@@ -427,6 +427,7 @@ The composite likelihood calculation implemented here matches that in PhyNEST (K
 Several extensions of this method are under active development in the Kubatko Research Group, with planned incorporation in this software. In particular, methods for testing hypotheses using composite likelihood ratio tests are being developed and a Bayesian species tree inference method using composite likelihood is in the works. In addition, the following more minor additions to the software are planned:
 
 <ul>
+<li> Remove requirement for the tree in the file treefile.tre to have branch lengths</li>
 <li> Bootstrap support values on nodes
 <li> Additional options for handling gaps and ambiguity codes (currently ignored at the quartet level)
 <li> Estimation of the effective population size parameter $\theta$
