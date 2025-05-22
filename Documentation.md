@@ -1,11 +1,4 @@
----
-title: "Documentation for PICL"
-embed-resources: true
-format: 
-  html:
-    code-fold: true
-    toc: true
----
+#PICL: Phylogenetic Inference with Composite Likelihood
 
 ## Introduction
 
