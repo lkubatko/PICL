@@ -1,4 +1,4 @@
-#PICL: Phylogenetic Inference with Composite Likelihood
+<h1>PICL: Phylogenetic Inference with Composite Likelihood</h1>
 
 ## Introduction
 
