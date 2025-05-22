@@ -4,7 +4,7 @@
 The PICL package includes a collection of methods for analyzing sequence data using composite likelihood. It includes methods for estimating species trees under the multispecies coalescent (MSC). For analyses 
 under the MSC, both multilocus and SNP data can be analyzed, and rate variation among sites can be incorporated. Multiple individuals per species can be included. Details about the method can be found in the following publication:
 
-Kubatko, L., S. Kong, E. Webb, and Z. Chen. 2025. The promise of composite likelihood for species-level phylogenomic inference, Evolutionary Journal of the Linnean Society [<a href="https://academic.oup.com/evolinnean/advance-article/doi/10.1093/evolinnean/kzaf008/8127126?login=true">web link</a>]]
+Kubatko, L., S. Kong, E. Webb, and Z. Chen. 2025. The promise of composite likelihood for species-level phylogenomic inference, Evolutionary Journal of the Linnean Society [<a href="https://academic.oup.com/evolinnean/advance-article/doi/10.1093/evolinnean/kzaf008/8127126?login=true">web link</a>]
 
 
 
