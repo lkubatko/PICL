@@ -1,4 +1,4 @@
-# PICL, Phylogenetic Inference with Composite Likelihood
+# PICL: Phylogenetic Inference with Composite Likelihood
 <b>A package for inferring phylogenies under the MSC and other models</b>
 
 The PICL package includes a collection of methods for analyzing sequence data using composite likelihood. It includes methods for estimating species trees under the multispecies coalescent (MSC). For analyses 
