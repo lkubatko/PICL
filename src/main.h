@@ -16,13 +16,13 @@ extern int anneal, anneal_bl, user_bl, max_it, max_it_bl, seedj, seedk;
 extern double ci, max_cl;
 extern float theta, beta, mu, ratepar, invpar;
 
-extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec;
-extern int **ppBase_full, **ppBase, **ppBase_unique, *site_counter, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
+extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
+extern int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
 extern int max_it;
 extern double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *rvals, *TimeVecQuart, **ppLengthMat, **ppMatrix;
 extern double smat[10][10],amat[12][12];
 
-extern FILE *out;
+extern FILE *out, *pt;
 
 typedef char naym[12];
 
@@ -79,6 +79,8 @@ void CalcTimeVec(double total, double rate);
 
 /* in compare.c */
 void write_species_tree(int node, int previous_node);
+void write_species_tree_out(int node, int previous_node);
+void write_species_tree_out_file(int node, int previous_node);
 void print_PHYLIP();
 void remove_CONSTANT();
 unsigned long long binomial(int n, int k);
@@ -114,6 +116,12 @@ void GetRateParams();
 void swap(int *a, int *b);
 void sort4(int arr[]);
 
+/* in complik_genetree.c */
+double tpii(double brlen);
+double tpij(double brlen);
+double QuartetLikelihood_genetree(int nn);
+double GetCompLik_genetree();
+
 /* in nodeopt.c */
 void AllMyChildrenLeft(int mynode);
 void AllMyChildrenRight(int mynode);
@@ -124,12 +132,17 @@ double GetMomentEstimate(int mynode);
 
 /* in anneal.c */
 void anneal_full();
+void anneal_msnp();
+void anneal_ratevar();
 void bl_anneal_full();
 void bl_uphill_full();
 void bl_anneal_msnp(); 
 void bl_uphill_msnp();
 void bl_anneal_ratevar();
 void bl_uphill_ratevar();
+void anneal_genetree();
+void bl_anneal_genetree();
+void bl_uphill_genetree();
 
 /* in boot.c */
 void boot_times(int nrep);
@@ -145,4 +158,7 @@ void trbldg_ratevar();
 
 /* in trbldg_msnp.c */
 void trbldg_msnp();
+
+/* in trbldg_genetree.c */
+void trbldg_genetree();   
 

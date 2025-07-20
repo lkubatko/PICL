@@ -15,6 +15,7 @@
 #include "tree.c"
 #include "compare.c"
 #include "complik.c"
+#include "complik_genetree.c"
 #include "nodeopt.c"
 #include "anneal.c"
 #include "boot.c"
@@ -22,18 +23,19 @@
 #include "trbldg.c"
 #include "trbldg_ratevar.c"
 #include "trbldg_msnp.c"
+#include "trbldg_genetree.c"
 
 // ntaxa = number of species
 // nseq = number of individuals
 int ntaxa, nspecies, nseq, nsite, nquarts, num_unique_quarts, num_unique, include_gaps, num_no_gaps, verbose, model, ncat, random_tree;
 int anneal, anneal_bl, user_bl, max_it, max_it_bl, seedj, seedk;
-int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec;
-int **ppBase_full, **ppBase, **ppBase_unique, *site_counter, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
+int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
+int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
 double ci, max_cl;
 float theta, beta, mu, ratepar, invpar;
 double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
 double smat[10][10],amat[12][12];
-FILE *out;
+FILE *out, *pt;
 
 Link Head, currenttree;
 naym *taxname=NULL, *speciesname=NULL, *psname=NULL;
@@ -235,6 +237,13 @@ int MemAlloc() {
 	}
     }
 
+  site_counter = (int*)malloc((nsite+1)*sizeof(int));
+  if (site_counter==NULL)
+    {
+      printf("     Can't memalloc site_counter.\n");
+      return 0;
+    }
+
   ppSp_assign = (int**)malloc(ntaxa*sizeof(int*));
   if (ppSp_assign==NULL)
     {
@@ -297,14 +306,7 @@ int MemAlloc() {
          printf("     Can't memalloc ppNodeChildrenRightQuart[%d].\n",i);
          return 0;
        }
-   } 
-
-  site_counter = (int*)malloc((nsite+1)*sizeof(int));
-  if (site_counter==NULL)
-    {
-      printf("     Can't memalloc site_counter.\n");
-      return 0;
-    }
+   }
 
   StoreQuarts = (CLq**)malloc(nquarts*sizeof(CLq*));
   for (i=0; i<nquarts; i++) StoreQuarts[i] = (CLq*)malloc(sizeof(CLq));
@@ -420,8 +422,7 @@ void unique_sites(){
 
   /* to facilitate bootstrapping later, put the constant A site pattern in the first position */
   /* in ppBase_unique; but don't add a count so that the total count will be correct          */
-
-  for (i=0;i<nseq; i++) ppBase_unique[i][0] = 0;
+  /* for (i=0;i<nseq; i++) ppBase_unique[i][0] = 0; -- no -- no longer doing this             */
 
   for (j=0; j<nsite; j++) {
 
@@ -471,6 +472,7 @@ void unique_sites(){
   printf("the number of unique site patterns is %d\n\n",num_unique);
   for (i=0; i<num_unique; i++) num_no_gaps += site_counter[i];
   //for (i=0; i<num_unique; i++) printf("%d ",site_counter[i]);
+  //printf("\n\n");
   if (include_gaps == 0) printf("Sites with a gap in at least one taxa have been excluded - the total number of sites used in the computations is %d\n\n",num_no_gaps);
 
 }
@@ -601,13 +603,14 @@ int main() {
   if (model==1) printf("Estimation will be carried out using the standard CIS/multilocus model (MSC-JC69)\n");
   else if (model==2) printf("Estimation will be carried out using the CIS/multlilocus (MSC-JC69 + G model)\n");
   else if (model==3) printf("Estimation will be carried out using the SNP model\n");
-  else { printf("Model must be 1, 2, or 3. Exiting.\n\n"); exit(1); }
+  else if (model==4) printf("Estimation will be carried out using the JC69 model for gene trees\n");
+  else { printf("Model must be 1, 2, 3, or 4. Exiting.\n\n"); exit(1); }
 
   /******* TO DO: need to free extra memory from storing taxon map *******/
 
   // read in data
   getSequenceData(data);
-  // fclose(data);
+  fclose(data);
   printf("\nSequence alignment with %d lineages and %d sites has been read successfully\n",nseq,nsite);
   unique_sites();
 
@@ -690,6 +693,7 @@ int main() {
   if (model == 1) printf("The composite likelihood of the initial tree is %f\n",GetCompLik());
   else if (model == 2) printf("The composite likelihood of the initial tree is %f\n",GetCompLik_ratevar());
   else if (model == 3) printf("The composite likelihood of the initial tree is %f\n",GetCompLik_msnp());
+  else if (model == 4) printf("The composite likelihood of the initial tree is %f\n",GetCompLik_genetree()); 
   printf("\n");
 
   /*************  Set-up complete ***************/
@@ -710,6 +714,7 @@ int main() {
                 	bl_uphill_ratevar();
         	}
         	else if (model == 3) bl_uphill_msnp();
+		else if (model == 4) bl_uphill_genetree();
 
 	}
 	else if (anneal_bl==2) { // simulated annealing bl search
@@ -721,6 +726,7 @@ int main() {
                 	bl_anneal_ratevar();
         	}
         	else if (model == 3) bl_anneal_msnp();
+		else if (model == 4) bl_anneal_genetree();
 	}
 	else if (anneal_bl==3) { // numerical optimization of branch lengths
 		printf("Numerical optimization of branch lengths is not yet implemented. Exiting.\n\n"); exit(1);
@@ -738,6 +744,7 @@ int main() {
 	if (model == 1) printf("the composite likelihood of the tree is %f\n",GetCompLik());
   	else if (model == 2) printf("the composite likelihood of the tree is %f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);
   	else if (model == 3) printf("the composite likelihood of the tree is %f\n",GetCompLik_msnp());
+	else if (model == 4) printf("the composite likelihood of the tree is %f\n",GetCompLik_genetree());
   	printf("\n\n");
   	
 	// re-order ppTwoRow and write tree to outtree.tre
@@ -785,6 +792,7 @@ int main() {
 	} 
 	//else if (model == 2) anneal_ratevar();
 	//else if (model == 3) anneal_msnp();
+	//else if (model == 4) anneal_genetree();
 
 	printf(" done\n\n");
 	if (verbose==1) {
@@ -830,6 +838,7 @@ int main() {
 	if (model == 1) printf("%f\n",GetCompLik());
         else if (model == 2) printf("%f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);    
         else if (model == 3) printf("%f\n",GetCompLik_msnp());
+	else if (model == 4) printf("%f\n",GetCompLik_genetree());
         printf("\n\n");
          
    	fprintf(out,"Best tree found by the algorithm in mutation units: \n");
@@ -842,7 +851,7 @@ int main() {
 
 	fclose(out);
 	printf("Results have been written to file outtree.tre -- exiting.\n\n");
-	exit(1);
+	//exit(1);
 
   }
   else { printf("Tree_search must be 0, 1, or 2. Exiting.\n\n"); exit(1); }
@@ -857,6 +866,15 @@ int main() {
   	fclose(res);
   }
   /* done print branch lengths to file */
+  
+  /* print only Newick string to file */
+  if (verbose==1) {
+	pt = fopen("picltrees.tre","a");
+	write_species_tree_out_file(ntaxa+1,ntaxa+1);
+	fprintf(pt,"\n");
+	fclose(pt);
+  }
+  /* done print only Newick string to file */
 
 
   /* bootstrapping */

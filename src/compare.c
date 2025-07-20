@@ -66,7 +66,7 @@ void write_species_tree(int node, int previous_node) {
 
 
 /***********************************************************/
-/*** Write tree to file out (outtree.tre                 ***/
+/*** Write tree to file out (outtree.tre)                ***/
 /***********************************************************/
 
 void write_species_tree_out(int node, int previous_node) {
@@ -128,6 +128,72 @@ void write_species_tree_out(int node, int previous_node) {
   }
 
 }
+
+
+/***********************************************************/
+/*** Write tree to file picltrees.tre                    ***/
+/***********************************************************/
+
+void write_species_tree_out_file(int node, int previous_node) {
+
+  if (ppTwoRow[0][node-(ntaxa+1)]<=ntaxa && ppTwoRow[1][node-(ntaxa+1)]<=ntaxa) {
+
+    //printf("(%d",ppTwoRow[0][node-(ntaxa+1)]);
+    fprintf(pt,"(%s",taxname[ppTwoRow[0][node-(ntaxa+1)]-1]);
+    fprintf(pt,":%f",fabs((-1.0)*(TimeVec[ppTwoRow[0][node-(ntaxa+1)]]-TimeVec[node])));
+    //printf(",%d",ppTwoRow[1][node-(ntaxa+1)]);
+    fprintf(pt,",%s",taxname[ppTwoRow[1][node-(ntaxa+1)]-1]);
+    fprintf(pt,":%f",fabs((-1.0)*(TimeVec[ppTwoRow[1][node-(ntaxa+1)]]-TimeVec[node])));
+    fprintf(pt,")");
+    if (node != previous_node) {
+      fprintf(pt,":%f",fabs((-1.0)*(TimeVec[node]-TimeVec[previous_node])));
+      }
+
+  }
+
+  if (ppTwoRow[0][node-(ntaxa+1)]<=ntaxa && ppTwoRow[1][node-(ntaxa+1)]>ntaxa) {
+
+    //printf("(%d",ppTwoRow[0][node-(ntaxa+1)]);
+    fprintf(pt,"(%s",taxname[ppTwoRow[0][node-(ntaxa+1)]-1]);
+    fprintf(pt,":%f",fabs((-1.0)*(TimeVec[ppTwoRow[0][node-(ntaxa+1)]]-TimeVec[node])));
+    fprintf(pt,",");
+    write_species_tree_out_file(ppTwoRow[1][node-(ntaxa+1)],node);
+    fprintf(pt,")");
+    if (node != previous_node) {
+      fprintf(pt,":%f",fabs((-1.0)*(TimeVec[node]-TimeVec[previous_node])));
+      }
+
+  }
+
+  if (ppTwoRow[0][node-(ntaxa+1)]>ntaxa && ppTwoRow[1][node-(ntaxa+1)]<=ntaxa) {
+
+    //printf("(%d",ppTwoRow[1][node-(ntaxa+1)]);
+    fprintf(pt,"(%s",taxname[ppTwoRow[1][node-(ntaxa+1)]-1]);
+    fprintf(pt,":%f",fabs((-1.0)*(TimeVec[ppTwoRow[1][node-(ntaxa+1)]]-TimeVec[node])));
+    fprintf(pt,",");
+    write_species_tree_out_file(ppTwoRow[0][node-(ntaxa+1)],node);
+    fprintf(pt,")");
+    if (node != previous_node) {
+      fprintf(pt,":%f",fabs((-1.0)*(TimeVec[node]-TimeVec[previous_node])));
+      }
+
+  }
+
+  if (ppTwoRow[0][node-(ntaxa+1)]>ntaxa && ppTwoRow[1][node-(ntaxa+1)]>ntaxa) {
+
+    fprintf(out,"(");
+    write_species_tree_out_file(ppTwoRow[0][node-(ntaxa+1)],node);
+    fprintf(pt,",");
+    write_species_tree_out_file(ppTwoRow[1][node-(ntaxa+1)],node);
+    fprintf(pt,")");
+    if (node != previous_node) {
+      fprintf(pt,":%f",fabs((-1.0)*(TimeVec[node]-TimeVec[previous_node])));
+      }
+
+  }
+
+}
+
 
 
 /***********************************************************/
