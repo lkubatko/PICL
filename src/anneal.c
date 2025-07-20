@@ -1040,8 +1040,6 @@ void bl_uphill_genetree() {
 
   for (it=0; it<max_it_bl; it++) {
 
-	printf("curr lik is %f\n",curr_lik);
-
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
         curr_time = TimeVec[rnode+(ntaxa+1)];
@@ -1061,8 +1059,7 @@ void bl_uphill_genetree() {
                 for (i=0; i<num_unique_quarts; i++) complik+=QuartetLikelihood_genetree(i);
 
                 prop_lik = complik;
-		printf("prop lik is %f\n",prop_lik);
- 
+	 
                 if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
                 else curr_lik = prop_lik;
         }
@@ -1078,9 +1075,7 @@ void bl_uphill_genetree() {
                 for (i=0; i<num_unique_quarts; i++) complik+=QuartetLikelihood_genetree(i);
 
                 prop_lik = complik;
-		printf("prop lik is %f\n",prop_lik);
-		printf("prop lik a different way is %f\n",GetCompLik_genetree());	
-
+	
                 if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
                 else curr_lik = prop_lik;
         }

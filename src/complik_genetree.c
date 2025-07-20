@@ -130,7 +130,7 @@ double GetCompLik_genetree() {
     for (j=i+1; j<ntaxa+1; j++) {
       for (k=j+1; k<ntaxa+1; k++) {
         for (l=k+1; l<ntaxa+1; l++) {
-          printf("Quartet %d %d %d %d\n",i,j,k,l);
+          //printf("Quartet %d %d %d %d\n",i,j,k,l);
 	  //printf("\t %llu %d %d\n",subset_to_index(i-1,j-1,k-1,l-1),(int)subset_to_index(i-1,j-1,k-1,l-1),qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]);
 	  //printf("\t Have we looked at this quartet yet? %d\n",qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]); 
           if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
@@ -173,7 +173,7 @@ double GetCompLik_genetree() {
   }
 
 
-  printf("The composite likelihood is %f; this required %d quartet comps\n",complik,num_unique_quarts);
+  //printf("The composite likelihood is %f; this required %d quartet comps\n",complik,num_unique_quarts);
   return(complik);
 
 }
