@@ -610,7 +610,7 @@ int main() {
 
   // read in data
   getSequenceData(data);
-  fclose(data);
+  // fclose(data);
   printf("\nSequence alignment with %d lineages and %d sites has been read successfully\n",nseq,nsite);
   unique_sites();
 
