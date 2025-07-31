@@ -111,7 +111,7 @@ double QuartetLikelihood_genetree(int nn){
                     + StoreQuarts[nn]->spprobs[5]*log(q[5]) + StoreQuarts[nn]->spprobs[6]*log(q[6]) + StoreQuarts[nn]->spprobs[7]*log(q[7]) + StoreQuarts[nn]->spprobs[8]*log(q[8]) 
                     + StoreQuarts[nn]->spprobs[9]*log(q[9]) + StoreQuarts[nn]->spprobs[10]*log(q[10]) + StoreQuarts[nn]->spprobs[11]*log(q[11]) + StoreQuarts[nn]->spprobs[12]*log(q[12]) + StoreQuarts[nn]->spprobs[13]*log(q[13]) + StoreQuarts[nn]->spprobs[14]*log(q[14]);
    
-  if (verbose==1) printf("The likelihood of the quartet with symmetry %d is %f\n\n",StoreQuarts[nn]->ncherries,quart_lik);
+  //if (verbose==1) printf("The likelihood of the quartet with symmetry %d is %f\n\n",StoreQuarts[nn]->ncherries,quart_lik);
   return(quart_lik);
 
 }  

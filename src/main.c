@@ -866,14 +866,12 @@ int main() {
   	fclose(res);
   }
   /* done print branch lengths to file */
-  
+
   /* print only Newick string to file */
-  if (verbose==1) {
 	pt = fopen("picltrees.tre","a");
 	write_species_tree_out_file(ntaxa+1,ntaxa+1);
-	fprintf(pt,"\n");
+	fprintf(pt,";\n");
 	fclose(pt);
-  }
   /* done print only Newick string to file */
 
 

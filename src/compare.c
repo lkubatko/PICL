@@ -181,7 +181,7 @@ void write_species_tree_out_file(int node, int previous_node) {
 
   if (ppTwoRow[0][node-(ntaxa+1)]>ntaxa && ppTwoRow[1][node-(ntaxa+1)]>ntaxa) {
 
-    fprintf(out,"(");
+    fprintf(pt,"(");
     write_species_tree_out_file(ppTwoRow[0][node-(ntaxa+1)],node);
     fprintf(pt,",");
     write_species_tree_out_file(ppTwoRow[1][node-(ntaxa+1)],node);
