@@ -60,6 +60,8 @@ In the settings file, each keyword (i.e., the words followed by a colon) should 
 <li> 1 = multilocus or CIS data
 <li> 2 = multilocus or CIS data with discrete gamma-distributed rate variation 
 <li> 3 = SNP data
+<li> 4 = JC69 model for gene trees (this computes composite likelihood under the JC69 model without the multispecies coalescent)
+</li>
 </ul>
 <br>
 <li> Gap:
@@ -433,5 +435,5 @@ Several extensions of this method are under active development in the Kubatko Re
 <li> Estimation of the effective population size parameter $\theta$
 <li> Posterior site pattern probabilities (Richards and Kubatko, 2021)
 <li> Site pattern probabilities under a relaxed clock (Richards and Kubatko, 2022)
-<li> Site pattern probabilities for gene tree estimation
+<li> Site pattern probabilities for gene tree estimation [done, 7/20/25]
 </ul>
