@@ -7,13 +7,12 @@ void trbldg_ratevar() {
 
   int i, j, k, index, target, parent, left_child, right_child, sib, side_target;
   int unsuccess_est;
-  double min_time, curr_lik, prop_lik, ran_num;
+  double min_time, old_lik, curr_lik, prop_lik, ran_num;
   double alpha, new_alpha;
   float ran_est;
 
-  curr_lik = GetCompLik_ratevar();
-  max_cl = curr_lik;
-
+  old_lik = curr_anneal_lik;
+ 
   /* Randomly choose an internal node as the target node */
   
   target = (floor)(ranf()*(ntaxa-2))+ntaxa+2;
@@ -110,7 +109,7 @@ void trbldg_ratevar() {
   if (prop_lik > curr_lik) {
 	
         //printf("ACCEPT\n");
-	curr_lik = prop_lik;
+	curr_anneal_lik = prop_lik;
 	ppTwoRow_temp[0][parent-(ntaxa+1)] = ppTwoRow[0][parent-(ntaxa+1)];
     	ppTwoRow_temp[1][parent-(ntaxa+1)] = ppTwoRow[1][parent-(ntaxa+1)];
     	ppTwoRow_temp[0][target-(ntaxa+1)] = ppTwoRow[0][target-(ntaxa+1)];
@@ -125,11 +124,11 @@ void trbldg_ratevar() {
 
 	/* make accept/reject decision */
 	ran_num = ranf();
-	//printf("Random number is %f, accept prob is %f\n",ran_num,exp((prop_lik-curr_lik)/ci));
+	//printf("Random number is %f, accept prob is %f\n",ran_num,exp((prop_lik-curr_anneal_lik)/ci));
 
-	if (ran_num<=exp((prop_lik-curr_lik)/ci)) { /* accept */
+	if (ran_num<=exp((prop_lik-curr_anneal_lik)/ci)) { /* accept */
 		//printf("ACCEPT lower\n"); 
-        	curr_lik = prop_lik;
+        	curr_anneal_lik = prop_lik;
         	ppTwoRow_temp[0][parent-(ntaxa+1)] = ppTwoRow[0][parent-(ntaxa+1)];
         	ppTwoRow_temp[1][parent-(ntaxa+1)] = ppTwoRow[1][parent-(ntaxa+1)];
         	ppTwoRow_temp[0][target-(ntaxa+1)] = ppTwoRow[0][target-(ntaxa+1)];                                                                                
@@ -142,6 +141,7 @@ void trbldg_ratevar() {
 
 	else {
 		//printf("Reject\n");
+		curr_anneal_lik = old_lik;
      		ppTwoRow[0][parent-(ntaxa+1)] = ppTwoRow_temp[0][parent-(ntaxa+1)];
     		ppTwoRow[1][parent-(ntaxa+1)] = ppTwoRow_temp[1][parent-(ntaxa+1)];
     		ppTwoRow[0][target-(ntaxa+1)] = ppTwoRow_temp[0][target-(ntaxa+1)];
@@ -162,7 +162,7 @@ void trbldg_ratevar() {
         	printf("%f %f\n ",TimeVec[i+ntaxa+1],TimeVec_temp[i+ntaxa+1]);
   	}*/
 
-  if (curr_lik > max_cl) {
+  if (curr_anneal_lik > max_cl) {
 
 	for (i=0; i<ntaxa-1; i++) {
             ppTwoRow_best[0][i] = ppTwoRow[0][i];

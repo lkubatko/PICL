@@ -7,10 +7,10 @@
 void anneal_full() {
 
    int i, counteri, burnin;
-   double curr_lik, prop_lik, max_change=0.0, U;
+   double curr_lik, max_change=0.0, U;
 
    counteri = 1;
-   burnin = 100;
+   burnin = 25;
 
    /* Step 0: Make sure that temp time vector matches starting time vector */
    for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
@@ -18,18 +18,20 @@ void anneal_full() {
    /* Step 1: estimate U, the upper bound on the change in likelihood */
 
    curr_lik = GetCompLik();
-   U = curr_lik;
+   U = curr_anneal_lik;
    ci = U/(1+counteri*beta);
    while (counteri<burnin) {
+
 	trbldg();
-	prop_lik = GetCompLik();
-	if (fabs(prop_lik-curr_lik)>max_change) max_change=fabs(prop_lik-curr_lik);
+	if (fabs(curr_lik-curr_anneal_lik)>max_change) max_change=fabs(curr_lik-curr_anneal_lik);
       	counteri++;
+
    }
    U = max_change;
 
   /* Step 2: anneal */
   counteri = 1;
+  curr_anneal_lik = GetCompLik();
   while (counteri<(int)max_it/2) {
 	trbldg();
 	ci = U/(1+counteri*beta);
@@ -49,10 +51,10 @@ void anneal_full() {
 void anneal_ratevar() {
 
    int i, counteri, burnin;
-   double curr_lik, prop_lik, max_change=0.0, U;
+   double curr_lik, max_change=0.0, U;
 
    counteri = 1;
-   burnin = 100;
+   burnin = 25;
 
    /* Step 0: Make sure that temp time vector matches starting time vector */
    for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];  
@@ -60,19 +62,19 @@ void anneal_ratevar() {
    /* Step 1: estimate U, the upper bound on the change in likelihood */
 
    curr_lik = GetCompLik_ratevar();
-   U = curr_lik;
+   U = curr_anneal_lik;
    ci = U/(1+counteri*beta);
    while (counteri<burnin) {
 
         trbldg_ratevar();
-        prop_lik = GetCompLik_ratevar();
-        if (fabs(prop_lik-curr_lik)>max_change) max_change=fabs(prop_lik-curr_lik);
+        if (fabs(curr_lik-curr_anneal_lik)>max_change) max_change=fabs(curr_lik-curr_anneal_lik);
         counteri++;
    }
    U = max_change;
 
   /* Step 2: anneal */
   counteri = 1;
+  curr_anneal_lik = GetCompLik_ratevar();
   while (counteri<(int)max_it/2) {
         trbldg_ratevar();
         ci = U/(1+counteri*beta);
@@ -93,10 +95,10 @@ void anneal_ratevar() {
 void anneal_msnp() {
 
    int i, counteri, burnin;
-   double curr_lik, prop_lik, max_change=0.0, U;
+   double curr_lik, max_change=0.0, U;
 
    counteri = 1;
-   burnin = 100;
+   burnin = 25;
 
    /* Step 0: Make sure that temp time vector matches starting time vector */
    for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];  
@@ -104,13 +106,12 @@ void anneal_msnp() {
    /* Step 1: estimate U, the upper bound on the change in likelihood */
 
    curr_lik = GetCompLik_msnp();
-   U = curr_lik;
+   U = curr_anneal_lik;
    ci = U/(1+counteri*beta);
    while (counteri<burnin) {
 
         trbldg_msnp();
-        prop_lik = GetCompLik_msnp();
-        if (fabs(prop_lik-curr_lik)>max_change) max_change=fabs(prop_lik-curr_lik);
+        if (fabs(curr_lik-curr_anneal_lik)>max_change) max_change=fabs(curr_lik-curr_anneal_lik);
         counteri++;
    }
    U = max_change;
@@ -118,6 +119,8 @@ void anneal_msnp() {
 
   /* Step 2: anneal */
   counteri = 1;
+  curr_anneal_lik = GetCompLik_msnp();
+  max_cl = curr_anneal_lik;
   while (counteri<(int)max_it/2) {
         trbldg_msnp();
         ci = U/(1+counteri*beta);
@@ -136,10 +139,10 @@ void anneal_msnp() {
 void anneal_genetree() {
 
   int i, counteri, burnin;
-   double curr_lik, prop_lik, max_change=0.0, U;
+   double curr_lik, max_change=0.0, U;
 
    counteri = 1;
-   burnin = 100;
+   burnin = 25;
 
    /* Step 0: Make sure that temp time vector matches starting time vector */
    for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
@@ -147,18 +150,19 @@ void anneal_genetree() {
    /* Step 1: estimate U, the upper bound on the change in likelihood */
 
    curr_lik = GetCompLik_genetree();
-   U = curr_lik;
+   U = curr_anneal_lik;
    ci = U/(1+counteri*beta);
    while (counteri<burnin) {
+	
         trbldg_genetree();
-        prop_lik = GetCompLik_genetree();
-        if (fabs(prop_lik-curr_lik)>max_change) max_change=fabs(prop_lik-curr_lik);
+        if (fabs(curr_lik-curr_anneal_lik)>max_change) max_change=fabs(curr_lik-curr_anneal_lik);
         counteri++;
    }
    U = max_change;
 
   /* Step 2: anneal */
   counteri = 1;
+  curr_anneal_lik = GetCompLik_genetree();
   while (counteri<(int)max_it/2) {
         trbldg_genetree();
         ci = U/(1+counteri*beta);

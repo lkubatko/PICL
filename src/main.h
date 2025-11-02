@@ -10,11 +10,11 @@
 #define SDELTA 0.0001
 #define FTOL 0.00001
 
-extern int ntaxa, nspecies, nsite, nquarts, num_unique_quarts, num_unique, include_gaps, num_no_gaps, verbose, model, ncat, random_tree;
+extern int ntaxa, nspecies, nseq, nsite, nquarts, num_unique_quarts, num_unique, include_gaps, num_no_gaps, verbose, model, ncat, random_tree;
 extern int anneal, anneal_bl, user_bl, max_it, max_it_bl, seedj, seedk;
 
 extern double ci, max_cl;
-extern float theta, beta, mu, ratepar, invpar;
+extern float theta, beta, mu, ratepar, invpar, curr_anneal_lik;
 
 extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 extern int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
@@ -83,6 +83,7 @@ void write_species_tree_out(int node, int previous_node);
 void write_species_tree_out_file(int node, int previous_node);
 void print_PHYLIP();
 void remove_CONSTANT();
+void remove_CONSTANT_MSNP();
 unsigned long long binomial(int n, int k);
 unsigned long long subset_to_index(int a, int b, int c, int d);
 void index_to_subset(unsigned long long index, int *a, int *b, int *c, int *d, int n);

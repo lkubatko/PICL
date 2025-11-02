@@ -32,7 +32,7 @@ int anneal, anneal_bl, user_bl, max_it, max_it_bl, seedj, seedk;
 int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
 double ci, max_cl;
-float theta, beta, mu, ratepar, invpar;
+float theta, beta, mu, ratepar, invpar, curr_anneal_lik;
 double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
 double smat[10][10],amat[12][12];
 FILE *out, *pt;
@@ -389,6 +389,7 @@ naym* getSequenceData(FILE *infile) {
   for (i=0; i<nseq; i++)
     {
       fscanf(infile, "%s %s", psname[i],ppDNASeq[i]);
+      if (verbose==1) printf("Read sequence %d with name %s\n",i,psname[i]);
 
       // No need to pad or load names, but done for using with other code.
       for (k=0; k<20; k++) if (psname[i][k] == 0) psname[i][k] = ' ';
@@ -484,7 +485,7 @@ int main() {
   char keyword;
   int memcheck, i, j, k, l;
   int i2, j2, k2, l2;
-  int nboot;
+  int nboot, ntquarts;
   naym tempname1, tempname2;
   float temp_rate;
   double totaltime;
@@ -567,9 +568,11 @@ int main() {
   fscanf(set,"%d",&ntaxa);
   setall((long)seedj,(long)seedk); /* Set seeds for random number generator */
   nquarts = binomial(ntaxa,4);
-  printf("There are %d total sequences. This corresponds to %d species-level quartets.\n\n",ntaxa,nquarts);
+  printf("There are %d total species. This corresponds to %d species-level quartets.\n",ntaxa,nquarts);
   data = fopen("data.phy","r");
   fscanf(data,"%d %d\n",&nseq,&nsite);
+  ntquarts = binomial(nseq,4);
+  printf("There are %d total sequences. This corresponds to %d sequence-level quartets.\n\n",nseq,ntquarts);
 
   // allocate memory
   memcheck = MemAlloc();
@@ -690,12 +693,12 @@ int main() {
   /* Compute the composite likelihood for the current tree */
   ComputeAandS(theta);
   for (i=0; i<nquarts+1; i++) qvec[i]=0; 
-  if (model == 1) printf("The composite likelihood of the initial tree is %f\n",GetCompLik());
-  else if (model == 2) printf("The composite likelihood of the initial tree is %f\n",GetCompLik_ratevar());
-  else if (model == 3) printf("The composite likelihood of the initial tree is %f\n",GetCompLik_msnp());
-  else if (model == 4) printf("The composite likelihood of the initial tree is %f\n",GetCompLik_genetree()); 
-  printf("\n");
-
+  if (model == 1) curr_anneal_lik = GetCompLik();
+  else if (model == 2) curr_anneal_lik = GetCompLik_ratevar();
+  else if (model == 3) curr_anneal_lik = GetCompLik_msnp();
+  else if (model == 4) curr_anneal_lik = GetCompLik_genetree(); 
+  printf("The composite likelihood of the initial tree is %f\n\n",curr_anneal_lik);
+  
   /*************  Set-up complete ***************/
 
 
@@ -740,7 +743,7 @@ int main() {
         		printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
 		}
 	}
-	printf("After branch length optimization, ");
+
 	if (model == 1) printf("the composite likelihood of the tree is %f\n",GetCompLik());
   	else if (model == 2) printf("the composite likelihood of the tree is %f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);
   	else if (model == 3) printf("the composite likelihood of the tree is %f\n",GetCompLik_msnp());
@@ -784,15 +787,39 @@ int main() {
 	ci = ntaxa;
 	printf("Tree is being estimated with simulated annealing ...");
         fflush(0);
+
+	// copy starting tree to besttree before beginning annealing
+	for (i=0; i<ntaxa; i++) {
+                ppTwoRow_best[0][i] = ppTwoRow[0][i];
+                ppTwoRow_best[1][i] = ppTwoRow[1][i];
+        }
+        for (i=0; i<2*ntaxa+1; i++) TimeVec_best[i] = TimeVec[i];
+
+	// now start annealing
 	if (model == 1) {
 		bl_uphill_full();
 		anneal_full();
-		if (anneal_bl==1) { printf("optimizing bl%f\n",GetCompLik()); bl_uphill_full(); printf("fdone %f\n\n",GetCompLik()); }
+		if (anneal_bl==1) bl_uphill_full();
 		else if (anneal_bl==2) bl_anneal_full();
 	} 
-	//else if (model == 2) anneal_ratevar();
-	//else if (model == 3) anneal_msnp();
-	//else if (model == 4) anneal_genetree();
+	else if (model == 2) {
+		bl_uphill_ratevar();
+		anneal_ratevar();
+		if (anneal_bl==1) bl_uphill_ratevar();
+		else if (anneal_bl==2) bl_anneal_ratevar();
+	}
+	else if (model == 3) {
+		bl_uphill_msnp();
+		anneal_msnp();
+		if (anneal_bl==1) bl_uphill_msnp();
+		else if (anneal_bl==2) bl_anneal_msnp();
+	}
+	else if (model == 4) {
+		bl_uphill_genetree();
+		anneal_genetree();
+		if (anneal_bl==1) bl_uphill_genetree();
+		else if (anneal_bl==2) bl_anneal_genetree();
+	}
 
 	printf(" done\n\n");
 	if (verbose==1) {
@@ -828,12 +855,27 @@ int main() {
 	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta; 
   
   	// copy best tree to current tree and write to file outtree.tre
-  	for (i=0; i<ntaxa-1; i++) {
+  	for (i=0; i<ntaxa; i++) {
          	ppTwoRow[0][i] = ppTwoRow_best[0][i];
          	ppTwoRow[1][i] = ppTwoRow_best[1][i];
   	}
   	for (i=0; i<2*ntaxa+1; i++) TimeVec[i] = TimeVec_best[i];
+	// re-order ppTwoRow to write to outtree.tre
 
+        for (i=0; i<ntaxa; i++) {
+                if (ppTwoRow[0][i]>ppTwoRow[1][i]) {
+                temptax = ppTwoRow[0][i];
+                ppTwoRow[0][i] = ppTwoRow[1][i];
+                ppTwoRow[1][i] = temptax;
+                }
+        }
+	if (verbose == 1){
+		printf("After transfer from bessttree, tree is \n");
+                	for (i=0; i<ntaxa-1; i++) {
+                        	printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);  
+                        	printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+        	}
+	}
 	printf("The composite likelihood of the best tree found by the algorithm is ");
 	if (model == 1) printf("%f\n",GetCompLik());
         else if (model == 2) printf("%f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);    
@@ -883,8 +925,9 @@ int main() {
 
   printf("\n\nAnalysis complete - exiting.\n\n");
 
-  /* useful functions -- not accessible through settings */
-  //  remove_CONSTANT();
-  //  print_PHYLIP();
+  /* useful functions -- not accessible to users through settings */
+    //remove_CONSTANT();
+    //remove_CONSTANT_MSNP();
+    //print_PHYLIP();
 
 }
