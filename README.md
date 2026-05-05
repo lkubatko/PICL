@@ -15,6 +15,8 @@ PICL is written in C. After cloning the repository or downloading the code, PICL
 
 On a Mac, open a terminal window, navigate to the directory where the source code is stored, and issue the command: `gcc main.c -lm -o picl`. The program can then be called with `./picl`.
 
+On a Windows machine, compilation has been successfully tested using two methods: MinGW and Microsoft Visual Studio. For MinGW, open a terminal window, navigate to the source code directory, and issue the command: `gcc main.c -lm -o picl`. The program can then be called with `./picl` (or `picl` if using command prompt). For Visual Studio, open a developer powershell/command prompt for VS or the VS GUI, navigate to the source code directory, and issue the command: `gcc main.c -lm -o picl`. The program can then be called with `./picl`.
+
 It is recommended that you run the two examples before trying your own data. The first example will take about 30 minutes to run (reducing the number of optimization steps will reduce this time). The second should run in under 5 minutes.
 
 <br>
