@@ -200,6 +200,9 @@ Seed2: 67890<br>
 Num_cat: 4<br>
 Tree_search: 2<br>
 Num_iter: 30000<br>
+Prob_bound: 0.05 <br>
+Test_incr: 250 <br>
+Opt_slope: -0.01  <br>
 Beta: 0.005<br>
 Verbose: 1<br>
 10<br>
@@ -271,6 +274,9 @@ Seed2: 67890 <br>
 Num_cat: 4 <br>
 Tree_search: 0 <br>
 Num_iter: 30000 <br>
+Prob_bound: 0.05 <br>
+Test_incr: 250<br>
+Opt_slope: -0.01 <br>
 Beta: 0.005 <br>
 Verbose: 1 <br>
 10 <br>
@@ -444,6 +450,8 @@ Several extensions of this method are under active development in the Kubatko Re
 <li> Remove requirement for the tree in the file treefile.tre to have branch lengths</li>
 <li> Bootstrap support values on nodes
 <li> Additional options for handling gaps and ambiguity codes (currently ignored at the quartet level)
+<li> Derivative-based branch length estimation
+<li> Efficiency calculation of CL after NNI 
 <li> Estimation of the effective population size parameter $\theta$
 <li> Posterior site pattern probabilities (Richards and Kubatko, 2021)
 <li> Site pattern probabilities under a relaxed clock (Richards and Kubatko, 2022)
