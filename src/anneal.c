@@ -6,11 +6,16 @@
 
 void anneal_full() {
 
-   int i, counteri, burnin;
+   int i, counteri, burnin, samplesize, startcount;
+   int bound1;
    double curr_lik, max_change=0.0, U;
+   double xsum=0.0, ysum=0.0, xsumsq=0.0, covarsum=0.0;
+   double b0, b1, b1old, R;    
 
+   /* set params */
    counteri = 1;
-   burnin = 25;
+   burnin = 1000;
+   bound1 = floor(log(prob_bound/ntaxa)/log(1.0-1.0/(ntaxa-2)));
 
    /* Step 0: Make sure that temp time vector matches starting time vector */
    for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
@@ -28,21 +33,75 @@ void anneal_full() {
 
    }
    U = max_change;
+   max_cl = curr_anneal_lik;
+   b1old = 0.0;
+   printf("\nburnin is complete ... \nstarting first annealing ...\n");
 
-  /* Step 2: anneal */
-  counteri = 1;
+
+  /* Step 2: annealing 1 */
+  num_reject = 0;
   curr_anneal_lik = GetCompLik();
-  while (counteri<(int)max_it/2) {
+  while (num_reject < bound1 && counteri < burnin+(int)max_it/2) {
 	trbldg();
 	ci = U/(1+counteri*beta);
-        counteri += 1;
+	xsum += log(counteri);
+        ysum += log(-1.0*curr_anneal_lik);
+        xsumsq += log(counteri)*log(counteri);
+        covarsum += log(counteri)*log(-1.0*curr_anneal_lik);
+	counteri += 1;
+
+	if (counteri%test_increment == 0) { /* adaptively update beta */
+		samplesize = counteri-burnin;
+		b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
+		R = fabs(b1-b1opt)/fabs(b1old-b1opt);
+		if (R>1) {
+			if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+			else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
+			else beta = beta/(2*R);  /* b1 above -b1opt */
+		}
+		b1old = b1;
+		RescaleTree();
+	}
   }
+  printf("first annealing is complete ...\n");
+
+  /* Step 3: branch length optimization */
   bl_uphill_full();
-  while (counteri<max_it) {
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
+
+  /* Step 4: annealing 2 */
+  printf("starting second annealing ...\n");
+  num_reject = 0;
+  startcount = counteri;
+  while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
         trbldg();
         ci = U/(1+counteri*beta);
+	xsum += log(counteri);
+        ysum += log(-1.0*curr_anneal_lik);
+        xsumsq += log(counteri)*log(counteri);
+        covarsum += log(counteri)*log(-1.0*curr_anneal_lik);
         counteri += 1;
+	if (counteri%test_increment == 0) { /* adaptively update beta */
+		samplesize = counteri-burnin;
+        	b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
+		R = fabs(b1-b1opt)/fabs(b1old-b1opt);
+		if (R>1) {
+                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
+                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                }
+		b1old = b1;
+		RescaleTree();
+        }
   }
+  printf("second annealing is complete ...\n");
+
+  /* Step 5: branch length optimization of estimated tree */
+  bl_uphill_full();
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
+
+  printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
+  if (counteri == max_it) printf("WARNING: maximum number of iterations reached without satisfying the stopping criterion.\n\n");
 
 }
 
@@ -50,11 +109,16 @@ void anneal_full() {
 
 void anneal_ratevar() {
 
-   int i, counteri, burnin;
+   int i, counteri, burnin, samplesize, startcount;
+   int bound1;
    double curr_lik, max_change=0.0, U;
+   double xsum=0.0, ysum=0.0, xsumsq=0.0, covarsum=0.0;
+   double b0, b1, b1old, R;
 
+   /* set params */
    counteri = 1;
-   burnin = 25;
+   burnin = 1000;
+   bound1 = floor(log(prob_bound/ntaxa)/log(1.0-1.0/(ntaxa-2)));
 
    /* Step 0: Make sure that temp time vector matches starting time vector */
    for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];  
@@ -65,27 +129,79 @@ void anneal_ratevar() {
    U = curr_anneal_lik;
    ci = U/(1+counteri*beta);
    while (counteri<burnin) {
-
         trbldg_ratevar();
         if (fabs(curr_lik-curr_anneal_lik)>max_change) max_change=fabs(curr_lik-curr_anneal_lik);
         counteri++;
    }
    U = max_change;
+   max_cl = curr_anneal_lik;
+   b1old = 0.0;
+   printf("\nburnin is complete ... \nstarting first annealing ...\n");
 
-  /* Step 2: anneal */
-  counteri = 1;
+  /* Step 2: annealing 1 */
+  num_reject = 0;
   curr_anneal_lik = GetCompLik_ratevar();
-  while (counteri<(int)max_it/2) {
+  while (num_reject < bound1 && counteri < burnin+(int)max_it/2) {
         trbldg_ratevar();
         ci = U/(1+counteri*beta);
+	xsum += log(counteri);
+        ysum += log(-1.0*curr_anneal_lik);
+        xsumsq += log(counteri)*log(counteri);
+        covarsum += log(counteri)*log(-1.0*curr_anneal_lik);
         counteri += 1;
+
+	 if (counteri%test_increment == 0) { /* adaptively update beta */
+                samplesize = counteri-burnin;
+                b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
+                R = fabs(b1-b1opt)/fabs(b1old-b1opt);
+                if (R>1) {
+                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
+                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                }
+                b1old = b1;
+                RescaleTree_ratevar();
+        }
   }
+  printf("first annealing is complete ...\n");
+
+  /* Step 3: branch length optimization */
   bl_uphill_ratevar();
-  while (counteri<max_it) {
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];   
+
+  /* Step 4: annealing 2 */
+  printf("starting second annealing ...\n");
+  num_reject = 0;
+  startcount = counteri;
+  while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
         trbldg_ratevar();
         ci = U/(1+counteri*beta);
+	xsum += log(counteri);
+        ysum += log(-1.0*curr_anneal_lik);
+        xsumsq += log(counteri)*log(counteri);
+        covarsum += log(counteri)*log(-1.0*curr_anneal_lik);
         counteri += 1;
+  	if (counteri%test_increment == 0) { /* adaptively update beta */
+                samplesize = counteri-burnin;
+                b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
+                R = fabs(b1-b1opt)/fabs(b1old-b1opt);
+                if (R>1) {
+                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
+                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                }
+                b1old = b1;
+                RescaleTree_ratevar();
+        }
   }
+
+  printf("second annealing is complete ....\n");
+  /* Step 5: branch length optimization of estimated tree */
+  bl_uphill_ratevar();
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
+
+  printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
+  if (counteri == max_it) printf("WARNING: maximum number of iterations reached without satisfying the stopping criterion.\n\n");
 
 }
 
@@ -94,11 +210,16 @@ void anneal_ratevar() {
 
 void anneal_msnp() {
 
-   int i, counteri, burnin;
+   int i, counteri, burnin, samplesize, startcount;
+   int bound1;
    double curr_lik, max_change=0.0, U;
+   double xsum=0.0, ysum=0.0, xsumsq=0.0, covarsum=0.0;
+   double b0, b1, b1old, R;    
 
+   /* set params */ 
    counteri = 1;
-   burnin = 25;
+   burnin = 1000;
+   bound1 = floor(log(prob_bound/ntaxa)/log(1.0-1.0/(ntaxa-2)));
 
    /* Step 0: Make sure that temp time vector matches starting time vector */
    for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];  
@@ -115,34 +236,91 @@ void anneal_msnp() {
         counteri++;
    }
    U = max_change;
+   max_cl = curr_anneal_lik;
+   b1old = 0.0;
+   printf("\nburnin is complete ... \nstarting first annealing ...\n");
 
-
-  /* Step 2: anneal */
-  counteri = 1;
+  /* Step 2: annealing 1 */
+  num_reject = 0;
   curr_anneal_lik = GetCompLik_msnp();
-  max_cl = curr_anneal_lik;
-  while (counteri<(int)max_it/2) {
+  while (num_reject < bound1 && counteri < burnin+(int)max_it/2) {
         trbldg_msnp();
         ci = U/(1+counteri*beta);
+	xsum += log(counteri);
+        ysum += log(-1.0*curr_anneal_lik);
+        xsumsq += log(counteri)*log(counteri);
+        covarsum += log(counteri)*log(-1.0*curr_anneal_lik);
         counteri += 1;
+
+	if (counteri%test_increment == 0) { /* adaptively update beta */
+                samplesize = counteri-burnin;
+                b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
+                R = fabs(b1-b1opt)/fabs(b1old-b1opt);
+                if (R>1) {
+                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
+                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                }
+                b1old = b1;
+                RescaleTree_msnp();
+        }
   }
+  printf("first annealing is complete ...\n");
+
+ /* Step 3: branch length optimization */
   bl_uphill_msnp();
-  while (counteri<max_it) {
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
+
+  /* Step 4: annealing 2 */
+  printf("starting second annealing ...\n");
+  num_reject = 0;
+  startcount = counteri;
+  while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
         trbldg_msnp();   
         ci = U/(1+counteri*beta);
+	xsum += log(counteri);
+        ysum += log(-1.0*curr_anneal_lik);
+        xsumsq += log(counteri)*log(counteri);
+        covarsum += log(counteri)*log(-1.0*curr_anneal_lik);
         counteri += 1;
+        if (counteri%test_increment == 0) { /* adaptively update beta */
+                samplesize = counteri-burnin;
+                b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
+                R = fabs(b1-b1opt)/fabs(b1old-b1opt);
+                if (R>1) {
+                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
+                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                }
+                b1old = b1;
+                RescaleTree_msnp();
+        }
+
   }
+  printf("second annealing is complete ...\n");
+
+  /* Step 5: branch length optimization of estimated tree */
+  bl_uphill_ratevar();
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
+
+  printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
+  if (counteri == max_it) printf("WARNING: maximum number of iterations reached without satisfying the stopping criterion.\n\n");
 
 }
 
 
 void anneal_genetree() {
 
-  int i, counteri, burnin;
-   double curr_lik, max_change=0.0, U;
+  int i, counteri, burnin, samplesize, startcount;
+  int bound1;
+  double curr_lik, max_change=0.0, U;
+  double xsum=0.0, ysum=0.0, xsumsq=0.0, covarsum=0.0;
+  double b0, b1, b1old, R;    
 
+   /* set params */
    counteri = 1;
-   burnin = 25;
+   burnin = 1000;
+   bound1 = floor(log(prob_bound/ntaxa)/log(1.0-1.0/(ntaxa-2)));
 
    /* Step 0: Make sure that temp time vector matches starting time vector */
    for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
@@ -159,21 +337,73 @@ void anneal_genetree() {
         counteri++;
    }
    U = max_change;
+   max_cl = curr_anneal_lik;
+   b1old = 0.0;
+   printf("\nburnin is complete ... \nstarting first annealing ...\n");
 
-  /* Step 2: anneal */
-  counteri = 1;
+  /* Step 2: annealing 1 */
+  num_reject = 0;
   curr_anneal_lik = GetCompLik_genetree();
-  while (counteri<(int)max_it/2) {
+  while (num_reject < bound1 && counteri < burnin+(int)max_it/2) {
         trbldg_genetree();
         ci = U/(1+counteri*beta);
+        xsum += log(counteri);
+        ysum += log(-1.0*curr_anneal_lik);
+        xsumsq += log(counteri)*log(counteri);
+        covarsum += log(counteri)*log(-1.0*curr_anneal_lik);
         counteri += 1;
+	if (counteri%test_increment == 0) { /* adaptively update beta */
+                samplesize = counteri-burnin;
+                b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
+                R = fabs(b1-b1opt)/fabs(b1old-b1opt);
+                if (R>1) {
+                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
+                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                }
+                b1old = b1;
+                RescaleTree_genetree();
+        }
   }
+  printf("first annealing is complete ...\n");
+
+  /* Step 3: branch length optimization */
   bl_uphill_genetree();
-  while (counteri<max_it) {
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
+
+  /* Step 4: annealing 2 */
+  printf("starting second annealing ...\n");
+  num_reject = 0;
+  startcount = counteri;
+  while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
         trbldg_genetree();
         ci = U/(1+counteri*beta);
+        xsum += log(counteri);
+        ysum += log(-1.0*curr_anneal_lik);
+        xsumsq += log(counteri)*log(counteri);
+        covarsum += log(counteri)*log(-1.0*curr_anneal_lik);
         counteri += 1;
+        if (counteri%test_increment == 0) { /* adaptively update beta */
+                samplesize = counteri-burnin;
+                b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
+                R = fabs(b1-b1opt)/fabs(b1old-b1opt);
+                if (R>1) {
+                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
+                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                }
+                b1old = b1;
+                RescaleTree_genetree();
+        }
   }
+  printf("second annealing is complete ...\n");
+
+  /* Step 5: branch length optimization of estimated tree */
+  bl_uphill_genetree();
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
+
+  printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
+  if (counteri == max_it) printf("WARNING: maximum number of iterations reached without satisfying the stopping criterion.\n\n");
 
 }
 
@@ -373,7 +603,7 @@ void bl_uphill_full() {
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
       
                 prop_time = ranf()*(par_time-child_time);
-		if (child_time + prop_time > 0.00001) TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
+		if (par_time - child_time > 0.00001 && prop_time > 0.001) TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
 		complik = 0.0;
 		for (i=0; i<num_unique_quarts; i++) {
@@ -404,11 +634,14 @@ void bl_uphill_full() {
 
                 prop_lik = complik;
 
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                if (curr_lik > prop_lik) {printf("not acceted\n"); TimeVec[rnode+(ntaxa+1)]  = curr_time;}
                 else curr_lik = prop_lik;
+
         }
 
   }
+
+  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
 
 }
 

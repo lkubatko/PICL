@@ -550,6 +550,13 @@ void FindDupQuarts(int is_symm, int spcounts[15]) {
   if (is_symm==2) mrca = FindMRCA(ppTwoRowQuart[0][ntaxa+2],ppTwoRowQuart[0][ntaxa+3]);
   else if (is_symm==1) mrca = FindMRCA(ppTwoRowQuart[1][ntaxa+1],ppTwoRowQuart[0][ntaxa+3]);
        else { 
+	printf("At the time of error, the tree and times are:\n");
+	for (i=0; i<ntaxa-1; i++) {
+                printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+                printf("%f %f\n ",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+                }
+        printf("\n");
+
 	printf("Error in FindDupQuarts .... exiting.\n\n"); 
 	exit(1);
 	}

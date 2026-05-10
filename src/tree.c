@@ -71,9 +71,7 @@ int AddToNode(int current,int next,int last_tip,FILE *fp,double read_length) {
       ss2 = sss;
       tname[0] = ss2;
       tname[1] = 00;
-      //printf("tname is %s\n",tname);
-      //printf("It really is\n");
-      //fflush(0);
+
       j=0;
       while (ss2 != ':') {
 	ss2=fgetc(fp);
@@ -85,7 +83,7 @@ int AddToNode(int current,int next,int last_tip,FILE *fp,double read_length) {
       k=0;
       while (strcmp(tname,taxname[k])!=0 && k<=ntaxa) k++;
       if (k>=ntaxa) {
-	printf("\n\t ERROR: Taxon name in gene tree (%s) does not match any name given in settings file.\n \t Exiting ...\n\n",tname);
+	printf("\n\t ERROR: Taxon name in gene tree (%s) does not match any name provided.\n \t Exiting ...\n\n",tname);
 	exit(1);
       }
       toadd = k+1;
@@ -115,7 +113,7 @@ int AddToNode(int current,int next,int last_tip,FILE *fp,double read_length) {
     k=0;
     while (strcmp(tname,taxname[k])!=0 && k<=ntaxa) k++;
     if (k>=ntaxa) {
-      printf("\n\t ERROR: Taxon name in gene tree (%s) does not match any name given in settings file.\n \t Exiting ...\n\n",tname);
+      printf("\n\t ERROR: Taxon name in gene tree (%s) does not match any name provided.\n \t Exiting ...\n\n",tname);
       exit(1);
     }
     toadd = k+1;
@@ -193,10 +191,6 @@ double ReadTree(FILE *fp) {
     }
   }
 
-//  while (ss!='[') ss=fgetc(fp);
-//  fscanf(fp,"%14f",&rate);
-//  ss=fgetc(fp);
-
   while (ss!='(') ss=fgetc(fp);
   last_ss = ss;
   ss = fgetc(fp);
@@ -231,7 +225,7 @@ double ReadTree(FILE *fp) {
 	  ss = CloseBack(last_open,curr_node,lastlast_ss,last_tip,fp,read_length);
 	  if (ss!=';' && filled_ind[last_open-(ntaxa+1)]==1) curr_node = FindParentI(curr_node);
 	  else curr_node = last_open;
-	 	  
+
 	}
 	
 	else {
@@ -249,7 +243,7 @@ double ReadTree(FILE *fp) {
 	  k=0;
 	  while (strcmp(tname,taxname[k])!=0 && k<=ntaxa) k++;
 	  if (k>=ntaxa) {
-	    printf("\n\t ERROR: Taxon name in gene tree (%s) does not match any name given in settings file.\n \t Exiting ...\n\n",tname);
+	    printf("\n\t ERROR: Taxon name in gene tree (%s) does not match any name provided.\n \t Exiting ...\n\n",tname);
 	    exit(1);
 	  }
 	  last_tip = k+1;
@@ -260,7 +254,7 @@ double ReadTree(FILE *fp) {
 	  parent = FindParentI(last_tip);
 	  if (parent != 0) ppLengthMat[parent][last_tip] = ppLengthMat[last_tip][parent] = read_length;
 	  ss = fgetc(fp);
-	  
+
 	}
 
       }
@@ -326,4 +320,5 @@ void CalcTimeVec(double total, double rate) {
   }
   //for (i=1; i<2*ntaxa+1; i++) printf("%d %1.20f\n",i,TimeVec_temp[i]); 
 }
+
 

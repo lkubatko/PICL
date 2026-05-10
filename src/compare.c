@@ -206,9 +206,9 @@ void print_PHYLIP() {
 
   printf("\n\n");
 
-   for (i=0; i<ntaxa; i++) {
+   for (i=0; i<nseq; i++) {
 
-     printf("%-10s",psname[i]);
+     printf("%-10.10s",psname[i]);
      printf(" ");
 
      for (j=0; j<num_unique; j++){
@@ -255,9 +255,9 @@ void remove_CONSTANT() {
      state = ppBase_unique[0][i];
      j = 0;
 
-     while (ppBase_unique[j][i] == state && j<ntaxa) j+=1; 
+     while (ppBase_unique[j][i] == state && j<nseq-1) j+=1;
 
-     if (j == ntaxa) site_counter[i] = 0;
+     if (j == nseq-1) site_counter[i] = 0;
      
      total_sites = total_sites + site_counter[i];
 	
@@ -268,6 +268,54 @@ void remove_CONSTANT() {
     printf("\n");*/
 
     printf("The total number of sites after removal is %d\n\n",total_sites);
+
+}
+
+
+void remove_CONSTANT_MSNP() {
+
+   int i, j, k, l, state, num_states;
+   int state_counter[4];
+   int total_sites = 0;
+   
+   // first remove constant sites
+   for (i=0; i<num_unique; i++) {
+
+     state = ppBase_unique[0][i];
+     j = 0;
+   
+     while (ppBase_unique[j][i] == state && j<nseq-1) j+=1;
+   
+     if (j == nseq-1) site_counter[i] = 0;
+     
+     //total_sites = total_sites + site_counter[i];
+     
+   }
+
+   // now remove sites with more than 2 bases
+   for (i=0; i<num_unique; i++) {
+  
+     for (l=0; l<4; l++) state_counter[l] = 0;
+
+     for (k=0; k<nseq; k++) {
+     	if (ppBase_unique[k][i] == 0) state_counter[0] = 1;
+	else if (ppBase_unique[k][i] == 1) state_counter[1] = 1;
+	else if (ppBase_unique[k][i] == 2) state_counter[2] = 1;
+	else if (ppBase_unique[k][i] == 3) state_counter[3] = 1;
+     }
+
+     num_states = state_counter[0]+state_counter[1]+state_counter[2]+state_counter[3];
+     if (num_states > 2) site_counter[i] = 0;
+     
+     total_sites = total_sites + site_counter[i];
+
+   }
+ 
+   /*printf("\n");  
+   for (i=0; i<num_unique; i++) printf("%d ",site_counter[i]);
+   printf("\n");*/  
+    
+   printf("The total number of sites after removal is %d\n\n",total_sites);
 
 }
 
@@ -313,4 +361,5 @@ void index_to_subset(unsigned long long index, int *a, int *b, int *c, int *d, i
     while (binomial(*d + 1, 4) <= index) (*d)++;
     // No need to subtract for the final element
 }
+
 

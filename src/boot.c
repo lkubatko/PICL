@@ -3,7 +3,7 @@
 /*************************************************************/
 
 
-void boot_times(int nrep){
+void boot_times(int nrep, const char *bootdata_file){
 
   int i, j, k, l, align_length;
   int nbatch, leftover;
@@ -34,7 +34,7 @@ void boot_times(int nrep){
   if (subsample==NULL)
    {
      printf("     Can't memalloc subsample.\n");
-   }
+   } 
 
   finput_freqs = (float*)malloc(199*sizeof(float));
   if (finput_freqs==NULL)

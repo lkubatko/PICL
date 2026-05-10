@@ -28,11 +28,11 @@
 // ntaxa = number of species
 // nseq = number of individuals
 int ntaxa, nspecies, nseq, nsite, nquarts, num_unique_quarts, num_unique, include_gaps, num_no_gaps, verbose, model, ncat, random_tree;
-int anneal, anneal_bl, user_bl, max_it, max_it_bl, seedj, seedk;
+int anneal, anneal_bl, user_bl, max_it, mult_iter, num_reject, max_it_bl, test_increment, seedj, seedk;
 int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
-double ci, max_cl;
-float theta, beta, mu, ratepar, invpar, curr_anneal_lik;
+double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
+float theta, beta, mu, ratepar, invpar;
 double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
 double smat[10][10],amat[12][12];
 FILE *out, *pt;
@@ -479,7 +479,7 @@ void unique_sites(){
 }
 
 
-int main() {
+int main(int argc, char *argv[]) {
 
   FILE *set, *tf, *data, *res;
   char keyword;
@@ -490,11 +490,41 @@ int main() {
   float temp_rate;
   double totaltime;
 
+  /* --- defaults --- */
+  const char *settings_file   = "settings";
+  const char *data_file       = "data.phy";
+  const char *tree_file       = "treefile.tre";
+  const char *out_file        = "outtree.tre";
+  const char *picltrees_file  = "picltrees.tre";
+  const char *results_file    = "results";
+  const char *bootdata_file   = "boots.dat";
+
+
+  /* --- override via argv --- */
+  if (argc > 1) settings_file = argv[1];
+  if (argc > 2) data_file     = argv[2];
+  if (argc >3) tree_file      = argv[3];
+  if (argc > 4) out_file      = argv[4];
+  if (argc > 5) picltrees_file= argv[5];
+  if (argc > 6) results_file  = argv[6];
+   if (argc > 7) bootdata_file = argv[7];
+
+  if(argc >1) {
+    printf("Using files:\n");
+    printf("  settings:    %s\n", settings_file);
+    printf("  data:        %s\n", data_file);
+    printf("  treefile:    %s\n", tree_file);
+    printf("  outtree:     %s\n", out_file);
+    printf("  picltrees:   %s\n", picltrees_file);
+    printf("  results:     %s\n\n", results_file);
+    printf("  bootdata:    %s\n\n", bootdata_file);
+ }
+
   // print opening message
   printf("\n\n----------------------------------------------------------------------------\n");
   printf("\t PICL: Phylogenetic Inference with Composite Likelihood \n");
-  printf("\t\t\t Very Beta Version  \n");
-  printf("\t\t\t      May 2025 \n");
+  printf("\t\t\t\t Beta Version  \n");
+  printf("\t\t\t         May 2026 \n");
   printf("----------------------------------------------------------------------------\n\n");
 
   // read from settings file
@@ -552,10 +582,30 @@ int main() {
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&anneal);
   printf("Tree_search: %d\n",anneal);
 
-  /* Num_iter */
+  /* Max_iter */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&max_it);
-  printf("Num_iter: %d\n",max_it);
+  printf("Max_iter: %d\n",max_it);
+ 
+  /* Mult_iter */                                                                    
+  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&mult_iter);
+  printf("Mult_iter: %d\n",mult_iter);
+  //mult_iter = 3;
 
+  /* prob_bound */
+  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%lf",&prob_bound);
+  printf("Prob_bound: %f\n",prob_bound);
+  //prob_bound = 0.05;
+
+  /* test_increment */
+  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&test_increment);
+  printf("Test_increment: %d\n",test_increment);
+  //test_increment = 250; 
+
+  /* b1opt */
+  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%lf",&b1opt);
+  printf("Target annealing slope: %f\n",b1opt);
+  //b1opt = -0.01;
+  
   /* Beta */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&beta);
   printf("Beta: %f\n",beta);
@@ -564,6 +614,7 @@ int main() {
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&verbose);
   printf("Verbose: %d\n\n",verbose);
 
+  if (b1opt>0) printf("The target annealing slope (b1opt) must be negative; adaptive annealing is disabled.\n\n");
 
   fscanf(set,"%d",&ntaxa);
   setall((long)seedj,(long)seedk); /* Set seeds for random number generator */
@@ -604,7 +655,7 @@ int main() {
   printf("\n");
 
   if (model==1) printf("Estimation will be carried out using the standard CIS/multilocus model (MSC-JC69)\n");
-  else if (model==2) printf("Estimation will be carried out using the CIS/multlilocus (MSC-JC69 + G model)\n");
+  else if (model==2) printf("Estimation will be carried out using the CIS/multlilocus rate variation model (MSC-JC69 + G)\n");
   else if (model==3) printf("Estimation will be carried out using the SNP model\n");
   else if (model==4) printf("Estimation will be carried out using the JC69 model for gene trees\n");
   else { printf("Model must be 1, 2, 3, or 4. Exiting.\n\n"); exit(1); }
@@ -632,6 +683,10 @@ int main() {
 		ppTwoRow[0][i] = ppTwoRow_temp[0][i];
 	 	ppTwoRow[1][i] = ppTwoRow_temp[1][i];
   	}
+	if (user_bl==0) { //do not use times from user tree; generate equally-spaced times
+		compute_times(ntaxa+1);
+		for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
+	}
   	for (i=0; i<2*ntaxa+1; i++) {
 		TimeVec[i] = theta*TimeVec_temp[i];
 		TimeVec_init[i] = theta*TimeVec_temp[i];
@@ -674,6 +729,7 @@ int main() {
 	printf("Random_tree must be either 0 or 1. Exiting.\n\n");
 	exit(1);
    }
+   fflush(0);
 
   // make the IND matrix that will be used for composite likelihood computation
   make_indmat();
@@ -709,7 +765,6 @@ int main() {
   if (anneal==0) {
 	if (anneal_bl==0) { printf("Analysis complete -- exiting.\n\n"); exit(1); }
 	else if (anneal_bl==1) { // uphill bl search
-		if (user_bl == 0) assign_times(); //use equally-spaced starting times
 		if (model == 1) bl_uphill_full();
         	else if (model == 2) {
                 	bl_uphill_ratevar();                                                                                               
@@ -721,7 +776,6 @@ int main() {
 
 	}
 	else if (anneal_bl==2) { // simulated annealing bl search
-		if (user_bl == 0) assign_times(); //use equally-spaced starting times
 		if (model == 1) bl_anneal_full();
         	else if (model == 2) {
                 	bl_anneal_ratevar();
@@ -797,7 +851,7 @@ int main() {
 
 	// now start annealing
 	if (model == 1) {
-		bl_uphill_full();
+		//bl_uphill_full();
 		anneal_full();
 		if (anneal_bl==1) bl_uphill_full();
 		else if (anneal_bl==2) bl_anneal_full();
@@ -821,7 +875,7 @@ int main() {
 		else if (anneal_bl==2) bl_anneal_genetree();
 	}
 
-	printf(" done\n\n");
+	//printf(" done\n\n");
 	if (verbose==1) {
 		printf("After search, tree is \n");
   		for (i=0; i<ntaxa-1; i++) {
@@ -920,7 +974,7 @@ int main() {
   /* bootstrapping */
   if(nboot>0) {
 	if (anneal_bl == 0) { printf("Please set Opt_bl = 1 to carry out bootstrapping -- exiting.\n\n"); exit(1); }
-	else boot_times(nboot);
+	else boot_times(nboot,bootdata_file);
   }
 
   printf("\n\nAnalysis complete - exiting.\n\n");

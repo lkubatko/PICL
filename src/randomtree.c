@@ -57,6 +57,7 @@ void build_random_tree(int seed1, int seed2) {
   int new_counter;
   int count_genarray=0, count_gen=0, count_gen2=0;
   int max_gen=0;
+  int num_times_assigned;
   double tmax=1.0;
   double *RandomTimes;
   double scale;
@@ -66,9 +67,10 @@ void build_random_tree(int seed1, int seed2) {
   eLength = (2*ntaxa+1)*sizeof(double);
   eeLength = (2*ntaxa+1)*sizeof(double);
   fLength = (ntaxa-2)*sizeof(double);
-  ffLength = (ntaxa-2)*sizeof(int);
+  ffLength = (2*ntaxa+1)*sizeof(int);
   iLenseq = (ntaxa)*sizeof(int);
-  
+
+  // keep track of which times have been assigned
   TimesAssigned = (int*)malloc(ffLength);
   if (TimesAssigned==NULL) printf("Can't memalloc TimesAssigned\n");
   
@@ -86,7 +88,7 @@ void build_random_tree(int seed1, int seed2) {
   
   /* done memory allocation */
 
-  scale = ((int)ntaxa/2)*theta;
+  scale = ((int)ntaxa)*theta;
 
   curr_length=ntaxa;
   new_counter=ntaxa+2;
@@ -161,73 +163,26 @@ void build_random_tree(int seed1, int seed2) {
   ppTwoRow[0][0]=ppNodes[0][0];
   ppTwoRow[1][0]=ppNodes[0][1];
 
-  
-  /*  equally space times throughout the tree  */
-
-  for (i=0; i<ntaxa;i++) {
-
-    genarray[i] = find_genr(i+1);
-    if (genarray[i]>max_gen) {
-
-      parent=i;
-      max_gen = genarray[i];
-
-    }
-
-  }
-
-  parent = parent + 1;
-  parent2 = parent;
-
-  while (count_genarray<ntaxa) {
-    
-    while (parent!=ntaxa+1) {
-      
-      if (TimeVec[parent]!=0.0) break;
-      parent = find_parentr(parent);
-      count_gen++;
-
-    }
-    
-    if (parent==ntaxa+1) tmax=1.0;
-    else tmax=1.0-TimeVec[parent];
-    
-    parent = find_parentr(parent2);
-    count_gen2 = 1;
-    
-    while (TimeVec[parent]==0.0 && parent!=ntaxa+1) {
-      
-      if (TimeVec[parent]==0.0) TimeVec[parent] = scale*(count_gen2*(tmax/((double)count_gen)));
-      count_gen2++;
-      parent = find_parentr(parent);
-      
-    }
-    
-    count_gen = 0;
-    count_genarray++;
-    genarray[parent2-1]=0;
-
-    /* find_max_gen */
-
-    max_geni = 0;
-    place_max = 0;
-    for (i=0; i<ntaxa;i++) {
-
-      if (genarray[i]>max_geni) {
-
-	max_geni = genarray[i];
-	place_max=i;
+  // assign times to internal nodes
+  num_times_assigned = 0;
+  for (i=ntaxa+1; i<2*ntaxa; i++) TimesAssigned[i] = 0;
+  for (i=0; i<ntaxa+1; i++) TimesAssigned[i] = 1;
 	
-      }
-      
-    }
+  while (num_times_assigned < ntaxa-2) {
 
-    /* end find_max_gen */
-    
-    parent = place_max + 1;
-    parent2 = parent;
-    
+	for (i=0; i<ntaxa-1; i++) {
+
+		if (TimesAssigned[ppTwoRow[0][i]]==1 && TimesAssigned[ppTwoRow[1][i]]==1 && TimesAssigned[i+ntaxa+1]==0) {
+
+			TimeVec[i+ntaxa+1] = scale*(num_times_assigned+1)/ntaxa;
+			TimesAssigned[i+ntaxa+1] = 1;
+			num_times_assigned++;
+
+	  	}
+ 	}
+
   }
+ 
   TimeVec[ntaxa+1] = scale;
   
 }
@@ -235,96 +190,29 @@ void build_random_tree(int seed1, int seed2) {
 
 
 
-void assign_times() {
+/* The following code was developed using ChatGPT on Jan 24, 2026 */
 
-  int i, j;
-  int count = 0;
-  int max_geni = 0, place_max = 0;
-  int *genarray;
-  int eeLength;
-  int parent, parent2;
-  int count_genarray=0, count_gen=0, count_gen2=0;
-  int max_gen=0;
-  double tmax=1.0;
-  double scale;
+double compute_times(int node){
 
-  /* allocate memory */
-  
-  eeLength = (2*ntaxa+1)*sizeof(double);
-  
-  genarray = (int*)malloc(eeLength);
-  if (genarray==NULL) printf("Can't memalloc genarray\n");
-  
-  /* done memory allocation */
+   int c1, c2;
+   double t1, t2, t;
+   double scale;
 
-  scale = ((int)ntaxa/2)*theta;
+   scale = ((int)ntaxa/2)*theta;
 
-  /*  equally space times throughout the tree  */
+   if (node <= ntaxa) {
+	TimeVec[node] = 0.0;
+	return 0.0;
+   }
+ 
+   c1 = ppTwoRow[0][node-(ntaxa+1)];
+   c2 = ppTwoRow[1][node-(ntaxa+1)];
+   t1 = compute_times(c1);
+   t2 = compute_times(c2);
 
-  for (i=0; i<ntaxa;i++) {
+   t = 0.5 * (1.0 + (t1 > t2 ? t1 : t2));
+   TimeVec[node] = scale*t;
 
-    genarray[i] = find_genr(i+1);
-    if (genarray[i]>max_gen) {
-
-      parent=i;
-      max_gen = genarray[i];
-
-    }
-
-  }
-
-  parent = parent + 1;
-  parent2 = parent;
-
-  while (count_genarray<ntaxa) {
-    
-    while (parent!=ntaxa+1) {
-      
-      if (TimeVec[parent]!=0.0) break;
-      parent = find_parentr(parent);
-      count_gen++;
-
-    }
-    
-    if (parent==ntaxa+1) tmax=1.0;
-    else tmax=1.0-TimeVec[parent];
-    
-    parent = find_parentr(parent2);
-    count_gen2 = 1;
-    
-    while (TimeVec[parent]==0.0 && parent!=ntaxa+1) {
-      
-      if (TimeVec[parent]==0.0) TimeVec[parent] = scale*(count_gen2*(tmax/((double)count_gen)));
-      count_gen2++;
-      parent = find_parentr(parent);
-      
-    }
-    
-    count_gen = 0;
-    count_genarray++;
-    genarray[parent2-1]=0;
-
-    /* find_max_gen */
-
-    max_geni = 0;
-    place_max = 0;
-    for (i=0; i<ntaxa;i++) {
-
-      if (genarray[i]>max_geni) {
-
-        max_geni = genarray[i];
-        place_max=i;
-        
-      }
-      
-    }
-
-    /* end find_max_gen */
-    
-    parent = place_max + 1;
-    parent2 = parent;
-    
-  }
-  TimeVec[ntaxa+1] = scale;
-
+  return t;
+	
 }

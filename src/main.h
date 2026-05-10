@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <memory.h>
 #include <assert.h>
 
@@ -11,14 +12,14 @@
 #define FTOL 0.00001
 
 extern int ntaxa, nspecies, nseq, nsite, nquarts, num_unique_quarts, num_unique, include_gaps, num_no_gaps, verbose, model, ncat, random_tree;
-extern int anneal, anneal_bl, user_bl, max_it, max_it_bl, seedj, seedk;
+extern int anneal, anneal_bl, user_bl, max_it, mult_iter, num_reject, max_it_bl, test_increment, seedj, seedk;
 
-extern double ci, max_cl;
-extern float theta, beta, mu, ratepar, invpar, curr_anneal_lik;
+extern double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
+extern float theta, beta, mu, ratepar, invpar;
 
 extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 extern int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
-extern int max_it;
+
 extern double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *rvals, *TimeVecQuart, **ppLengthMat, **ppMatrix;
 extern double smat[10][10],amat[12][12];
 
@@ -29,7 +30,6 @@ typedef char naym[12];
 struct Node {
   char *iTree;
   int first_hit;
-  int first_anneal;
   double max_lik;
   int times_hit;
   int loc_ppTR;
@@ -64,7 +64,7 @@ void unique_sites();
 int find_parentr(int target);
 int find_genr(int current_node);
 void build_random_tree(int seed1, int seed2);
-void assign_times();
+double compute_times(int node);
 
 /* in tree.c */
 int FindParentI(int target);
@@ -146,20 +146,24 @@ void bl_anneal_genetree();
 void bl_uphill_genetree();
 
 /* in boot.c */
-void boot_times(int nrep);
+void boot_times(int nrep, const char *bootdata_file);
 
 /* in opt.c */
 void OptAlpha();
 
 /* in trbldg.c */
 void trbldg();
+void RootUpdate();
+void RescaleTree();
 
 /* in trbldg_ratevar.c */
 void trbldg_ratevar();
+void RescaleTree_ratevar(); 
 
 /* in trbldg_msnp.c */
 void trbldg_msnp();
+void RescaleTree_msnp();
 
 /* in trbldg_genetree.c */
 void trbldg_genetree();   
-
+void RescaleTree_genetree();
