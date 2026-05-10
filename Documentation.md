@@ -40,6 +40,9 @@ Seed2: 67890 <br>
 Num_cat: 4 <br>
 Tree_search: 0<br>
 Num_iter: 10000 <br>
+Prob_bound: 0.05 <br>
+Test_incr: 250 <br>
+Opt_slope: -0.01 <br>
 Beta: 0.005 <br>
 Verbose: 1 <br>
 Nspecies <br>
@@ -109,6 +112,15 @@ In the settings file, each keyword (i.e., the words followed by a colon) should 
 </ul>
 <br>
 <li> Num_iter: number of iterations for the tree search (both methods)
+<br>
+
+<li> Prob_bound: probability that a node has NOT been selected for rearrangement; this is used to specify a stopping rule in the annealing tree search and should be set to some small number (recommended is 0.05); this value is ignored unless Tree_search = 2
+<br>
+
+<li> Test_incr: specifies the frequency with which the cooling schedule  is updated in the adaptive annealing procedure; this value is ignored unless Tree_search = 2
+<br>
+
+<li> Opt_slope: specifies the target for adaptive annealing; this value should be set to -0.01 and should generally not be modified by users; this value is ignored unless Tree_search = 2
 <br>
 
 <li> Beta: parameter to control the cooling rate in the simulated annealing search (ignored if Tree_search = 0)
