@@ -13,7 +13,7 @@ void boot_times(int nrep, const char *bootdata_file){
   float *finput_freqs, *flinput_freqs;
   FILE *boot;
 	
-  boot = fopen("boot.dat","w");
+  boot = fopen("bootdata_file","w");
   printf("Beginning bootstrapping ....\n");
 
   /*******************/

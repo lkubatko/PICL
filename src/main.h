@@ -25,7 +25,7 @@ extern double smat[10][10],amat[12][12];
 
 extern FILE *out, *pt;
 
-typedef char naym[12];
+typedef char naym[16000];
 
 struct Node {
   char *iTree;

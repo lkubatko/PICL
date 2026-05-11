@@ -528,7 +528,7 @@ int main(int argc, char *argv[]) {
   printf("----------------------------------------------------------------------------\n\n");
 
   // read from settings file
-  set = fopen("settings","r");
+  set = fopen("settings_file","r");
   
   /* Model */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&model);
@@ -620,7 +620,7 @@ int main(int argc, char *argv[]) {
   setall((long)seedj,(long)seedk); /* Set seeds for random number generator */
   nquarts = binomial(ntaxa,4);
   printf("There are %d total species. This corresponds to %d species-level quartets.\n",ntaxa,nquarts);
-  data = fopen("data.phy","r");
+  data = fopen("data_file","r");
   fscanf(data,"%d %d\n",&nseq,&nsite);
   ntquarts = binomial(nseq,4);
   printf("There are %d total sequences. This corresponds to %d sequence-level quartets.\n\n",nseq,ntquarts);
@@ -671,7 +671,7 @@ int main(int argc, char *argv[]) {
   // set a tree
   if (random_tree==0) { // read in user species tree
   	for (i=0; i<2*ntaxa; i++) TimeVec[i] = 0.0;
-  	tf = fopen("treefile.tre","r");
+  	tf = fopen("tree_file","r");
 	if (tf==NULL) { printf("File treefile.tre not found. Exiting.\n\n"); exit(1);}
   	temp_rate = ReadTree(tf);
   	totaltime = FindTotalTime();
@@ -814,7 +814,7 @@ int main(int argc, char *argv[]) {
                 }
         }
 
-        out = fopen("outtree.tre","w");
+        out = fopen("out_file","w");
         fprintf(out,"Current tree in mutation units: \n");
         write_species_tree_out(ntaxa+1,ntaxa+1);
 	fprintf(out,";\n\n");
@@ -898,7 +898,7 @@ int main(int argc, char *argv[]) {
         	}
   	}
 
-       	out = fopen("outtree.tre","w");
+       	out = fopen("out_file","w");
   	fprintf(out,"Current tree in mutation units: \n");
   	write_species_tree_out(ntaxa+1,ntaxa+1);
 	fprintf(out,";\n\n");
@@ -956,7 +956,7 @@ int main(int argc, char *argv[]) {
 
   /* print branch lengths to file */
   if (verbose==1) {
-  	res = fopen("results","w");
+  	res = fopen("results_file","w");
   	for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]/theta);
   	fprintf(res,"%f \n",ratepar);
   	fclose(res);
@@ -964,7 +964,7 @@ int main(int argc, char *argv[]) {
   /* done print branch lengths to file */
 
   /* print only Newick string to file */
-	pt = fopen("picltrees.tre","a");
+	pt = fopen("picltrees_file","a");
 	write_species_tree_out_file(ntaxa+1,ntaxa+1);
 	fprintf(pt,";\n");
 	fclose(pt);
