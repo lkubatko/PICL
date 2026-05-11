@@ -634,7 +634,7 @@ void bl_uphill_full() {
 
                 prop_lik = complik;
 
-                if (curr_lik > prop_lik) {printf("not acceted\n"); TimeVec[rnode+(ntaxa+1)]  = curr_time;}
+                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
                 else curr_lik = prop_lik;
 
         }
