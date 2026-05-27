@@ -204,6 +204,39 @@ void sort4(int arr[]) {
 }
 
 
+
+// Returns weights for a base code (0-3 = unambiguous, 4+ = ambiguous)
+// Code below modified from Claude, 5/16/26
+
+BaseWeights get_base_weights(int base_code) {
+    BaseWeights bw = {{0.0, 0.0, 0.0, 0.0}};
+    switch (base_code) {
+        // Unambiguous
+        case 0: bw.weight[0] = 1.0; break;  // A
+        case 1: bw.weight[1] = 1.0; break;  // C
+        case 2: bw.weight[2] = 1.0; break;  // G
+        case 3: bw.weight[3] = 1.0; break;  // T
+        // 2-fold ambiguities
+        case 6:  bw.weight[0]=bw.weight[2]=0.5; break;  // R = A/G
+        case 9:  bw.weight[1]=bw.weight[3]=0.5; break;  // Y = C/T
+        case 5:  bw.weight[0]=bw.weight[1]=0.5; break;  // M = A/C
+        case 10:  bw.weight[2]=bw.weight[3]=0.5; break; // K = G/T
+        case 7:  bw.weight[0]=bw.weight[3]=0.5; break;  // W = A/T
+        case 8:  bw.weight[1]=bw.weight[2]=0.5; break;  // S = C/G
+        // 3-fold ambiguities
+        case 14: bw.weight[0]=bw.weight[1]=bw.weight[2]=1.0/3.0; break;  // V = A/C/G
+        case 13: bw.weight[0]=bw.weight[1]=bw.weight[3]=1.0/3.0; break;  // H = A/C/T
+        case 12: bw.weight[0]=bw.weight[2]=bw.weight[3]=1.0/3.0; break;  // D = A/G/T
+        case 11: bw.weight[1]=bw.weight[2]=bw.weight[3]=1.0/3.0; break;  // B = C/G/T
+        // 4-fold ambiguity
+        case 15: bw.weight[0]=bw.weight[1]=bw.weight[2]=bw.weight[3]=0.25; break;  // N
+        default: break;  // gap or unknown: zero weight (site skipped) - this includes case=4
+    }
+    return bw;
+}
+
+
+
 /***  Function to search through ppTwoRow to find parent ***/
 /***  of a specified node.                               ***/
 
@@ -528,13 +561,13 @@ void AllMyChildrenQuartet(int mynode) {
 /*** their site pattern counts; uses current values  ***/
 /*** of ppTwoRowQuart and TimeVecQuart               ***/
 
-void FindDupQuarts(int is_symm, int spcounts[15]) {
+void FindDupQuarts(int is_symm, double spcounts[15]) {
 
   int i, j, k, l, m;
   int mrca, mrca3, parent1, parent2, leftnode, sideind;
-  int dupspcounts[15];
   int mytaxarr[4];
-
+  double dupspcounts[15];
+ 
   /* set ppNodeChildrenLeftQuart and ppNodeChildrenRightQuart to 0 */
   for (i=0; i<ntaxa+1; i++) {
 	ppNodeChildrenLeftQuart[0][i] = 0;
@@ -544,7 +577,7 @@ void FindDupQuarts(int is_symm, int spcounts[15]) {
 	ppNodeChildrenRightQuart[2][i] = 0;
   }
   /* initialize spcounts */
-  for (i=0; i<15; i++) { spcounts[i] = 0; dupspcounts[i] = 0;}
+  for (i=0; i<15; i++) { spcounts[i] = 0.0; dupspcounts[i] = 0.0;}
 
   
   if (is_symm==2) mrca = FindMRCA(ppTwoRowQuart[0][ntaxa+2],ppTwoRowQuart[0][ntaxa+3]);
@@ -598,7 +631,7 @@ void FindDupQuarts(int is_symm, int spcounts[15]) {
           }
 	}
         //printf("The overall counts are:\n");
-	//for (m=0; m<15; m++) printf("%d ",dupspcounts[m]);
+	//for (m=0; m<15; m++) printf("%f ",dupspcounts[m]);
 	//printf("\n");
   }
 
@@ -670,7 +703,7 @@ void FindDupQuarts(int is_symm, int spcounts[15]) {
           }
         }
         //printf("The overall counts are:\n");
-        //for (m=0; m<15; m++) printf("%d ",dupspcounts[m]);
+        //for (m=0; m<15; m++) printf("%f ",dupspcounts[m]);
         //printf("\n");
 
   }
@@ -894,96 +927,121 @@ int GetQuartetTree(int tax1, int tax2, int tax3, int tax4, int OrderedVec[5]) {
 /*** Function to count site patterns for a specified quartet ***/
 /*** adding over all of its lineages.  Counts are returned   ***/
 /*** in a 15-dimensional vector called pvec.                 ***/
-/*** Note that if include-gaps = 0, only - are excluded.     ***/
-/*** ? still appear in ppBase_unique. The code below removes ***/
-/*** sites with ? or any other ambiguity codes before        ***/
-/*** counting site patterns.                                 ***/
+/*** Ambiguity codes are accommodated by splitting counts    ***/
+/*** over site patterns. If include_gaps = 0, sites with     ***/
+/*** gaps in at least one taxa are excluded. If = 1, sites   ***/
+/*** for which a particular quartet has no gap are included. ***/
 
-void CountQuartetSitePatterns(int tax1, int tax2, int tax3, int tax4, int pvec[15]) {
+void CountQuartetSitePatterns(int tax1, int tax2, int tax3, int tax4, double pvec[15]) {
 
-    int count_array[16][16], p[15];
-    int i, j, k, l, count_noambigs=0, sumps=0, datasum=0;
+    int i, j, k, l;
     int i2, j2, k2, l2;
     int ltax1, ltax2, ltax3, ltax4;
+    double count_array[16][16], p[15];
+    double count_sites=0.0, sumps=0.0, datasum=0.0;
+    double site_total=0.0;
 
     //printf("Ordered taxa are %d %d %d %d\n",tax1,tax2,tax3,tax4);
 
-    for (i=0; i<15; i++) pvec[i]=0; 
-
+    for (i=0; i<15; i++) pvec[i]=0.0; 
+  
     for (i2=0; i2<seq_counter[tax1-1]; i2++) {
     	for (j2=0; j2<seq_counter[tax2-1]; j2++) {
             for (k2=0; k2<seq_counter[tax3-1]; k2++) {
                 for (l2=0; l2<seq_counter[tax4-1]; l2++) {
 
-			count_noambigs = 0;
-			for (i=0; i<15; i++) p[i]=0; 
-			for (i=0; i<16; i++) for (j=0; j<16; j++) count_array[i][j]=0;
+			count_sites = 0.0;
+			for (i=0; i<15; i++) p[i]=0.0; 
+			for (i=0; i<16; i++) for (j=0; j<16; j++) count_array[i][j]=0.0;
 
 			//if (verbose==1) printf("Sequences are %d %d %d %d\n, ",ppSp_assign[tax1-1][i2],ppSp_assign[tax2-1][j2],ppSp_assign[tax3-1][k2],ppSp_assign[tax4-1][l2]);
 
-    			for (i=0; i<num_unique; i++) {
-      			if (ppBase_unique[ppSp_assign[tax1-1][i2]][i]<4 && ppBase_unique[ppSp_assign[tax2-1][j2]][i]<4 && ppBase_unique[ppSp_assign[tax3-1][k2]][i]<4 && ppBase_unique[ppSp_assign[tax4-1][l2]][i]<4) {        
-            			count_noambigs+=site_counter[i];
-            			count_array[ppBase_unique[ppSp_assign[tax1-1][i2]][i]*4+ppBase_unique[ppSp_assign[tax2-1][j2]][i]][ppBase_unique[ppSp_assign[tax3-1][k2]][i]*4+ppBase_unique[ppSp_assign[tax4-1][l2]][i]] += site_counter[i];
-			      	}
+		   for (i=0; i<num_unique; i++) {
+
+			int b1 = ppBase_unique[ppSp_assign[tax1-1][i2]][i];
+    			int b2 = ppBase_unique[ppSp_assign[tax2-1][j2]][i];
+    			int b3 = ppBase_unique[ppSp_assign[tax3-1][k2]][i];
+    			int b4 = ppBase_unique[ppSp_assign[tax4-1][l2]][i];
+
+			// Fast path: no ambiguity codes
+    			if (b1 < 4 && b2 < 4 && b3 < 4 && b4 < 4) {
+        			count_sites += site_counter[i];
+				p[pattern_index[b1*4 + b2][b3*4 + b4]] += site_counter[i];
+        			continue;
     			}
 
-    			//printf(" count_noambigs is %d, ",count_noambigs);
+    			// Skip sites where any base is a gap/unknown (weight sums to 0)
+    			// You can define a max valid code, e.g. 14 for N
+    			if (b1 > 14 || b2 > 14 || b3 > 14 || b4 > 14) continue;
+
+			// Slow path: ambiguity codes
+			//BaseWeights w1 = get_base_weights(b1);
+                        //BaseWeights w2 = get_base_weights(b2);
+                        //BaseWeights w3 = get_base_weights(b3);
+                        //BaseWeights w4 = get_base_weights(b4);
+			double *w1 = base_weight_table[b1];
+    			double *w2 = base_weight_table[b2];
+    			double *w3 = base_weight_table[b3];
+    			double *w4 = base_weight_table[b4];
+
+			double w12[16], w34[16];
+    			for (int a = 0; a < 4; a++)
+        		  for (int b = 0; b < 4; b++)
+            		    w12[a*4+b] = w1[a] * w2[b];
+    			for (int c = 0; c < 4; c++)
+        		  for (int d = 0; d < 4; d++)
+            		    w34[c*4+d] = w3[c] * w4[d];
+
+    			count_sites += site_counter[i];
+    			double sc = (double)site_counter[i];
+			for (int row = 0; row < 16; row++) {
+    			 if (w12[row] == 0.0) continue;
+    			  double contrib = sc * w12[row];
+    			  for (int col = 0; col < 16; col++) {
+			   p[pattern_index[row][col]] += contrib * w34[col];
+    			  }
+			 }
+
+			}
+
+    			//printf(" \n\n\t\tcount_sites is %f, ",count_sites);
     			// order is: 0 = xxxx; 1 = xxxy; 2 = xxyx; 3 = xyxx; 4 = yxxx
     			// 5 = xyxy; 6 = yxxy; 7 = xxyy; 8 = xyxz; 9 = xyzx; 10 = yxxz
     			// 11 = yxzx; 12 = xxyz; 13 = yzxx; 14 = xyzw
 
-    			p[0] = count_array[0][0] + count_array[5][5] + count_array[10][10] + count_array[15][15];
-    			p[1] = count_array[0][1] + count_array[0][2] + count_array[0][3] + count_array[5][4] + count_array[5][6] + count_array[5][7] + count_array[10][8] + count_array[10][9] + count_array[10][11] + count_array[15][12] + count_array[15][13] + count_array[15][14];
-    			p[2] = count_array[0][4] + count_array[0][8] + count_array[0][12] + count_array[5][1] + count_array[5][9] + count_array[5][13] + count_array[10][2] + count_array[10][6] + count_array[10][14] + count_array[15][3] + count_array[15][7] + count_array[15][11];
-    			p[7] = count_array[0][5] + count_array[0][10] + count_array[0][15] + count_array[5][0] + count_array[5][10] + count_array[5][15] + count_array[10][0] + count_array[10][5] + count_array[10][15] + count_array[15][0] + count_array[15][5] + count_array[15][10];
-    			p[12] = count_array[0][6] + count_array[0][7] + count_array[0][9] + count_array[0][11] + count_array[0][13] + count_array[0][14]
-    			+ count_array[5][2] + count_array[5][3] + count_array[5][8] + count_array[5][11] + count_array[5][12] + count_array[5][14]
-    			+ count_array[10][1] + count_array[10][3] + count_array[10][4] + count_array[10][7] + count_array[10][12] + count_array[10][13]
-    			+ count_array[15][1] + count_array[15][2] + count_array[15][4] + count_array[15][6] + count_array[15][8] + count_array[15][9];
-    			p[3] = count_array[1][0] + count_array[2][0] + count_array[3][0] + count_array[4][5] + count_array[6][5] + count_array[7][5] + count_array[8][10] + count_array[9][10] + count_array[11][10] + count_array[12][15] + count_array[13][15] + count_array[14][15];
-    			p[5] = count_array[1][1] + count_array[2][2] + count_array[3][3] + count_array[4][4] + count_array[6][6] + count_array[7][7] + count_array[8][8] + count_array[9][9] + count_array[11][11] + count_array[12][12] + count_array[13][13] + count_array[14][14];
-    			p[8] = count_array[1][2] + count_array[1][3] + count_array[2][1] + count_array[2][3] + count_array[3][1] + count_array[3][2] + count_array[4][6] + count_array[4][7] + count_array[6][4] + count_array[6][7] + count_array[7][4] + count_array[7][6] + count_array[8][9] + count_array[8][11] + count_array[9][8] + count_array[9][11] + count_array[11][8] + count_array[11][9] + count_array[12][13] + count_array[12][14] + count_array[13][12] + count_array[13][14] + count_array[14][12] + count_array[14][13];
-    			p[6] = count_array[1][4] + count_array[2][8] + count_array[3][12] + count_array[4][1] + count_array[6][9] + count_array[7][13] + count_array[8][2] + count_array[9][6] + count_array[11][14] + count_array[12][3] + count_array[13][7] + count_array[14][11];
-    			p[4] = count_array[4][0] + count_array[8][0] + count_array[12][0] + count_array[1][5] + count_array[9][5] + count_array[13][5] + count_array[2][10] + count_array[6][10] + count_array[14][10] + count_array[3][15] + count_array[7][15] + count_array[11][15];
-    			p[10] = count_array[1][6] + count_array[1][7] + count_array[2][9] + count_array[2][11] + count_array[3][13] + count_array[3][14] + count_array[4][2] + count_array[4][3] + count_array[6][8] + count_array[6][11] + count_array[7][12] + count_array[7][14] + count_array[8][1] + count_array[8][3] + count_array[9][4] + count_array[9][7] + count_array[11][12] + count_array[11][13] + count_array[12][1] + count_array[12][2] + count_array[13][4] + count_array[13][6] + count_array[14][8] + count_array[14][9];
-    			p[9] = count_array[8][6] + count_array[12][7] + count_array[4][9] + count_array[12][11] + count_array[4][13] + count_array[8][14] + count_array[9][2] + count_array[13][3] + count_array[1][8] + count_array[13][11] + count_array[1][12] + count_array[9][14] + count_array[6][1] + count_array[14][3] + count_array[2][4] + count_array[14][7] + count_array[2][12] + count_array[6][13] + count_array[7][1] + count_array[11][2] + count_array[3][4] + count_array[11][6] + count_array[3][8] + count_array[7][9];
-    			p[11] = count_array[4][8] + count_array[4][12] + count_array[8][4] + count_array[8][12] + count_array[12][4] + count_array[12][8] + count_array[1][9] + count_array[1][13] + count_array[9][1] + count_array[9][13] + count_array[13][1] + count_array[13][9] + count_array[2][6] + count_array[2][14] + count_array[6][2] + count_array[6][14] + count_array[14][2] + count_array[14][6] + count_array[3][7] + count_array[3][11] + count_array[7][3] + count_array[7][11] + count_array[11][3] + count_array[11][7];
-    			p[13] = count_array[6][0] + count_array[7][0] + count_array[9][0] + count_array[11][0] + count_array[13][0] + count_array[14][0] + count_array[2][5] + count_array[3][5] + count_array[8][5] + count_array[11][5] + count_array[12][5] + count_array[14][5] + count_array[1][10] + count_array[3][10] + count_array[4][10] + count_array[7][10] + count_array[12][10] + count_array[13][10] + count_array[1][15] + count_array[2][15] + count_array[4][15] + count_array[6][15] + count_array[8][15] + count_array[9][15];
-    			p[14] = count_array[1][11] + count_array[1][14] + count_array[2][7] + count_array[2][13] + count_array[3][6] + count_array[3][9] + count_array[4][11] + count_array[4][14] + count_array[6][3] + count_array[6][12] + count_array[7][2] + count_array[7][8] + count_array[8][7] + count_array[8][13] + count_array[9][3] + count_array[9][12] + count_array[11][1] + count_array[11][4] + count_array[12][6] + count_array[12][9] + count_array[13][2] + count_array[13][8] + count_array[14][1] + count_array[14][4];
-
-    			sumps = 0;
+    			sumps = 0.0;
     			for (i=0; i<15; i++) sumps += p[i];
-			//printf(" sumps is %d, ",sumps);
-    			if (fabs((1.0/count_noambigs)*sumps - 1.0) > 0.005) {
+			//printf(" sumps is %f, ",sumps);
+    			if (fabs((1.0/count_sites)*sumps - 1.0) > 0.005) {
         			printf("There was a problem counting site patterns ... exiting.");
         			exit(1);
     			}
 
     			/*if (verbose==1) { 
-				printf("Site pattern counts are: ");
-    				for (i=0; i<15; i++) printf("%d ",p[i]);
+				printf("\tSite pattern counts are: ");
+    				for (i=0; i<15; i++) printf("%f ",p[i]);
     				printf("\n"); 
 			}*/
+			
 
 			for (i=0; i<15; i++) pvec[i] = pvec[i] + p[i]; 
     
-			datasum = datasum + count_noambigs;
-			//printf("\tcount_noambigs is %d, datasum is %d\n",count_noambigs,datasum);
+			datasum = datasum + count_sites;
+			//printf("\tcount_sites is %f, datasum is %f\n",count_sites,datasum);
  
-			}
 		    }
 		}
+	     }
 	}
 
 	/*if (verbose==1) {
-		printf("The overall site pattern counts are: ");
-		for (i=0; i<15; i++) printf("%d ",pvec[i]);
+		printf("\n\n The overall site pattern counts are: ");
+		for (i=0; i<15; i++) printf("%f ",pvec[i]);
 		printf("\n");
 	}*/
-	sumps = 0;
+	sumps = 0.0;
         for (i=0; i<15; i++) sumps += pvec[i];
-	//if (verbose==1) printf("The total number of site pattern is %d\n",sumps);
+	//if (verbose==1) printf("The total number of site patterns is %f, datasum is %f\n",sumps,datasum);
         if (fabs((1.0/datasum)*sumps - 1.0) > 0.005) {
             printf("There was a problem counting overall site patterns ... exiting.");                                                        
             exit(1);
@@ -1106,7 +1164,8 @@ double AsymmetricQuartetLikelihood(int nn){
 double GetCompLik() {
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;
@@ -1306,7 +1365,8 @@ double AsymmetricQuartetLikelihood_msnp(int nn){
 double GetCompLik_msnp() {
 
   int i, j, k, l, m=0;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;
@@ -1538,7 +1598,8 @@ double AsymmetricQuartetLikelihood_ratevar(int nn){
 double GetCompLik_ratevar() {
    
   int i, j, k, l, m=0;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   GetRateParams();

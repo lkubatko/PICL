@@ -120,7 +120,8 @@ double QuartetLikelihood_genetree(int nn){
 double GetCompLik_genetree() {
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;

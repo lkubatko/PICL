@@ -102,9 +102,9 @@ void trbldg_ratevar() {
 
   	/* Propose a new value of the rate parameter */
   	alpha = ratepar;
-  	new_alpha = (double)ratepar*gengam((float)10.0,(float)10.0);
-  	ratepar = new_alpha;
-  	GetRateParams();
+  	//new_alpha = (double)ratepar*gengam((float)10.0,(float)10.0);
+  	//ratepar = new_alpha;
+  	//GetRateParams();
 
   	/* Compute CL of new time and make decision */
   	prop_lik = GetCompLik_ratevar();
@@ -199,15 +199,14 @@ void RescaleTree_ratevar() {
 
   int i, j, ntries=5;
   float multiplier;
-  double prop_lik;
+  double prop_lik, alpha, new_alpha;
 
   for (i=0; i<ntries; i++) {
 
+	/* rescale the tree */
         multiplier = gennor(1.0,0.01);
-        //printf("multiplier is %f\n",multiplier);
         for (j=0; j<2*ntaxa+1; j++) TimeVec[j] = multiplier*TimeVec[j];
         prop_lik = GetCompLik_ratevar();
-        //printf("curr lik is %f, prop lik is %f\n",curr_anneal_lik,prop_lik);
 
         if (curr_anneal_lik > prop_lik) for (j=0; j<2*ntaxa+1; j++) TimeVec[j] = TimeVec_temp[j];
         else {

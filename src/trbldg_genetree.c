@@ -194,11 +194,9 @@ void RescaleTree_genetree() {
   for (i=0; i<ntries; i++) {
 
         multiplier = gennor(1.0,0.01);
-        printf("multiplier is %f\n",multiplier);
         for (j=0; j<2*ntaxa+1; j++) TimeVec[j] = multiplier*TimeVec[j];
         prop_lik = GetCompLik_genetree();
-        printf("curr lik is %f, prop lik is %f\n",curr_anneal_lik,prop_lik);
-
+        
         if (curr_anneal_lik > prop_lik) for (j=0; j<2*ntaxa+1; j++) TimeVec[j] = TimeVec_temp[j];
         else {
                 for (j=0; j<2*ntaxa+1; j++) TimeVec_temp[j] = TimeVec[j];

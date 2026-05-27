@@ -31,10 +31,12 @@ int ntaxa, nspecies, nseq, nsite, nquarts, num_unique_quarts, num_unique, includ
 int anneal, anneal_bl, user_bl, max_it, mult_iter, num_reject, max_it_bl, test_increment, seedj, seedk;
 int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
+int pattern_index[16][16];
 double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
 float theta, beta, mu, ratepar, invpar;
 double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
 double smat[10][10],amat[12][12];
+double base_weight_table[15][4]; 
 FILE *out, *pt;
 
 Link Head, currenttree;
@@ -478,6 +480,88 @@ void unique_sites(){
 
 }
 
+void init_pattern_index(void) {
+    pattern_index[0][0]=0;   pattern_index[0][1]=1;   pattern_index[0][2]=1;   pattern_index[0][3]=1;
+    pattern_index[0][4]=2;   pattern_index[0][5]=7;   pattern_index[0][6]=12;  pattern_index[0][7]=12;
+    pattern_index[0][8]=2;   pattern_index[0][9]=12;  pattern_index[0][10]=7;  pattern_index[0][11]=12;
+    pattern_index[0][12]=2;  pattern_index[0][13]=12; pattern_index[0][14]=12; pattern_index[0][15]=7;
+
+    pattern_index[1][0]=3;   pattern_index[1][1]=5;   pattern_index[1][2]=8;   pattern_index[1][3]=8;
+    pattern_index[1][4]=6;   pattern_index[1][5]=4;   pattern_index[1][6]=10;  pattern_index[1][7]=10;
+    pattern_index[1][8]=9;   pattern_index[1][9]=11;  pattern_index[1][10]=13; pattern_index[1][11]=14;
+    pattern_index[1][12]=9;  pattern_index[1][13]=11; pattern_index[1][14]=14; pattern_index[1][15]=13;
+
+    pattern_index[2][0]=3;   pattern_index[2][1]=8;   pattern_index[2][2]=5;   pattern_index[2][3]=8;
+    pattern_index[2][4]=9;   pattern_index[2][5]=13;  pattern_index[2][6]=11;  pattern_index[2][7]=14;
+    pattern_index[2][8]=6;   pattern_index[2][9]=10;  pattern_index[2][10]=4;  pattern_index[2][11]=10;
+    pattern_index[2][12]=9;  pattern_index[2][13]=14; pattern_index[2][14]=11; pattern_index[2][15]=13;
+
+    pattern_index[3][0]=3;   pattern_index[3][1]=8;   pattern_index[3][2]=8;   pattern_index[3][3]=5;
+    pattern_index[3][4]=9;   pattern_index[3][5]=13;  pattern_index[3][6]=14;  pattern_index[3][7]=11;
+    pattern_index[3][8]=9;   pattern_index[3][9]=14;  pattern_index[3][10]=13; pattern_index[3][11]=11;
+    pattern_index[3][12]=6;  pattern_index[3][13]=10; pattern_index[3][14]=10; pattern_index[3][15]=4;
+
+    pattern_index[4][0]=4;   pattern_index[4][1]=6;   pattern_index[4][2]=10;  pattern_index[4][3]=10;
+    pattern_index[4][4]=5;   pattern_index[4][5]=3;   pattern_index[4][6]=8;   pattern_index[4][7]=8;
+    pattern_index[4][8]=11;  pattern_index[4][9]=9;   pattern_index[4][10]=13; pattern_index[4][11]=14;
+    pattern_index[4][12]=11; pattern_index[4][13]=9;  pattern_index[4][14]=14; pattern_index[4][15]=13;
+
+    pattern_index[5][0]=7;   pattern_index[5][1]=2;   pattern_index[5][2]=12;  pattern_index[5][3]=12;
+    pattern_index[5][4]=1;   pattern_index[5][5]=0;   pattern_index[5][6]=1;   pattern_index[5][7]=1;
+    pattern_index[5][8]=12;  pattern_index[5][9]=2;   pattern_index[5][10]=7;  pattern_index[5][11]=12;
+    pattern_index[5][12]=12; pattern_index[5][13]=2;  pattern_index[5][14]=12; pattern_index[5][15]=7;
+
+    pattern_index[6][0]=13;  pattern_index[6][1]=9;   pattern_index[6][2]=11;  pattern_index[6][3]=14;
+    pattern_index[6][4]=8;   pattern_index[6][5]=3;   pattern_index[6][6]=5;   pattern_index[6][7]=8;
+    pattern_index[6][8]=10;  pattern_index[6][9]=6;   pattern_index[6][10]=4;  pattern_index[6][11]=10;
+    pattern_index[6][12]=14; pattern_index[6][13]=9;  pattern_index[6][14]=11; pattern_index[6][15]=13;
+
+    pattern_index[7][0]=13;  pattern_index[7][1]=9;   pattern_index[7][2]=14;  pattern_index[7][3]=11;
+    pattern_index[7][4]=8;   pattern_index[7][5]=3;   pattern_index[7][6]=8;   pattern_index[7][7]=5;
+    pattern_index[7][8]=14;  pattern_index[7][9]=9;   pattern_index[7][10]=13; pattern_index[7][11]=11;
+    pattern_index[7][12]=10; pattern_index[7][13]=6;  pattern_index[7][14]=10; pattern_index[7][15]=4;
+
+    pattern_index[8][0]=4;   pattern_index[8][1]=10;  pattern_index[8][2]=6;   pattern_index[8][3]=10;
+    pattern_index[8][4]=11;  pattern_index[8][5]=13;  pattern_index[8][6]=9;   pattern_index[8][7]=14;
+    pattern_index[8][8]=5;   pattern_index[8][9]=8;   pattern_index[8][10]=3;  pattern_index[8][11]=8;
+    pattern_index[8][12]=11; pattern_index[8][13]=14; pattern_index[8][14]=9;  pattern_index[8][15]=13;
+
+    pattern_index[9][0]=13;  pattern_index[9][1]=11;  pattern_index[9][2]=9;   pattern_index[9][3]=14;
+    pattern_index[9][4]=10;  pattern_index[9][5]=4;   pattern_index[9][6]=6;   pattern_index[9][7]=10;
+    pattern_index[9][8]=8;   pattern_index[9][9]=5;   pattern_index[9][10]=3;  pattern_index[9][11]=8;
+    pattern_index[9][12]=14; pattern_index[9][13]=11; pattern_index[9][14]=9;  pattern_index[9][15]=13;
+
+    pattern_index[10][0]=7;  pattern_index[10][1]=12; pattern_index[10][2]=2;  pattern_index[10][3]=12;
+    pattern_index[10][4]=12; pattern_index[10][5]=7;  pattern_index[10][6]=2;  pattern_index[10][7]=12;
+    pattern_index[10][8]=1;  pattern_index[10][9]=1;  pattern_index[10][10]=0; pattern_index[10][11]=1;
+    pattern_index[10][12]=12;pattern_index[10][13]=12;pattern_index[10][14]=2; pattern_index[10][15]=7;
+
+    pattern_index[11][0]=13; pattern_index[11][1]=14; pattern_index[11][2]=9;  pattern_index[11][3]=11;
+    pattern_index[11][4]=14; pattern_index[11][5]=13; pattern_index[11][6]=9;  pattern_index[11][7]=11;
+    pattern_index[11][8]=8;  pattern_index[11][9]=8;  pattern_index[11][10]=3; pattern_index[11][11]=5;
+    pattern_index[11][12]=10;pattern_index[11][13]=10;pattern_index[11][14]=6; pattern_index[11][15]=4;
+
+    pattern_index[12][0]=4;  pattern_index[12][1]=10; pattern_index[12][2]=10; pattern_index[12][3]=6;
+    pattern_index[12][4]=11; pattern_index[12][5]=13; pattern_index[12][6]=14; pattern_index[12][7]=9;
+    pattern_index[12][8]=11; pattern_index[12][9]=14; pattern_index[12][10]=13;pattern_index[12][11]=9;
+    pattern_index[12][12]=5; pattern_index[12][13]=8; pattern_index[12][14]=8; pattern_index[12][15]=3;
+
+    pattern_index[13][0]=13; pattern_index[13][1]=11; pattern_index[13][2]=14; pattern_index[13][3]=9;
+    pattern_index[13][4]=10; pattern_index[13][5]=4;  pattern_index[13][6]=10; pattern_index[13][7]=6;
+    pattern_index[13][8]=14; pattern_index[13][9]=11; pattern_index[13][10]=13;pattern_index[13][11]=9;
+    pattern_index[13][12]=8; pattern_index[13][13]=5; pattern_index[13][14]=8; pattern_index[13][15]=3;
+
+    pattern_index[14][0]=13; pattern_index[14][1]=14; pattern_index[14][2]=11; pattern_index[14][3]=9;
+    pattern_index[14][4]=14; pattern_index[14][5]=13; pattern_index[14][6]=11; pattern_index[14][7]=9;
+    pattern_index[14][8]=10; pattern_index[14][9]=10; pattern_index[14][10]=4; pattern_index[14][11]=6;
+    pattern_index[14][12]=8; pattern_index[14][13]=8; pattern_index[14][14]=5; pattern_index[14][15]=3;
+
+    pattern_index[15][0]=7;  pattern_index[15][1]=12; pattern_index[15][2]=12; pattern_index[15][3]=2;
+    pattern_index[15][4]=12; pattern_index[15][5]=7;  pattern_index[15][6]=12; pattern_index[15][7]=2;
+    pattern_index[15][8]=12; pattern_index[15][9]=12; pattern_index[15][10]=7; pattern_index[15][11]=2;
+    pattern_index[15][12]=1; pattern_index[15][13]=1; pattern_index[15][14]=1; pattern_index[15][15]=0;
+}
+
 
 int main(int argc, char *argv[]) {
 
@@ -486,6 +570,7 @@ int main(int argc, char *argv[]) {
   int memcheck, i, j, k, l;
   int i2, j2, k2, l2;
   int nboot, ntquarts;
+  int table_initialized = 0;
   naym tempname1, tempname2;
   float temp_rate;
   double totaltime;
@@ -510,6 +595,9 @@ int main(int argc, char *argv[]) {
    if (argc > 7) bootdata_file = argv[7];
 
   if(argc >1) {
+    setvbuf(stdout, NULL, _IOLBF, 0);   /* line-buffered, even on a pipe */
+    setvbuf(stderr, NULL, _IONBF, 0);   /* unbuffered for errors        */
+
     printf("Using files:\n");
     printf("  settings:    %s\n", settings_file);
     printf("  data:        %s\n", data_file);
@@ -627,6 +715,7 @@ int main(int argc, char *argv[]) {
 
   // allocate memory
   memcheck = MemAlloc();
+  for (i=0; i<ntaxa+1; i++) seq_counter[i] = 0;
 
   taxname = (naym*)malloc(ntaxa*sizeof(naym));
   for (i=0; i<ntaxa; i++) fscanf(set,"%s",taxname[i]);
@@ -662,11 +751,25 @@ int main(int argc, char *argv[]) {
 
   /******* TO DO: need to free extra memory from storing taxon map *******/
 
+  // set up look up table to deal with ambiguity codes efficiently
+
+  if (!table_initialized) {
+    for (int code = 0; code < 15; code++) {
+        BaseWeights bw = get_base_weights(code);
+        for (int k = 0; k < 4; k++)
+            base_weight_table[code][k] = bw.weight[k];
+    }
+    table_initialized = 1;
+  }
+
   // read in data
   getSequenceData(data);
   // fclose(data);
   printf("\nSequence alignment with %d lineages and %d sites has been read successfully\n",nseq,nsite);
   unique_sites();
+
+  // build lookup table for quartet site pattern counts
+  init_pattern_index();
 
   // set a tree
   if (random_tree==0) { // read in user species tree
@@ -765,6 +868,7 @@ int main(int argc, char *argv[]) {
   if (anneal==0) {
 	if (anneal_bl==0) { printf("Analysis complete -- exiting.\n\n"); exit(1); }
 	else if (anneal_bl==1) { // uphill bl search
+		printf("Optimizing branch lengths using uphill search ...\n\n");
 		if (model == 1) bl_uphill_full();
         	else if (model == 2) {
                 	bl_uphill_ratevar();                                                                                               
@@ -776,6 +880,7 @@ int main(int argc, char *argv[]) {
 
 	}
 	else if (anneal_bl==2) { // simulated annealing bl search
+		printf("Optimizing branch lengths using simulating annealing ...\n\n");
 		if (model == 1) bl_anneal_full();
         	else if (model == 2) {
                 	bl_anneal_ratevar();

@@ -55,9 +55,9 @@ void anneal_full() {
 		b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
 		R = fabs(b1-b1opt)/fabs(b1old-b1opt);
 		if (R>1) {
-			if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+			if (b1<b1opt) beta = (2*beta)/R; /* b1 below b1opt */
 			else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
-			else beta = beta/(2*R);  /* b1 above -b1opt */
+			else beta = beta/(R);  /* b1 above -b1opt */
 		}
 		b1old = b1;
 		RescaleTree();
@@ -86,9 +86,9 @@ void anneal_full() {
         	b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
 		R = fabs(b1-b1opt)/fabs(b1old-b1opt);
 		if (R>1) {
-                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        if (b1<b1opt) beta = (2*beta)/R; /* b1 below b1opt */
                         else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
-                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                        else beta = beta/(R);  /* b1 above -b1opt */
                 }
 		b1old = b1;
 		RescaleTree();
@@ -125,6 +125,7 @@ void anneal_ratevar() {
 
    /* Step 1: estimate U, the upper bound on the change in likelihood */
 
+   OptAlpha();
    curr_lik = GetCompLik_ratevar();
    U = curr_anneal_lik;
    ci = U/(1+counteri*beta);
@@ -155,18 +156,20 @@ void anneal_ratevar() {
                 b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
                 R = fabs(b1-b1opt)/fabs(b1old-b1opt);
                 if (R>1) {
-                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        if (b1<b1opt) beta = (2*beta)/R; /* b1 below b1opt */
                         else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
-                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                        else beta = beta/(R);  /* b1 above -b1opt */
                 }
                 b1old = b1;
                 RescaleTree_ratevar();
+		OptAlpha();
         }
   }
   printf("first annealing is complete ...\n");
 
   /* Step 3: branch length optimization */
   bl_uphill_ratevar();
+  OptAlpha();
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];   
 
   /* Step 4: annealing 2 */
@@ -186,18 +189,20 @@ void anneal_ratevar() {
                 b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
                 R = fabs(b1-b1opt)/fabs(b1old-b1opt);
                 if (R>1) {
-                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        if (b1<b1opt) beta = (2*beta)/R; /* b1 below b1opt */
                         else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
-                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                        else beta = beta/(R);  /* b1 above -b1opt */
                 }
                 b1old = b1;
                 RescaleTree_ratevar();
+		OptAlpha();
         }
   }
 
   printf("second annealing is complete ....\n");
   /* Step 5: branch length optimization of estimated tree */
   bl_uphill_ratevar();
+  OptAlpha();
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
 
   printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
@@ -257,9 +262,9 @@ void anneal_msnp() {
                 b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
                 R = fabs(b1-b1opt)/fabs(b1old-b1opt);
                 if (R>1) {
-                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        if (b1<b1opt) beta = (2*beta)/R; /* b1 below b1opt */
                         else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
-                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                        else beta = beta/(R);  /* b1 above -b1opt */
                 }
                 b1old = b1;
                 RescaleTree_msnp();
@@ -288,9 +293,9 @@ void anneal_msnp() {
                 b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
                 R = fabs(b1-b1opt)/fabs(b1old-b1opt);
                 if (R>1) {
-                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        if (b1<b1opt) beta = (2*beta)/R; /* b1 below b1opt */
                         else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
-                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                        else beta = beta/(R);  /* b1 above -b1opt */
                 }
                 b1old = b1;
                 RescaleTree_msnp();
@@ -357,9 +362,9 @@ void anneal_genetree() {
                 b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
                 R = fabs(b1-b1opt)/fabs(b1old-b1opt);
                 if (R>1) {
-                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        if (b1<b1opt) beta = (2*beta)/R; /* b1 below b1opt */
                         else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
-                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                        else beta = beta/(R);  /* b1 above -b1opt */
                 }
                 b1old = b1;
                 RescaleTree_genetree();
@@ -388,9 +393,9 @@ void anneal_genetree() {
                 b1 = (samplesize*covarsum-xsum*ysum)/(samplesize*xsumsq-xsum*xsum);
                 R = fabs(b1-b1opt)/fabs(b1old-b1opt);
                 if (R>1) {
-                        if (b1<b1opt) beta = beta/R; /* b1 below b1opt */
+                        if (b1<b1opt) beta = (2*beta)/R; /* b1 below b1opt */
                         else if (b1<-1.0*b1opt) beta = R*beta; /* b1 between b1opt and -b1opt */
-                        else beta = beta/(2*R);  /* b1 above -b1opt */
+                        else beta = beta/(R);  /* b1 above -b1opt */
                 }
                 b1old = b1;
                 RescaleTree_genetree();
@@ -420,7 +425,8 @@ void bl_anneal_full() {
   double curr_lik, prop_lik, U;
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;
@@ -543,7 +549,8 @@ void bl_uphill_full() {
   double curr_lik, prop_lik, U;
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;
@@ -660,7 +667,8 @@ void bl_anneal_msnp() {
   double curr_lik, prop_lik;
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0, U;
 
   num_unique_quarts = 0;
@@ -784,7 +792,8 @@ int it, rnode;
   double curr_lik, prop_lik, U;
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;
@@ -899,7 +908,8 @@ void bl_anneal_ratevar() {
   double curr_lik, prop_lik, U;
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;
@@ -1023,7 +1033,8 @@ int it, rnode;
   double curr_lik, prop_lik;
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;
@@ -1133,7 +1144,8 @@ void bl_anneal_genetree(){
   double curr_lik, prop_lik, U;
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;
@@ -1236,7 +1248,8 @@ void bl_uphill_genetree() {
   double curr_lik, prop_lik, U;
 
   int i, j, k, l, m;
-  int ovec[5], duppvec[15];
+  int ovec[5];
+  double duppvec[15];
   double complik = 0.0;
 
   num_unique_quarts = 0;

@@ -13,7 +13,8 @@ void OptAlpha() {
   curr_lik = GetCompLik_ratevar();
   //printf("starting lik is %f\n",curr_lik);
 
-  for (i=0; i<max_it_bl; i++) {
+  //for (i=0; i<max_it_bl; i++) {
+  for (i=0; i<100; i++) {
 
         alpha = ratepar;
 	new_alpha = (double)ratepar*gengam((float)10.0,(float)10.0);

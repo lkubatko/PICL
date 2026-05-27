@@ -19,9 +19,11 @@ extern float theta, beta, mu, ratepar, invpar;
 
 extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 extern int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
+extern int pattern_index[16][16];
 
 extern double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *rvals, *TimeVecQuart, **ppLengthMat, **ppMatrix;
 extern double smat[10][10],amat[12][12];
+extern double base_weight_table[15][4];
 
 extern FILE *out, *pt;
 
@@ -40,7 +42,7 @@ typedef struct Node *Link;
 
 
 struct CLquart {
-  int spprobs[15];
+  double spprobs[15];
   int ncherries;
   double *t1;
   double *t2;
@@ -48,6 +50,10 @@ struct CLquart {
 };
 
 typedef struct CLquart CLq;
+
+typedef struct {
+    double weight[4];  // weights for A, C, G, T
+} BaseWeights;
 
 extern Link Head, currenttree;
 extern naym *taxname, *speciesname, *psname;
@@ -101,9 +107,9 @@ void AllMyChildrenRightQuartetLeft(int mynode);
 void AllMyChildrenLeftQuartRight(int mynode);
 void AllMyChildrenRightQuartetRight(int mynode);
 void AllMyChildrenQuartet(int mynode);
-void FindDupQuarts(int is_symm, int spcounts[15]);
+void FindDupQuarts(int is_symm, double spcounts[15]);
 int GetQuartetTree(int tax1, int tax2, int tax3, int tax4, int OrderedVec[5]);
-void CountQuartetSitePatterns(int tax1, int tax2, int tax3, int tax4, int pvec[15]);
+void CountQuartetSitePatterns(int tax1, int tax2, int tax3, int tax4, double pvec[15]);
 double SymmetricQuartetLikelihood(int nn);
 double AsymmetricQuartetLikelihood(int nn);
 double SymmetricQuartetLikelihood_msnp(int nn);
