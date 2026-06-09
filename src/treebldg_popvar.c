@@ -224,7 +224,7 @@ void RootUpdate() {
 }
 
 
-void RescaleTree() {
+void RescaleTree_popvar() {
 
   int i, j, ntries=5;
   float multiplier;
@@ -234,7 +234,7 @@ void RescaleTree() {
 
 	multiplier = gennor(1.0,0.01);
 	for (j=0; j<2*ntaxa+1; j++) TimeVec[j] = multiplier*TimeVec[j];
-	prop_lik = GetCompLik();
+	prop_lik = GetCompLik_popvar();
 
 	if (curr_anneal_lik > prop_lik) for (j=0; j<2*ntaxa+1; j++) TimeVec[j] = TimeVec_temp[j];
 	else {
