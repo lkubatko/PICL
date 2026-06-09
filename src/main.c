@@ -920,11 +920,20 @@ int main(int argc, char *argv[]) {
 	else { printf("Opt_bl must be 0, 1, 2, or 3. Exiting.\n\n"); exit(1); }
 
         if (verbose == 1 ) {
+			if (model == 5){
+				printf("The tree after branch length optimization is (mutation units):\n");
+    		for (i=0; i<ntaxa-1; i++) {
+        		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+        		printf("%f %f\n",TimeVec[i+ntaxa+1]);
+		}
+			}
+			else{
     		printf("The tree after branch length optimization is (coalescent units, mutation units):\n");
     		for (i=0; i<ntaxa-1; i++) {
         		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
         		printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
 		}
+			}
 	}
 
 	if (model == 1) printf("the composite likelihood of the tree is %f\n",GetCompLik());
@@ -948,11 +957,13 @@ int main(int argc, char *argv[]) {
         fprintf(out,"Current tree in mutation units: \n");
         write_species_tree_out(ntaxa+1,ntaxa+1);
 	fprintf(out,";\n\n");
+	if (model != 5) {
 	fprintf(out,"Current tree in coalescent units: \n");
         for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta;
         write_species_tree_out(ntaxa+1,ntaxa+1);
         fprintf(out,";\n\n");
         for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta;
+	}
 	printf("Tree has been written to file outtree.tre\n\n");
 
   }
@@ -1016,7 +1027,13 @@ int main(int argc, char *argv[]) {
 		printf("After search, tree is \n");
   		for (i=0; i<ntaxa-1; i++) {
         		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
-        		printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+				if (model == 5) {
+					printf("%f %f\n",TimeVec[i+ntaxa+1]);
+				}
+				else {
+					printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+				}
+        		
   		}
 		if (model == 1) printf("The composite likelihood of this tree is %f\n",GetCompLik());
                 else if (model == 2) printf("The composite likelihood of this tree is %f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);
@@ -1039,12 +1056,14 @@ int main(int argc, char *argv[]) {
   	fprintf(out,"Current tree in mutation units: \n");
   	write_species_tree_out(ntaxa+1,ntaxa+1);
 	fprintf(out,";\n\n");
+	if (model != 5){
+		
 	fprintf(out,"Current tree in coalescent units: \n");
 	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta;
 	write_species_tree_out(ntaxa+1,ntaxa+1);
   	fprintf(out,";\n\n");   
 	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta; 
-  
+	}
   	// copy best tree to current tree and write to file outtree.tre
   	for (i=0; i<ntaxa; i++) {
          	ppTwoRow[0][i] = ppTwoRow_best[0][i];
@@ -1062,9 +1081,18 @@ int main(int argc, char *argv[]) {
         }
 	if (verbose == 1){
 		printf("After transfer from bessttree, tree is \n");
+					if (model == 5){
+						for (i=0; i<ntaxa-1; i++) {
+                        	printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);  
+                        	printf("%f %f\n",TimeVec[i+ntaxa+1]);
+					}
+					}
+					else {
+						
                 	for (i=0; i<ntaxa-1; i++) {
                         	printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);  
                         	printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+					}
         	}
 	}
 	printf("The composite likelihood of the best tree found by the algorithm is ");
@@ -1078,11 +1106,13 @@ int main(int argc, char *argv[]) {
    	fprintf(out,"Best tree found by the algorithm in mutation units: \n");
   	write_species_tree_out(ntaxa+1,ntaxa+1);
   	fprintf(out,";\n\n");
+	if (model != 5){
+		
 	fprintf(out,"Best tree found by the algorithm in coalescent units: \n");
         for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta; 
         write_species_tree_out(ntaxa+1,ntaxa+1);     
 	fprintf(out,";\n\n");
-
+	}
 	fclose(out);
 	printf("Results have been written to file outtree.tre -- exiting.\n\n");
 	//exit(1);
@@ -1095,9 +1125,16 @@ int main(int argc, char *argv[]) {
   /* print branch lengths to file */
   if (verbose==1) {
   	res = fopen(results_file,"w");
-  	for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]/theta);
-  	fprintf(res,"%f \n",ratepar);
+	if (model == 5){
+		for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]);
   	fclose(res);
+	}
+	  else{
+		  for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]/theta);
+  			fprintf(res,"%f \n",ratepar);
+  			fclose(res);
+	  }
+  	
   }
   /* done print branch lengths to file */
 
