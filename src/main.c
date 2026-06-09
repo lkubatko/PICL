@@ -832,6 +832,7 @@ int main(int argc, char *argv[]) {
                		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
                 	printf("%f %f\n ",TimeVec[i+ntaxa+1]);
 				}
+				}
 				else{
                 printf("The random tree generated is (coalescent units, mutation units):\n");
                 for (i=0; i<ntaxa-1; i++) {
