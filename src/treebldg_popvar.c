@@ -192,7 +192,7 @@ void trbldg_popvar() {
 
 /* Uphill stochastic search for a new root time */
 
-void RootUpdate() {
+void RootUpdate_popvar() {
 
    int i, ntries = 5;
    double curr_time, par_time, child_time, prop_time, prop_lik;
@@ -209,7 +209,7 @@ void RootUpdate() {
    	prop_time = ranf()*(par_time-child_time);
    	TimeVec[ntaxa+1]  =  child_time + prop_time;
 
-   	prop_lik = GetCompLik();
+   	prop_lik = GetCompLik_popvar();
 
    	if (curr_anneal_lik > prop_lik) TimeVec[ntaxa+1]  = curr_time;
    	else {
