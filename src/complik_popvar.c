@@ -2,7 +2,7 @@ extern double besselK_c(double nu, double x);
 
 /*** Compute the S and A matrices to compute site pattern probs ***/
 
-void ComputeAandSpopvar(double lambda) {
+void ComputeAandS_popvar(double lambda) {
 
    int i;
    double m = 4.0/3.0;
@@ -135,7 +135,7 @@ void ComputeAandSpopvar(double lambda) {
     for (i=1; i<12; i++) amat[10][i] = 0.0;
 }
 
-double SymmetricQuartetLikelihoodpopvar(int nn){
+double SymmetricQuartetLikelihood_popvar(int nn){
 
   int i, sump=0;
   double m = 4.0/3.0;  
@@ -240,7 +240,7 @@ double SymmetricQuartetLikelihoodpopvar(int nn){
 }  
 
 
-double AsymmetricQuartetLikelihoodpopvar(int nn){                            
+double AsymmetricQuartetLikelihood_popvar(int nn){                            
 
   int i, sump=0;
   double m = 4.0/3.0; // t is 2*theta
@@ -391,8 +391,8 @@ double GetCompLik_popvar() {
 	//printf("%f %f %f ",*StoreQuarts[i]->t1,*StoreQuarts[i]->t2,*StoreQuarts[i]->t3);
 	//printf("%d\n",StoreQuarts[i]->ncherries);
 
-	if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihoodpopvar(i);
-        else if (StoreQuarts[i]->ncherries==1) complik+=AsymmetricQuartetLikelihoodpopvar(i);
+	if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_popvar(i);
+        else if (StoreQuarts[i]->ncherries==1) complik+=AsymmetricQuartetLikelihood_popvar(i);
         else { printf("There was an error forming quartets .... exiting.\n"); exit(1);}
 	//printf("\t %f\n",complik);
 
