@@ -851,7 +851,10 @@ int main(int argc, char *argv[]) {
   /* end test */
 
   /* Compute the composite likelihood for the current tree */
+  if (model == 5) {ComputeAandSpopvar(lambda);}
+  else {
   ComputeAandS(theta);
+  }
   for (i=0; i<nquarts+1; i++) qvec[i]=0; 
   if (model == 1) curr_anneal_lik = GetCompLik();
   else if (model == 2) curr_anneal_lik = GetCompLik_ratevar();
