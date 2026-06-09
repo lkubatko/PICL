@@ -340,7 +340,7 @@ double AsymmetricQuartetLikelihoodpopvar(int nn){
 }
 
 
-double GetCompLikpopvar() {
+double GetCompLik_popvar() {
 
   int i, j, k, l, m;
   int ovec[5];
