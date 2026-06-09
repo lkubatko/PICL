@@ -33,7 +33,7 @@ int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2],
 int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
 int pattern_index[16][16];
 double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
-float theta, beta, mu, ratepar, invpar;
+float lambda, theta, beta, mu, ratepar, invpar;
 double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
 double smat[10][10],amat[12][12];
 double base_weight_table[15][4]; 
@@ -634,6 +634,10 @@ int main(int argc, char *argv[]) {
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&theta);
   printf("Theta: %f\n",theta);
 
+  /* Lambda */
+  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&lambda);
+  printf("Lambda: %f\n",lambda);
+	
   /* Rate_param */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&ratepar);
   printf("Rate_param: %f\n",ratepar);
@@ -851,7 +855,10 @@ int main(int argc, char *argv[]) {
   /* end test */
 
   /* Compute the composite likelihood for the current tree */
-  if (model == 5) {ComputeAandSpopvar(lambda);}
+  if (model == 5) {
+	  theta = -1000;
+	  ComputeAandSpopvar(lambda);
+  }
   else {
   ComputeAandS(theta);
   }
@@ -915,6 +922,7 @@ int main(int argc, char *argv[]) {
   	else if (model == 2) printf("the composite likelihood of the tree is %f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);
   	else if (model == 3) printf("the composite likelihood of the tree is %f\n",GetCompLik_msnp());
 	else if (model == 4) printf("the composite likelihood of the tree is %f\n",GetCompLik_genetree());
+	else if (model == 5) printf("the composite likelihood of the tree is %f\n",GetCompLik_popvar());
   	printf("\n\n");
   	
 	// re-order ppTwoRow and write tree to outtree.tre
