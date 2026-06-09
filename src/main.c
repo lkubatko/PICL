@@ -870,7 +870,7 @@ int main(int argc, char *argv[]) {
 
   /* Compute the composite likelihood for the current tree */
   if (model == 5) {
-	  ComputeAandSpopvar(lambda);
+	  ComputeAandS_popvar(lambda);
   }
   else {
   ComputeAandS(theta);
