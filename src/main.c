@@ -24,9 +24,10 @@
 #include "trbldg_ratevar.c"
 #include "trbldg_msnp.c"
 #include "trbldg_genetree.c"
-#include "anneal_popvar.c"
-#include "treebldg_popvar.c"
 #include "complik_popvar.c"
+#include "treebldg_popvar.c"
+#include "anneal_popvar.c"
+
 
 // ntaxa = number of species
 // nseq = number of individuals
