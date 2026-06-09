@@ -60,7 +60,7 @@ void anneal_full_popvar() {
 			else beta = beta/(R);  /* b1 above -b1opt */
 		}
 		b1old = b1;
-		RescaleTree();
+		RescaleTree_popvar();
 	}
   }
   printf("first annealing is complete ...\n");
@@ -91,7 +91,7 @@ void anneal_full_popvar() {
                         else beta = beta/(R);  /* b1 above -b1opt */
                 }
 		b1old = b1;
-		RescaleTree();
+		RescaleTree_popvar();
         }
   }
   printf("second annealing is complete ...\n");
