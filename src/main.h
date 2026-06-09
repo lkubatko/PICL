@@ -132,6 +132,11 @@ double tpij(double brlen);
 double QuartetLikelihood_genetree(int nn);
 double GetCompLik_genetree();
 
+/* in complik_popvar.c */
+double SymmetricQuartetLikelihood_popvar(int nn);
+double AsymmetricQuartetLikelihood_popvar(int nn);
+double GetCompLik_popvar();
+
 /* in nodeopt.c */
 void AllMyChildrenLeft(int mynode);
 void AllMyChildrenRight(int mynode);
@@ -153,6 +158,11 @@ void bl_uphill_ratevar();
 void anneal_genetree();
 void bl_anneal_genetree();
 void bl_uphill_genetree();
+
+/* in anneal_popvar.c */
+void anneal_full_popvar();
+void bl_anneal_full_popvar();
+void bl_uphill_full_popvar();
 
 /* in boot.c */
 void boot_times(int nrep, const char *bootdata_file);
@@ -176,3 +186,8 @@ void RescaleTree_msnp();
 /* in trbldg_genetree.c */
 void trbldg_genetree();   
 void RescaleTree_genetree();
+
+/* in treebldg_popvar.c */
+void RootUpdate_popvar();
+void trbldg_popvar();   
+void RescaleTree_popvar();
