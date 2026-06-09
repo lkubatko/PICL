@@ -706,6 +706,7 @@ int main(int argc, char *argv[]) {
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&verbose);
   printf("Verbose: %d\n\n",verbose);
 
+  if (model == 5){ theta = -1000;}
   if (b1opt>0) printf("The target annealing slope (b1opt) must be negative; adaptive annealing is disabled.\n\n");
 
   fscanf(set,"%d",&ntaxa);
@@ -825,10 +826,18 @@ int main(int argc, char *argv[]) {
                 TimeVec_init[i] = TimeVec[i];
         }
  	if (verbose == 1 ) {
+				if (model == 5){
+					printf("The random tree generated is (mutation units):\n");
+                	for (i=0; i<ntaxa-1; i++) {
+               		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+                	printf("%f %f\n ",TimeVec[i+ntaxa+1]);
+				}
+				else{
                 printf("The random tree generated is (coalescent units, mutation units):\n");
                 for (i=0; i<ntaxa-1; i++) {
                 printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
                 printf("%f %f\n ",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+				}
         	}
 	printf("\n");
 	}
@@ -856,7 +865,6 @@ int main(int argc, char *argv[]) {
 
   /* Compute the composite likelihood for the current tree */
   if (model == 5) {
-	  theta = -1000;
 	  ComputeAandSpopvar(lambda);
   }
   else {
