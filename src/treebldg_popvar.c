@@ -3,7 +3,7 @@
 /*** and make reject/accept decision           ***/
 /*************************************************/
 
-void trbldg() {
+void trbldg_popvar() {
 
   int i, j, k, index, target, parent, left_child, right_child, sib, side_target, root_ind;
   int unsuccess_est;
