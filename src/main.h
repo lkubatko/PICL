@@ -15,7 +15,7 @@ extern int ntaxa, nspecies, nseq, nsite, nquarts, num_unique_quarts, num_unique,
 extern int anneal, anneal_bl, user_bl, max_it, mult_iter, num_reject, max_it_bl, test_increment, seedj, seedk;
 
 extern double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
-extern float theta, beta, mu, ratepar, invpar;
+extern float lambda, theta, beta, mu, ratepar, invpar;
 
 extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 extern int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
