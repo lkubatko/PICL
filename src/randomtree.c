@@ -87,9 +87,10 @@ void build_random_tree(int seed1, int seed2) {
     }
   
   /* done memory allocation */
-
   scale = ((int)ntaxa)*theta;
-
+  if (model == 5) {
+    scale = (double)rand() / RAND_MAX;
+  }
   curr_length=ntaxa;
   new_counter=ntaxa+2;
   seedj = seed1;
