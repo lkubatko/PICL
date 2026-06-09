@@ -905,7 +905,7 @@ int main(int argc, char *argv[]) {
         	}
         	else if (model == 3) bl_uphill_msnp();
 		else if (model == 4) bl_uphill_genetree();
-		else if (model == 5) bl_uphill_popvar();
+		else if (model == 5) bl_uphill_full_popvar();
 	}
 	else if (anneal_bl==2) { // simulated annealing bl search
 		printf("Optimizing branch lengths using simulating annealing ...\n\n");
@@ -917,7 +917,7 @@ int main(int argc, char *argv[]) {
         	}
         	else if (model == 3) bl_anneal_msnp();
 		else if (model == 4) bl_anneal_genetree();
-		else if (model == 5) bl_anneal_popvar();
+		else if (model == 5) bl_anneal_full_popvar();
 	}
 	else if (anneal_bl==3) { // numerical optimization of branch lengths
 		printf("Numerical optimization of branch lengths is not yet implemented. Exiting.\n\n"); exit(1);
