@@ -747,8 +747,9 @@ int main(int argc, char *argv[]) {
   else if (model==2) printf("Estimation will be carried out using the CIS/multlilocus rate variation model (MSC-JC69 + G)\n");
   else if (model==3) printf("Estimation will be carried out using the SNP model\n");
   else if (model==4) printf("Estimation will be carried out using the JC69 model for gene trees\n");
+  else if (model==5) printf("Estimation will be carried out using the CIS/multilocus model (MSC-JC69) with variable population size\n");
   else { printf("Model must be 1, 2, 3, or 4. Exiting.\n\n"); exit(1); }
-
+ 
   /******* TO DO: need to free extra memory from storing taxon map *******/
 
   // set up look up table to deal with ambiguity codes efficiently
@@ -856,6 +857,7 @@ int main(int argc, char *argv[]) {
   else if (model == 2) curr_anneal_lik = GetCompLik_ratevar();
   else if (model == 3) curr_anneal_lik = GetCompLik_msnp();
   else if (model == 4) curr_anneal_lik = GetCompLik_genetree(); 
+  else if (model == 5) curr_anneal_lik = GetCompLik_popvar(); 
   printf("The composite likelihood of the initial tree is %f\n\n",curr_anneal_lik);
 
   GetCompLikDerivatives(7);
