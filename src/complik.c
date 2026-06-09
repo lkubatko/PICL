@@ -3,185 +3,185 @@
 void ComputeAandS(double mytheta) {
 
    int i;
-   double m = 4.0/3.0, t = 2.0*theta;
+   double m = 4.0/3.0, t = 2.0*theta, mt = 8.0*theta/3.0;
 
    //compute the C matrix in the symmetric case - indexing starts at 1 to match R code
         // row 1
         for (i=1; i<10; i++) smat[1][i] = 1.0/256;
         // row 2
-        smat[2][1]=smat[2][3]=smat[2][5]=smat[2][7] = 3.0/(256*(1+m*t));
-        smat[2][2]=smat[2][4]=smat[2][6]=smat[2][8]=smat[2][9]=-1.0/(256*(1+m*t));
+        smat[2][1]=smat[2][3]=smat[2][5]=smat[2][7] = 3.0/(256*(1+mt));
+        smat[2][2]=smat[2][4]=smat[2][6]=smat[2][8]=smat[2][9]=-1.0/(256*(1+mt));
         // row 3
-        smat[3][1]=smat[3][2]=smat[3][5]=smat[3][6]=3.0/(256*(1+m*t));
-        smat[3][3]=smat[3][4]=smat[3][7]=smat[3][8]=smat[3][9]=-1.0/(256*(1+m*t));
+        smat[3][1]=smat[3][2]=smat[3][5]=smat[3][6]=3.0/(256*(1+mt));
+        smat[3][3]=smat[3][4]=smat[3][7]=smat[3][8]=smat[3][9]=-1.0/(256*(1+mt));
         // row 4
-        smat[4][1]=smat[4][5] = 9.0/(256*pow(1+m*t,2));
-        smat[4][2]=smat[4][3]=smat[4][6]=smat[4][7] = -3.0/(256*pow(1+m*t,2));
-        smat[4][4]=smat[4][8]=smat[4][9] = 1.0/(256*pow(1+m*t,2));
+        smat[4][1]=smat[4][5] = 9.0/(256*pow(1+mt,2));
+        smat[4][2]=smat[4][3]=smat[4][6]=smat[4][7] = -3.0/(256*pow(1+mt,2));
+        smat[4][4]=smat[4][8]=smat[4][9] = 1.0/(256*pow(1+mt,2));
         // row 5
-        smat[5][1]=12.0/(256*(1+m*t));
-        smat[5][2]=smat[5][3]=smat[5][4]=4.0/(256*(1+m*t));
-        smat[5][5]=smat[5][6]=smat[5][7]=smat[5][9]=-4.0/(256*(1+m*t));
+        smat[5][1]=12.0/(256*(1+mt));
+        smat[5][2]=smat[5][3]=smat[5][4]=4.0/(256*(1+mt));
+        smat[5][5]=smat[5][6]=smat[5][7]=smat[5][9]=-4.0/(256*(1+mt));
         smat[5][8]=0.0;
         // row 6
-        smat[6][1]=24.0/(256*(1+m*t)*(2+m*t));
-        smat[6][2]=smat[6][4]=smat[6][5]=smat[6][7]=-8.0/(256*(1+m*t)*(2+m*t));
-        smat[6][3]=8.0/(256*(1+m*t)*(2+m*t));
-        smat[6][6]=smat[6][9]=8.0/(256*(1+m*t)*(2+m*t));
+        smat[6][1]=24.0/(256*(1+m*t)*(2+mt));
+        smat[6][2]=smat[6][4]=smat[6][5]=smat[6][7]=-8.0/(256*(1+mt)*(2+mt));
+        smat[6][3]=8.0/(256*(1+mt)*(2+mt));
+        smat[6][6]=smat[6][9]=8.0/(256*(1+mt)*(2+mt));
         smat[6][8]=0.0;
         // row 7
-        smat[7][1]=24.0/(256*(1+m*t)*(2+m*t));
-        smat[7][2]=8.0/(256*(1+m*t)*(2+m*t));
-        smat[7][3]=smat[7][4]=smat[7][5]=smat[7][6]=-8.0/(256*(1+m*t)*(2+m*t));
-        smat[7][7]=smat[7][9]=8.0/(256*(1+m*t)*(2+m*t));
+        smat[7][1]=24.0/(256*(1+mt)*(2+mt));
+        smat[7][2]=8.0/(256*(1+mt)*(2+mt));
+        smat[7][3]=smat[7][4]=smat[7][5]=smat[7][6]=-8.0/(256*(1+mt)*(2+mt));
+        smat[7][7]=smat[7][9]=8.0/(256*(1+mt)*(2+mt));
         smat[7][8]=0.0;
         // row 8
-        smat[8][1]=48.0/(256*(1+m*t)*pow(2+m*t,2));
-        smat[8][2]=smat[8][3]=smat[8][5]=-16.0/(256*(1+m*t)*pow(2+m*t,2));
-        smat[8][4]=smat[8][6]=smat[8][7]=16.0/(256*(1+m*t)*pow(2+m*t,2));
+        smat[8][1]=48.0/(256*(1+m*t)*pow(2+mt,2));
+        smat[8][2]=smat[8][3]=smat[8][5]=-16.0/(256*(1+mt)*pow(2+mt,2));
+        smat[8][4]=smat[8][6]=smat[8][7]=16.0/(256*(1+mt)*pow(2+mt,2));
         smat[8][8]=0.0;
-        smat[8][9]=-16.0/(256*(1+m*t)*pow(2+m*t,2));
+        smat[8][9]=-16.0/(256*(1+mt)*pow(2+mt,2));
         // row 9
-        smat[9][1]=6.0*m*t*(4+m*t)*(4+3*m*t)/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
-        smat[9][2]=smat[9][3]=-2.0*m*t*(4+m*t)*(4+3*m*t)/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
-        smat[9][4]=m*t*(32+40*m*t+10*pow(m,2)*pow(t,2))/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
-        smat[9][5]=2.0*m*t*pow(4+m*t,2)/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
-        smat[9][6]=smat[9][7]=2.0*pow(m,2)*pow(t,2)*(4+m*t)/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
-        smat[9][8]=-pow(m,2)*pow(t,2)*(4+2*m*t)/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
-        smat[9][9]=2.0*pow(m,3)*pow(t,3)/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
+        smat[9][1]=6.0*mt*(4+mt)*(4+3*mt)/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
+        smat[9][2]=smat[9][3]=-2.0*mt*(4+mt)*(4+3*mt)/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
+        smat[9][4]=mt*(32+40*mt+10*pow(m,2)*pow(t,2))/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
+        smat[9][5]=2.0*mt*pow(4+mt,2)/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
+        smat[9][6]=smat[9][7]=2.0*mt*mt*(4+mt)/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
+        smat[9][8]=-mt*mt*(4+2*mt)/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
+        smat[9][9]=2.0*mt*mt*mt/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
 
    //compute the C matrix in the symmetric case - indexing starts at 1 to match R code
         // row 1 
         amat[1][1] = 1.0/256; 
-        amat[1][2] = 3.0/((256)*(1+m*t)); 
-        amat[1][3] = 6.0/(256*(1+m*t));
-        amat[1][4] = 12.0/(256*(1+m*t)*(2+m*t)); 
-        amat[1][5] = 9.0/(256*(1+m*t)); 
-        amat[1][6] = 12.0/(256*(1+m*t)*(2+m*t)); 
-        amat[1][7] = 9.0/(256*pow(1+m*t,2)); 
-        amat[1][8] = 24.0/(256*(1+m*t)*(2+m*t)); 
-        amat[1][9] = 48.0/(256*(1+m*t)*pow(2+m*t,2)); 
-        amat[1][10] = (6*m*t*(4+m*t)*(4+3*m*t))/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
+        amat[1][2] = 3.0/((256)*(1+mt)); 
+        amat[1][3] = 6.0/(256*(1+mt));
+        amat[1][4] = 12.0/(256*(1+mt)*(2+mt)); 
+        amat[1][5] = 9.0/(256*(1+mt)); 
+        amat[1][6] = 12.0/(256*(1+mt)*(2+mt)); 
+        amat[1][7] = 9.0/(256*pow(1+mt,2)); 
+        amat[1][8] = 24.0/(256*(1+mt)*(2+mt)); 
+        amat[1][9] = 48.0/(256*(1+mt)*pow(2+mt,2)); 
+        amat[1][10] = (6*mt*(4+mt)*(4+3*mt))/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
 
         // row 2 
         amat[2][1] = 1.0/256; 
-        amat[2][2] = -1.0/(256*(1+m*t)); 
-        amat[2][3] = 2.0/(256*(1+m*t));
-        amat[2][4] = -4.0/(256*(1+m*t)*(2+m*t)); 
-        amat[2][5] = 5.0/(256*(1+m*t)); 
-        amat[2][6] = -4.0/(256*(1+m*t)*(2+m*t)); 
-        amat[2][7] = -3.0/(256*pow(1+m*t,2)); 
-        amat[2][8] = 8.0/(256*(1+m*t)*(2+m*t)); 
-        amat[2][9] = -16.0/(256*(1+m*t)*pow(2+m*t,2)); 
-        amat[2][10] = -(2*m*t*(4+m*t)*(4+3*m*t))/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[2][2] = -1.0/(256*(1+mt)); 
+        amat[2][3] = 2.0/(256*(1+mt));
+        amat[2][4] = -4.0/(256*(1+mt)*(2+mt)); 
+        amat[2][5] = 5.0/(256*(1+mt)); 
+        amat[2][6] = -4.0/(256*(1+mt)*(2+mt)); 
+        amat[2][7] = -3.0/(256*pow(1+mt,2)); 
+        amat[2][8] = 8.0/(256*(1+mt)*(2+mt)); 
+        amat[2][9] = -16.0/(256*(1+mt)*pow(2+mt,2)); 
+        amat[2][10] = -(2*mt*(4+mt)*(4+3*mt))/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
         // row 3 
         amat[3][1] = 1.0/256; 
-        amat[3][2] = 3.0/(256*(1+m*t)); 
-        amat[3][3] = -2.0/(256*(1+m*t)); 
-        amat[3][4] = -4.0/(256*(1+m*t)*(2+m*t)); 
-        amat[3][5] = 5.0/(256*(1+m*t)); 
-        amat[3][6] = 12.0/(256*(1+m*t)*(2+m*t)); 
-        amat[3][7] = -3.0/(256*pow(1+m*t,2)); 
-        amat[3][8] = -8.0/(256*(1+m*t)*(2+m*t)); 
-        amat[3][9] = -16.0/(256*(1+m*t)*pow(2+m*t,2)); 
-        amat[3][10] = -(2*m*t*(4+m*t)*(4+3*m*t))/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[3][2] = 3.0/(256*(1+mt)); 
+        amat[3][3] = -2.0/(256*(1+mt)); 
+        amat[3][4] = -4.0/(256*(1+mt)*(2+mt)); 
+        amat[3][5] = 5.0/(256*(1+mt)); 
+        amat[3][6] = 12.0/(256*(1+mt)*(2+mt)); 
+        amat[3][7] = -3.0/(256*pow(1+mt,2)); 
+        amat[3][8] = -8.0/(256*(1+mt)*(2+mt)); 
+        amat[3][9] = -16.0/(256*(1+mt)*pow(2+mt,2)); 
+        amat[3][10] = -(2*mt*(4+mt)*(4+3*mt))/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
         // row 4 
         amat[4][1] = 1.0/256; 
-        amat[4][2] = 3.0/(256*(1+m*t)); 
-        amat[4][3] = 6.0/(256*(1+m*t)); 
-        amat[4][4] = 12.0/(256*(1+m*t)*(2+m*t)); 
-        amat[4][5] = -3.0/(256*(1+m*t)); 
-        amat[4][6] = -4.0/(256*(1+m*t)*(2+m*t)); 
-        amat[4][7] = -3.0/(256*pow(1+m*t,2)); 
-        amat[4][8] = -8.0/(256*(1+m*t)*(2+m*t)); 
-        amat[4][9] = -16.0/(256*(1+m*t)*pow(2+m*t,2)); 
-        amat[4][10] = -(2*m*t*(4+m*t)*(4+3*m*t))/(256*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[4][2] = 3.0/(256*(1+mt)); 
+        amat[4][3] = 6.0/(256*(1+mt)); 
+        amat[4][4] = 12.0/(256*(1+mt)*(2+mt)); 
+        amat[4][5] = -3.0/(256*(1+mt)); 
+        amat[4][6] = -4.0/(256*(1+mt)*(2+mt)); 
+        amat[4][7] = -3.0/(256*pow(1+mt,2)); 
+        amat[4][8] = -8.0/(256*(1+mt)*(2+mt)); 
+        amat[4][9] = -16.0/(256*(1+mt)*pow(2+mt,2)); 
+        amat[4][10] = -(2*mt*(4+mt)*(4+3*mt))/(256*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
         // row 5 
         amat[5][1] = 1.0/256; 
-        amat[5][2] = 3.0/((256)*(1+m*t)); 
-        amat[5][3] = -2.0/((256)*(1+m*t)); 
-        amat[5][4] = -4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[5][5] = 1.0/((256)*(1+m*t)); 
-        amat[5][6] = -4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[5][7] = 9.0/((256)*pow(1+m*t,2)); 
-        amat[5][8] = -8.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[5][9] = -16.0/((256)*(1+m*t)*pow(2+m*t,2)); 
-        amat[5][10] = (2*m*t*pow(4+m*t,2))/((256)*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[5][2] = 3.0/((256)*(1+mt)); 
+        amat[5][3] = -2.0/((256)*(1+mt)); 
+        amat[5][4] = -4.0/((256)*(1+mt)*(2+mt)); 
+        amat[5][5] = 1.0/((256)*(1+mt)); 
+        amat[5][6] = -4.0/((256)*(1+mt)*(2+mt)); 
+        amat[5][7] = 9.0/((256)*pow(1+mt,2)); 
+        amat[5][8] = -8.0/((256)*(1+mt)*(2+mt)); 
+        amat[5][9] = -16.0/((256)*(1+mt)*pow(2+mt,2)); 
+        amat[5][10] = (2*mt*pow(4+mt,2))/((256)*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
         // row 6 
         amat[6][1] = 1.0/256; 
-        amat[6][2] = -1.0/((256)*(1+m*t)); 
-        amat[6][3] = 2.0/((256)*(1+m*t)); 
-        amat[6][4] = -4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[6][5] = 1.0/((256)*(1+m*t)); 
-        amat[6][6] = -4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[6][7] = 1.0/((256)*pow(1+m*t,2)); 
-        amat[6][8] = -8.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[6][9] = 16.0/((256)*(1+m*t)*pow(2+m*t,2)); 
-        amat[6][10] = m*t*(2*16+40*m*t+(10.0)*pow(m,2)*pow(t,2))/((256)*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[6][2] = -1.0/((256)*(1+mt)); 
+        amat[6][3] = 2.0/((256)*(1+mt)); 
+        amat[6][4] = -4.0/((256)*(1+mt)*(2+mt)); 
+        amat[6][5] = 1.0/((256)*(1+mt)); 
+        amat[6][6] = -4.0/((256)*(1+mt)*(2+mt)); 
+        amat[6][7] = 1.0/((256)*pow(1+mt,2)); 
+        amat[6][8] = -8.0/((256)*(1+mt)*(2+mt)); 
+        amat[6][9] = 16.0/((256)*(1+mt)*pow(2+mt,2)); 
+        amat[6][10] = mt*(2*16+40*mt+(10.0)*mt*mt)/((256)*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
         // row 7 
         amat[7][1] = 1.0/256; 
-        amat[7][2] = -1.0/((256)*(1+m*t)); 
-        amat[7][3] = -2.0/((256)*(1+m*t));
-        amat[7][4] = 4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[7][5] = 1.0/((256)*(1+m*t)); 
-        amat[7][6] = 4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[7][7] = -3.0/((256)*pow(1+m*t,2)); 
-        amat[7][8] = -8.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[7][9] = 16.0/((256)*(1+m*t)*pow(2+m*t,2)); 
-        amat[7][10] = 2.0*pow(m,2)*pow(t,2)*(4+m*t)/((256)*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[7][2] = -1.0/((256)*(1+mt)); 
+        amat[7][3] = -2.0/((256)*(1+mt));
+        amat[7][4] = 4.0/((256)*(1+mt)*(2+mt)); 
+        amat[7][5] = 1.0/((256)*(1+mt)); 
+        amat[7][6] = 4.0/((256)*(1+mt)*(2+mt)); 
+        amat[7][7] = -3.0/((256)*pow(1+mt,2)); 
+        amat[7][8] = -8.0/((256)*(1+mt)*(2+mt)); 
+        amat[7][9] = 16.0/((256)*(1+mt)*pow(2+mt,2)); 
+        amat[7][10] = 2.0*mt*mt*(4+mt)/((256)*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
         // row 8 
         amat[8][1] = 1.0/256;
-        amat[8][2] = 3.0/((256)*(1+m*t)); 
-        amat[8][3] = -2.0/((256)*(1+m*t)); 
-        amat[8][4] = -4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[8][5] = -3.0/((256)*(1+m*t)); 
-        amat[8][6] = -4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[8][7] = -3.0/((256)*pow(1+m*t,2)); 
-        amat[8][8] = 8.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[8][9] = 16.0/((256)*(1+m*t)*pow(2+m*t,2)); 
-        amat[8][10] = 2.0*pow(m,2)*pow(t,2)*(4+m*t)/((256)*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[8][2] = 3.0/((256)*(1+mt)); 
+        amat[8][3] = -2.0/((256)*(1+mt)); 
+        amat[8][4] = -4.0/((256)*(1+mt)*(2+mt)); 
+        amat[8][5] = -3.0/((256)*(1+mt)); 
+        amat[8][6] = -4.0/((256)*(1+mt)*(2+mt)); 
+        amat[8][7] = -3.0/((256)*pow(1+mt,2)); 
+        amat[8][8] = 8.0/((256)*(1+mt)*(2+mt)); 
+        amat[8][9] = 16.0/((256)*(1+mt)*pow(2+mt,2)); 
+        amat[8][10] = 2.0*mt*mt*(4+mt)/((256)*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
         // row 9 
         amat[9][1] = 1.0/256; 
-        amat[9][2] = -1.0/((256)*(1+m*t)); 
-        amat[9][3] = -2.0/((256)*(1+m*t)); 
-        amat[9][4] = 4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[9][5] = 1.0/((256)*(1+m*t)); 
-        amat[9][6] = -4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[9][7] = 1.0/((256)*pow(1+m*t,2)); 
+        amat[9][2] = -1.0/((256)*(1+mt)); 
+        amat[9][3] = -2.0/((256)*(1+mt)); 
+        amat[9][4] = 4.0/((256)*(1+mt)*(2+mt)); 
+        amat[9][5] = 1.0/((256)*(1+mt)); 
+        amat[9][6] = -4.0/((256)*(1+mt)*(2+mt)); 
+        amat[9][7] = 1.0/((256)*pow(1+mt,2)); 
         amat[9][8] = 0.0;
         amat[9][9] = 0.0; 
-        amat[9][10] = -pow(m,2)*pow(t,2)*(4+2*m*t)/((256)*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t));
+        amat[9][10] = -mt*mt*(4+2*mt)/((256)*pow(1+mt,2)*pow(2+mt,2)*(3+mt));
 
         // row 10 
         amat[10][1] = 1.0/256;
-        amat[10][2] = -1.0/((256)*(1+m*t));
-        amat[10][3] = 2.0/((256)*(1+m*t)); 
-        amat[10][4] = -4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[10][5] = -3.0/((256)*(1+m*t)); 
-        amat[10][6] = 4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[10][7] = 1.0/((256)*pow(1+m*t,2)); 
+        amat[10][2] = -1.0/((256)*(1+mt));
+        amat[10][3] = 2.0/((256)*(1+mt)); 
+        amat[10][4] = -4.0/((256)*(1+mt)*(2+mt)); 
+        amat[10][5] = -3.0/((256)*(1+mt)); 
+        amat[10][6] = 4.0/((256)*(1+mt)*(2+mt)); 
+        amat[10][7] = 1.0/((256)*pow(1+mt,2)); 
         amat[10][8] = 0.0; 
         amat[10][9] = 0.0; 
-        amat[10][10] = -pow(m,2)*pow(t,2)*(4+2*m*t)/((256)*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[10][10] = -mt*mt*(4+2*mt)/((256)*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
         // row 11 
         amat[11][1] = 1.0/256; 
-        amat[11][2] = -1.0/((256)*(1+m*t)); 
-        amat[11][3] = -2.0/((256)*(1+m*t)); 
-        amat[11][4] = 4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[11][5] = -3.0/((256)*(1+m*t)); 
-        amat[11][6] = 4.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[11][7] = 1.0/((256)*pow(1+m*t,2)); 
-        amat[11][8] = 8.0/((256)*(1+m*t)*(2+m*t)); 
-        amat[11][9] = -16.0/((256)*(1+m*t)*pow(2+m*t,2)); 
-        amat[11][10] = 2.0*pow(m,3)*pow(t,3)/((256)*pow(1+m*t,2)*pow(2+m*t,2)*(3+m*t)); 
+        amat[11][2] = -1.0/((256)*(1+mt)); 
+        amat[11][3] = -2.0/((256)*(1+mt)); 
+        amat[11][4] = 4.0/((256)*(1+mt)*(2+mt)); 
+        amat[11][5] = -3.0/((256)*(1+mt)); 
+        amat[11][6] = 4.0/((256)*(1+mt)*(2+mt)); 
+        amat[11][7] = 1.0/((256)*pow(1+mt,2)); 
+        amat[11][8] = 8.0/((256)*(1+mt)*(2+mt)); 
+        amat[11][9] = -16.0/((256)*(1+mt)*pow(2+mt,2)); 
+        amat[11][10] = 2.0*mt*mt*mt/((256)*pow(1+mt,2)*pow(2+mt,2)*(3+mt)); 
 
 }
 
@@ -1057,22 +1057,25 @@ double SymmetricQuartetLikelihood(int nn){
   double sbeta[10][1];
   double q[12],check_qsum, prsum;
   double quart_lik = 0.0;
-  double t1, t2, t3;
+  double t1, t2, t3, expt1, expt2, expt3;
 
   // t1 = TimeVecQuart[ntaxa+3]; t2 = TimeVecQuart[ntaxa+2]; t3 = TimeVecQuart[ntaxa+1]
   t1 = *StoreQuarts[nn]->t1;
   t2 = *StoreQuarts[nn]->t2;
   t3 = *StoreQuarts[nn]->t3;
   //printf("Times are %f %f %f\n",t1,t2,t3);
+  expt1 = exp(-2*m*t1);
+  expt2 = exp(-2*m*t2);
+  expt3 = exp(-2*m*t3);
 
   sbeta[1][0]=1.0;
-  sbeta[2][0]=exp(-2*m*t1);
-  sbeta[3][0]=exp(-2*m*t2);
-  sbeta[4][0]=exp(-2*m*t1)*exp(-2*m*t2);
-  sbeta[5][0]=exp(-2*m*t3);
-  sbeta[6][0]=exp(-m*t1)*exp(-2*m*t3);
-  sbeta[7][0]=exp(-m*t2)*exp(-2*m*t3);
-  sbeta[8][0]=exp(-m*t1)*exp(-m*t2)*exp(-2*m*t3);
+  sbeta[2][0]=expt1;
+  sbeta[3][0]=expt2;
+  sbeta[4][0]=expt1*expt2;
+  sbeta[5][0]=expt3;
+  sbeta[6][0]=exp(-m*t1)*expt3;
+  sbeta[7][0]=exp(-m*t2)*expt3;
+  sbeta[8][0]=exp(-m*t1)*exp(-m*t2)*expt3;
   sbeta[9][0]=exp(2*t1/t)*exp(2*t2/t)*exp(-4*t3*(m+1/t));
 
   // order is: 1 = xxxx; 2 = xxxy = xxyx; 3 = xyxx = yxxx; 4 = xyxy = yxxy
@@ -1111,24 +1114,27 @@ double AsymmetricQuartetLikelihood(int nn){
   double abeta[11][1];
   double q[12],check_qsum, prsum;
   double quart_lik = 0.0;
-  double t1, t2, t3;
+  double t1, t2, t3, expt1, expt2, expt3;
 
 
   // t1 = TimeVecQuart[ntaxa+3]; t2 = TimeVecQuart[ntaxa+2]; t3 = TimeVecQuart[ntaxa+1]
   t1 = *StoreQuarts[nn]->t1;
   t2 = *StoreQuarts[nn]->t2;
   t3 = *StoreQuarts[nn]->t3;
+  expt1 = exp(-2.0*m*t1);
+  expt2 = exp(-2.0*m*t2);
+  expt3 = exp(-2.0*m*t3);
 
   abeta[1][0]=1.0; 
-  abeta[2][0]=exp(-2.0*m*t1);
-  abeta[3][0]=exp(-2.0*m*t2); 
-  abeta[4][0]=exp(-m*t1)*exp(-2.0*m*t2); 
-  abeta[5][0]=exp(-2.0*m*t3); 
-  abeta[6][0]=exp(-m*t1)*exp(-2.0*m*t3); 
-  abeta[7][0]=exp(-2.0*m*t1)*exp(-2.0*m*t3); 
-  abeta[8][0]=exp(-m*t2)*exp(-2.0*m*t3); 
-  abeta[9][0]=exp(-m*t1)*exp(-m*t2)*exp(-2.0*m*t3);
-  abeta[10][0]=exp((2.0/t)*(t1-t2))*exp(-2.0*m*(t2+t3)); 
+  abeta[2][0]=expt1;
+  abeta[3][0]=expt2; 
+  abeta[4][0]=exp(-m*t1)*expt2; 
+  abeta[5][0]=expt3; 
+  abeta[6][0]=exp(-m*t1)*expt3; 
+  abeta[7][0]=expt1*expt3; 
+  abeta[8][0]=exp(-m*t2)*expt3; 
+  abeta[9][0]=exp(-m*t1)*exp(-m*t2)*expt3;
+  abeta[10][0]=exp((2.0/t)*(t1-t2))*expt2*expt3; 
 
   // order is: xxxx; xxxy = xxyx; xyxx; yxxx; xxyy; xyxy = yxxy; xxyz
   // yzxx; xyxz = xyzx; yxxz = yxzx; xyzw
@@ -1222,6 +1228,476 @@ double GetCompLik() {
 
   //printf("The composite likelihood is %f; this required %d quartet comps\n",complik,num_unique_quarts);
   return(complik);
+
+}
+
+/* switch specifies which node in the quartet to use */
+/* switch = 1, 2, 3 for t1, t2, t3                   */
+
+void SymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *symders){
+
+  int i, sump=0;
+  double m = 4.0/3.0, t=2.0*theta; // t is 2*theta   
+  double sbeta[10][1], sdbeta[10][1], sddbeta[10][1];
+  double q[12], dq[12], ddq[12], check_qsum, prsum;
+  double quart_lik = 0.0;
+  double t1, t2, t3, expt1, expt2, expt3, emt1, emt2;
+
+  symders[0] = 0.0;  /* storage for first derivative */
+  symders[1] = 0.0;  /* storage for second derivative */
+
+  // t1 = TimeVecQuart[ntaxa+3]; t2 = TimeVecQuart[ntaxa+2]; t3 = TimeVecQuart[ntaxa+1]
+  t1 = *StoreQuarts[nn]->t1;
+  t2 = *StoreQuarts[nn]->t2;
+  t3 = *StoreQuarts[nn]->t3;
+  printf("Times are %f %f %f\n",t1,t2,t3);
+  expt1 = exp(-2.0*m*t1);
+  expt2 = exp(-2.0*m*t2);
+  expt3 = exp(-2.0*m*t3);
+  emt1 = exp(-m*t1);
+  emt2 = exp(-m*t2); 
+
+  sbeta[1][0]=1.0;
+  sbeta[2][0]=expt1;
+  sbeta[3][0]=expt2;
+  sbeta[4][0]=expt1*expt2;
+  sbeta[5][0]=expt3;
+  sbeta[6][0]=emt1*expt3;
+  sbeta[7][0]=emt2*expt3;
+  sbeta[8][0]=emt1*emt2*expt3;
+  sbeta[9][0]=exp(2*t1/t)*exp(2*t2/t)*exp(-4*t3*(m+1/t));
+
+
+  if (blswitch == 1) {
+
+  	sdbeta[1][0]=0.0;
+  	sdbeta[2][0]=-2.0*m*expt1;
+  	sdbeta[3][0]=0.0;
+  	sdbeta[4][0]=-2.0*m*expt1*expt2;
+  	sdbeta[5][0]=0.0;
+  	sdbeta[6][0]=-m*expt1*expt3;
+  	sdbeta[7][0]=0.0;
+  	sdbeta[8][0]=-m*emt1*emt2*expt3;
+  	sdbeta[9][0]=(2.0/t)*exp(2.0*t1/t)*exp(2.0*t2/t)*exp(-4.0*t3*(m+1/t));
+
+  	sddbeta[1][0]=0.0;
+  	sddbeta[2][0]=4.0*(m/2.0)*expt1;
+  	sddbeta[3][0]=0.0;
+  	sddbeta[4][0]=4.0*(m/2)*expt1*expt2;
+  	sddbeta[5][0]=0.0;
+  	sddbeta[6][0]=m*m*emt1*expt3;
+  	sddbeta[7][0]=0.0;
+  	sddbeta[8][0]=m*m*emt1*emt2*expt3;
+  	sddbeta[9][0]=(4.0/(t*t))*exp(2.0*t1/t)*exp(2.0*t2/t)*exp(-4.0*t3*(m+1/t));
+
+  }
+
+  else if (blswitch == 2) {
+
+	sdbeta[1][0]=0.0;
+  	sdbeta[2][0]=0.0;
+  	sdbeta[3][0]=-2.0*m*expt2;
+  	sdbeta[4][0]=-2.0*m*expt1*expt2;
+  	sdbeta[5][0]=0.0;
+  	sdbeta[6][0]=0.0;
+  	sdbeta[7][0]=-m*emt2*expt3;
+  	sdbeta[8][0]=-m*emt1*emt2*expt3;
+  	sdbeta[9][0]=(2.0/t)*exp(2.0*t1/t)*exp(2.0*t2/t)*exp(-4.0*t3*(m+1/t));
+  
+  	sddbeta[1][0]=0.0;
+  	sddbeta[2][0]=0.0;
+  	sddbeta[3][0]=4.0*m*m*expt2;
+  	sddbeta[4][0]=4.0*m*m*expt1*expt2;
+  	sddbeta[5][0]=0.0;
+  	sddbeta[6][0]=0.0;
+  	sddbeta[7][0]=m*m*emt2*expt3;
+  	sddbeta[8][0]=m*m*emt1*emt2*expt3;
+  	sddbeta[9][0]=(4.0/(t*t))*exp(2.0*t1/t)*exp(2.0*t2/t)*exp(-4.0*t3*(m+1/t));
+
+  }
+
+  else if (blswitch == 3) {
+
+	sdbeta[1][0]=0.0;
+  	sdbeta[2][0]=0.0;
+  	sdbeta[3][0]=0.0;
+  	sdbeta[4][0]=0.0;
+  	sdbeta[5][0]=-2.0*m*expt3;
+  	sdbeta[6][0]=-2.0*m*emt1*expt3;
+  	sdbeta[7][0]=-2.0*m*emt2*expt3;
+  	sdbeta[8][0]=-2.0*m*emt1*emt2*expt3;
+  	sdbeta[9][0]=(-4.0/t-4.0*m)*exp(2.0*t1/t)*exp(2.0*t2/t)*exp(-4.0*t3*(m+1.0/t)); 
+  
+  	sddbeta[1][0]=0.0;
+  	sddbeta[2][0]=0.0;
+  	sddbeta[3][0]=0.0;
+  	sddbeta[4][0]=0.0;
+  	sddbeta[5][0]=4.0*m*m*expt3;
+  	sddbeta[6][0]=4.0*m*m*emt1*expt3;
+  	sddbeta[7][0]=4.0*m*m*emt2*expt3;
+  	sddbeta[8][0]=4.0*m*m*emt1*emt2*expt3;
+  	sddbeta[9][0]=pow(-4.0/t-4.0*m,2)*exp(2.0*t1/t)*exp(2.0*t2/t)*exp(-4.0*t3*(m+1/t));
+
+  }
+
+  else { printf("Invalid argument to derivative function. Exiting.\n\n"); exit(1); }
+
+  // order is: 1 = xxxx; 2 = xxxy = xxyx; 3 = xyxx = yxxx; 4 = xyxy = yxxy
+  // 5 = xxyy; 6 = xxyz; 7 = yzxx; 8 = xyxz = yxxz = xyzx = yxzx; 9 = xyzw
+  // to get site patterns probs, multiply transpose(smat)*sbeta
+  // weighted version is below
+
+  for (i=1; i<12; i++) { q[i]=0.0; dq[i]=0.0; ddq[i]=0.0; }
+    for (i=1; i<10; i++) {
+
+	    q[1] += 4*smat[i][1]*sbeta[i][0];
+            q[2] += 12*smat[i][2]*sbeta[i][0];//24
+            q[3] += 12*smat[i][3]*sbeta[i][0];//24
+            q[4] += 12*smat[i][4]*sbeta[i][0];//24
+            q[5] += 12*smat[i][5]*sbeta[i][0];
+            q[6] += 24*smat[i][6]*sbeta[i][0];
+            q[7] += 24*smat[i][7]*sbeta[i][0];
+            q[8] += 24*smat[i][8]*sbeta[i][0];//96
+            q[9] += 24*smat[i][9]*sbeta[i][0]; 
+
+            dq[1] += 4*smat[i][1]*sdbeta[i][0];
+            dq[2] += 12*smat[i][2]*sdbeta[i][0];//24
+            dq[3] += 12*smat[i][3]*sdbeta[i][0];//24
+            dq[4] += 12*smat[i][4]*sdbeta[i][0];//24
+            dq[5] += 12*smat[i][5]*sdbeta[i][0];
+            dq[6] += 24*smat[i][6]*sdbeta[i][0];
+            dq[7] += 24*smat[i][7]*sdbeta[i][0];
+            dq[8] += 24*smat[i][8]*sdbeta[i][0];//96
+            dq[9] += 24*smat[i][9]*sdbeta[i][0];     
+
+	    ddq[1] += 4*smat[i][1]*sddbeta[i][0];
+            ddq[2] += 12*smat[i][2]*sddbeta[i][0];//24                                                                                 
+            ddq[3] += 12*smat[i][3]*sddbeta[i][0];//24
+            ddq[4] += 12*smat[i][4]*sddbeta[i][0];//24                                                                                 
+            ddq[5] += 12*smat[i][5]*sddbeta[i][0];
+            ddq[6] += 24*smat[i][6]*sddbeta[i][0];
+            ddq[7] += 24*smat[i][7]*sddbeta[i][0];
+            ddq[8] += 24*smat[i][8]*sddbeta[i][0];//96
+            ddq[9] += 24*smat[i][9]*sddbeta[i][0]; 
+  }
+
+  for (i=1; i<10; i++) printf("%f %f %f\n",sdbeta[i][0],dq[i],ddq[i]);
+
+
+   // compute first derivative of the quartet likelihood
+   symders[0] = StoreQuarts[nn]->spprobs[0]*(1.0/q[1])*dq[1] + StoreQuarts[nn]->spprobs[1]*(1.0/q[2])*dq[2] + StoreQuarts[nn]->spprobs[2]*(1.0/q[2])*dq[2] + StoreQuarts[nn]->spprobs[3]*(1.0/q[3])*dq[3] + StoreQuarts[nn]->spprobs[4]*(1.0/q[3])*dq[3] 
+                    + StoreQuarts[nn]->spprobs[5]*(1.0/q[4])*dq[4] + StoreQuarts[nn]->spprobs[6]*(1.0/q[4])*dq[4] + StoreQuarts[nn]->spprobs[7]*(1.0/q[5])*dq[5] + StoreQuarts[nn]->spprobs[12]*(1.0/q[6])*dq[6] 
+                    + StoreQuarts[nn]->spprobs[13]*(1.0/q[7])*dq[7] + StoreQuarts[nn]->spprobs[8]*(1.0/q[8])*dq[8] + StoreQuarts[nn]->spprobs[10]*(1.0/q[8])*dq[8] + StoreQuarts[nn]->spprobs[9]*(1.0/q[8])*dq[8] + StoreQuarts[nn]->spprobs[11]*(1.0/q[8])*dq[8] 
+		    + StoreQuarts[nn]->spprobs[14]*(1.0/q[9])*dq[9];
+   
+   // compute second derivative of the quartet likelihood 
+   symders[1] = StoreQuarts[nn]->spprobs[0]*((1.0/q[1])*ddq[1]-(1.0/(q[1]*q[1]))*(dq[1]*dq[1])) 
+		+ StoreQuarts[nn]->spprobs[1]*((1.0/q[2])*ddq[2]-(1.0/(q[2]*q[2]))*(dq[2]*dq[2])) 
+		+ StoreQuarts[nn]->spprobs[2]*((1.0/q[2])*ddq[2]-(1.0/(q[2]*q[2]))*(dq[2]*dq[2])) 
+		+ StoreQuarts[nn]->spprobs[3]*((1.0/q[3])*ddq[3]-(1.0/(q[3]*q[3]))*(dq[3]*dq[3])) 
+		+ StoreQuarts[nn]->spprobs[4]*((1.0/q[3])*ddq[3]-(1.0/(q[3]*q[3]))*(dq[3]*dq[3]))
+                + StoreQuarts[nn]->spprobs[5]*((1.0/q[4])*ddq[4]-(1.0/(q[4]*q[4]))*(dq[4]*dq[4])) 
+		+ StoreQuarts[nn]->spprobs[6]*((1.0/q[4])*ddq[4]-(1.0/(q[4]*q[4]))*(dq[4]*dq[4])) 
+		+ StoreQuarts[nn]->spprobs[7]*((1.0/q[5])*ddq[5]-(1.0/(q[5]*q[5]))*(dq[5]*dq[5])) 
+		+ StoreQuarts[nn]->spprobs[12]*((1.0/q[6])*ddq[6]-(1.0/(q[6]*q[6]))*(dq[6]*dq[6]))
+                + StoreQuarts[nn]->spprobs[13]*((1.0/q[7])*ddq[7]-(1.0/(q[7]*q[7]))*(dq[7]*dq[7])) 
+		+ StoreQuarts[nn]->spprobs[8]*((1.0/q[8])*ddq[8]-(1.0/(q[8]*q[8]))*(dq[8]*dq[8])) 
+		+ StoreQuarts[nn]->spprobs[10]*((1.0/q[8])*ddq[8]-(1.0/(q[8]*q[8]))*(dq[8]*dq[8]))
+		+ StoreQuarts[nn]->spprobs[9]*((1.0/q[8])*ddq[8]-(1.0/(q[8]*q[8]))*(dq[8]*dq[8]))
+		+ StoreQuarts[nn]->spprobs[11]*((1.0/q[8])*ddq[8]-(1.0/(q[8]*q[8]))*(dq[8]*dq[8]))
+                + StoreQuarts[nn]->spprobs[14]*((1.0/q[9])*ddq[9]-(1.0/(q[9]*q[9]))*(dq[9]*dq[9]));
+
+   
+  if (verbose==1) printf("The derivatives of the likelihood of the symmetric quartet are %f %f\n\n",symders[0],symders[1]);
+
+}  
+
+
+void AsymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *asymders){                            
+
+  int i, sump=0;
+  double m = 4.0/3.0, t=2.0*theta; // t is 2*theta
+  double abeta[11][1], adbeta[11][1], addbeta[11][0];
+  double q[12], dq[12], ddq[12], check_qsum, prsum;
+  double quart_lik = 0.0;
+  double t1, t2, t3, expt1, expt2, expt3, emt1, emt2;
+
+  // t1 = TimeVecQuart[ntaxa+3]; t2 = TimeVecQuart[ntaxa+2]; t3 = TimeVecQuart[ntaxa+1]
+  t1 = *StoreQuarts[nn]->t1;
+  t2 = *StoreQuarts[nn]->t2;
+  t3 = *StoreQuarts[nn]->t3;
+  expt1 = exp(-2.0*m*t1);
+  expt2 = exp(-2.0*m*t2);
+  expt3 = exp(-2.0*m*t3);
+  emt1 = exp(-m*t1);
+  emt2 = exp(-m*t2);
+
+  abeta[1][0]=1.0; 
+  abeta[2][0]=expt1;
+  abeta[3][0]=expt2; 
+  abeta[4][0]=emt1*expt2; 
+  abeta[5][0]=expt3; 
+  abeta[6][0]=emt1*expt3; 
+  abeta[7][0]=expt1*expt3; 
+  abeta[8][0]=emt2*expt3; 
+  abeta[9][0]=emt1*emt2*expt3;
+  abeta[10][0]=exp((2.0/t)*(t1-t2))*expt2*expt3; 
+
+  if (blswitch == 1) {
+
+	adbeta[1][0]=0.0;
+  	adbeta[2][0]=-2*m*expt1;
+ 	adbeta[3][0]=0.0;
+  	adbeta[4][0]=-m*emt1*expt2;
+  	adbeta[5][0]=0.0;
+  	adbeta[6][0]=-m*emt1*expt3;
+  	adbeta[7][0]=-2*m*expt1*expt3;
+  	adbeta[8][0]=0.0;
+  	adbeta[9][0]=-m*emt1*emt2*expt3;
+  	adbeta[10][0]=(2.0/t)*exp((2.0/t)*(t1-t2))*expt2*expt3;
+
+	addbeta[1][0]=0.0;
+  	addbeta[2][0]=4*m*m*expt1;
+  	addbeta[3][0]=0.0;
+  	addbeta[4][0]=m*m*emt1*expt2;
+  	addbeta[5][0]=0.0;
+  	addbeta[6][0]=m*m*emt1*expt3;
+  	addbeta[7][0]=4*m*m*expt1*expt3;
+  	addbeta[8][0]=0.0;
+  	addbeta[9][0]=m*m*emt1*emt2*expt3;
+  	addbeta[10][0]=(4.0/(t*t))*exp((2.0/t)*(t1-t2))*expt2*expt3;
+
+  }
+ 
+  else if (blswitch == 2) {
+
+        adbeta[1][0]=0.0;
+  	adbeta[2][0]=0.0; 
+  	adbeta[3][0]=-2*m*expt2;
+  	adbeta[4][0]=-2*m*emt1*expt2;
+  	adbeta[5][0]=0.0;
+  	adbeta[6][0]=0.0;
+  	adbeta[7][0]=0.0;
+  	adbeta[8][0]=-m*emt2*expt3;
+  	adbeta[9][0]=-m*emt1*emt2*expt3;
+  	adbeta[10][0]=(-2.0/t-2.0*m)*exp((2.0/t)*(t1-t2))*expt2*expt3;
+  
+        addbeta[1][0]=0.0;
+  	addbeta[2][0]=0.0;
+  	addbeta[3][0]=4*m*m*expt2;
+  	addbeta[4][0]=4*m*m*emt1*expt2;
+  	addbeta[5][0]=0.0;
+  	addbeta[6][0]=0.0;
+  	addbeta[7][0]=0.0;
+  	addbeta[8][0]=m*m*emt2*expt3;
+  	addbeta[9][0]=m*m*emt1*emt2*expt3;
+  	addbeta[10][0]=((2.0/t+2.0*m)*(2.0/t+2.0*m))*exp((2.0/t)*(t1-t2))*expt2*expt3;
+
+  }
+
+  else if (blswitch == 3) {
+
+        adbeta[1][0]=0.0;
+  	adbeta[2][0]=0.0; 
+  	adbeta[3][0]=0.0;
+  	adbeta[4][0]=0.0;
+  	adbeta[5][0]=-2*m*expt3;
+  	adbeta[6][0]=-2*m*emt1*expt3;
+  	adbeta[7][0]=-2*m*expt1*expt3;
+  	adbeta[8][0]=-2*m*emt2*expt3;
+  	adbeta[9][0]=-2*m*emt1*emt2*expt3;
+  	adbeta[10][0]=(-2*m)*exp((2.0/t)*(t1-t2))*expt2*expt3;
+  
+        addbeta[1][0]=0.0;
+  	addbeta[2][0]=0.0;  
+  	addbeta[3][0]=0.0;
+  	addbeta[4][0]=0.0;
+  	addbeta[5][0]=4*m*m*expt3;
+  	addbeta[6][0]=4*m*m*emt1*expt3;
+  	addbeta[7][0]=4*m*m*expt1*expt3;
+  	addbeta[8][0]=4*m*m*emt2*expt3;
+  	addbeta[9][0]=4*m*m*emt1*emt2*expt3;
+  	addbeta[10][0]=(4*m*m)*exp((2.0/t)*(t1-t2))*expt2*expt3;
+
+  }
+
+  else { printf("Invalid argument to derivative function. Exiting.\n\n"); exit(1); }
+
+  // order is: xxxx; xxxy = xxyx; xyxx; yxxx; xxyy; xyxy = yxxy; xxyz
+  // yzxx; xyxz = xyzx; yxxz = yxzx; xyzw
+  // to get site patterns probs, multiply amat*abeta (not transpose)
+  // weighted version is below
+
+  for (i=1; i<12; i++) { q[i]=0.0; dq[i]=0.0; ddq[i]=0.0; }
+   for (i=1; i<11; i++) {
+            q[1] += 4*amat[1][i]*abeta[i][0]; //4
+            q[2] += 12*amat[2][i]*abeta[i][0]; //24
+            q[3] += 12*amat[3][i]*abeta[i][0]; //12
+            q[4] += 12*amat[4][i]*abeta[i][0]; //12
+            q[5] += 12*amat[5][i]*abeta[i][0]; //12
+            q[6] += 12*amat[6][i]*abeta[i][0]; //24
+            q[7] += 24*amat[7][i]*abeta[i][0]; //24
+            q[8] += 24*amat[8][i]*abeta[i][0]; //24
+            q[9] += 24*amat[9][i]*abeta[i][0];  //48
+            q[10] += 24*amat[10][i]*abeta[i][0]; //48
+            q[11] += 24*amat[11][i]*abeta[i][0]; //24
+
+	    dq[1] += 4*amat[1][i]*adbeta[i][0]; //4
+            dq[2] += 12*amat[2][i]*adbeta[i][0]; //24
+            dq[3] += 12*amat[3][i]*adbeta[i][0]; //12
+            dq[4] += 12*amat[4][i]*adbeta[i][0]; //12
+            dq[5] += 12*amat[5][i]*adbeta[i][0]; //12
+            dq[6] += 12*amat[6][i]*adbeta[i][0]; //24
+            dq[7] += 24*amat[7][i]*adbeta[i][0]; //24
+            dq[8] += 24*amat[8][i]*adbeta[i][0]; //24                                                                                                   
+            dq[9] += 24*amat[9][i]*adbeta[i][0];  //48                                                                                                  
+            dq[10] += 24*amat[10][i]*adbeta[i][0]; //48                                                                                                 
+            dq[11] += 24*amat[11][i]*adbeta[i][0]; //24   
+
+	    ddq[1] += 4*amat[1][i]*addbeta[i][0]; //4
+            ddq[2] += 12*amat[2][i]*addbeta[i][0]; //24
+            ddq[3] += 12*amat[3][i]*addbeta[i][0]; //12
+            ddq[4] += 12*amat[4][i]*addbeta[i][0]; //12
+            ddq[5] += 12*amat[5][i]*addbeta[i][0]; //12
+            ddq[6] += 12*amat[6][i]*addbeta[i][0]; //24
+            ddq[7] += 24*amat[7][i]*addbeta[i][0]; //24
+            ddq[8] += 24*amat[8][i]*addbeta[i][0]; //24                                                                                                   
+            ddq[9] += 24*amat[9][i]*addbeta[i][0];  //48                                                                                                  
+            ddq[10] += 24*amat[10][i]*addbeta[i][0]; //48                                                                                                 
+            ddq[11] += 24*amat[11][i]*addbeta[i][0]; //24   
+
+   }
+
+  for (i=1; i<12; i++) printf("%f %f %f %f\n",abeta[i][0],adbeta[i][0],dq[i],ddq[i]);
+
+  // compute first derviative of the quartet likelihood
+  asymders[0] = StoreQuarts[nn]->spprobs[0]*(1.0/q[1])*dq[1] 
+		+ StoreQuarts[nn]->spprobs[1]*(1.0/q[2])*dq[2] 
+		+ StoreQuarts[nn]->spprobs[2]*(1.0/q[2])*dq[2] 
+		+ StoreQuarts[nn]->spprobs[3]*(1.0/q[3])*dq[3] 
+		+ StoreQuarts[nn]->spprobs[4]*(1.0/q[4])*dq[4]
+                + StoreQuarts[nn]->spprobs[7]*(1.0/q[5])*dq[5] 
+		+ StoreQuarts[nn]->spprobs[5]*(1.0/q[6])*dq[6] 
+		+ StoreQuarts[nn]->spprobs[6]*(1.0/q[6])*dq[6] 
+		+ StoreQuarts[nn]->spprobs[12]*(1.0/q[7])*dq[7] 
+		+ StoreQuarts[nn]->spprobs[13]*(1.0/q[8])*dq[8]
+                + StoreQuarts[nn]->spprobs[8]*(1.0/q[9])*dq[9] 
+		+ StoreQuarts[nn]->spprobs[9]*(1.0/q[9])*dq[9] 
+		+ StoreQuarts[nn]->spprobs[10]*(1.0/q[10])*dq[10] 
+		+ StoreQuarts[nn]->spprobs[11]*(1.0/q[10])*dq[10]
+		+ StoreQuarts[nn]->spprobs[14]*(1.0/q[11])*dq[11];
+
+ // compute second derviative of the quartet likelihood
+  asymders[1] = StoreQuarts[nn]->spprobs[0]*((1.0/q[1])*ddq[1]-(1.0/(q[1]*q[1]))*(dq[1]*dq[1]))
+                + StoreQuarts[nn]->spprobs[1]*((1.0/q[2])*ddq[2]-(1.0/(q[2]*q[2]))*(dq[2]*dq[2]))  
+                + StoreQuarts[nn]->spprobs[2]*((1.0/q[2])*ddq[2]-(1.0/(q[2]*q[2]))*(dq[2]*dq[2]))  
+                + StoreQuarts[nn]->spprobs[3]*((1.0/q[3])*ddq[3]-(1.0/(q[3]*q[3]))*(dq[3]*dq[3]))  
+                + StoreQuarts[nn]->spprobs[4]*((1.0/q[4])*ddq[4]-(1.0/(q[4]*q[4]))*(dq[4]*dq[4]))     
+                + StoreQuarts[nn]->spprobs[7]*((1.0/q[5])*ddq[5]-(1.0/(q[5]*q[5]))*(dq[5]*dq[5])) 
+                + StoreQuarts[nn]->spprobs[5]*((1.0/q[6])*ddq[6]-(1.0/(q[6]*q[6]))*(dq[6]*dq[6])) 
+                + StoreQuarts[nn]->spprobs[6]*((1.0/q[6])*ddq[6]-(1.0/(q[6]*q[6]))*(dq[6]*dq[6])) 
+                + StoreQuarts[nn]->spprobs[12]*((1.0/q[7])*ddq[7]-(1.0/(q[7]*q[7]))*(dq[7]*dq[7])) 
+                + StoreQuarts[nn]->spprobs[13]*((1.0/q[8])*ddq[8]-(1.0/(q[8]*q[8]))*(dq[8]*dq[8])) 
+                + StoreQuarts[nn]->spprobs[8]*((1.0/q[9])*ddq[9]-(1.0/(q[9]*q[9]))*(dq[9]*dq[9])) 
+                + StoreQuarts[nn]->spprobs[9]*((1.0/q[9])*ddq[9]-(1.0/(q[9]*q[9]))*(dq[9]*dq[9])) 
+                + StoreQuarts[nn]->spprobs[10]*((1.0/q[10])*ddq[10]-(1.0/(q[10]*q[10]))*(dq[10]*dq[10])) 
+                + StoreQuarts[nn]->spprobs[11]*((1.0/q[10])*ddq[10]-(1.0/(q[10]*q[10]))*(dq[10]*dq[10]))
+                + StoreQuarts[nn]->spprobs[14]*((1.0/q[11])*ddq[11]-(1.0/(q[11]*q[11]))*(dq[11]*dq[11])); 
+
+
+  if (verbose==1) printf("The derivatives of the likelihood of the asymmetric quartet are %f %f\n\n",asymders[0],asymders[1]);
+
+}
+
+
+/*** Functions to compute first and second derivatives  ***/
+/*** of the composite log likelihood for one node time. ***/
+/*** The argument optnode is the integer index of the   ***/
+/*** node whose time is being optimized.                ***/
+
+void GetCompLikDerivatives(int optnode) {
+
+  int i, j, k, l, m;
+  int ovec[5], bl_ind[nquarts+1];
+  int timemap1, timemap2, timemap3;
+  double duppvec[15];
+  double complik=0.0, bl_ders[2], der1=0.0, der2=0.0;
+
+  bl_ders[0] = bl_ders[1] = 0.0;
+
+  num_unique_quarts = 0;
+  for (i=0; i<nquarts+1; i++) { qvec[i]=0; bl_ind[i]=0;}
+
+  for (i=1; i<ntaxa+1; i++){
+    for (j=i+1; j<ntaxa+1; j++) {
+      for (k=j+1; k<ntaxa+1; k++) {
+        for (l=k+1; l<ntaxa+1; l++) {
+          printf("Quartet %d %d %d %d\n",i,j,k,l);
+          //printf("\t %llu %d %d\n",subset_to_index(i-1,j-1,k-1,l-1),(int)subset_to_index(i-1,j-1,k-1,l-1),qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]);
+          //printf("\t Have we looked at this quartet yet? %d\n",qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]); 
+          if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
+
+                GetQuartetTree(i,j,k,l,ovec);
+                //printf("ovec is: %d %d %d %d %d\n",ovec[0],ovec[1],ovec[2],ovec[3],ovec[4]);
+                FindDupQuarts(ovec[0],duppvec);
+            
+                // Fill the information for the current quartet into the struct StoreQuarts
+                for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
+                StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
+
+		timemap1 = FindMRCA(ppTwoRowQuart[0][ntaxa+3],ppTwoRowQuart[1][ntaxa+3]);
+                StoreQuarts[num_unique_quarts]->t1 = &TimeVec[timemap1];
+		if (optnode == timemap1) bl_ind[num_unique_quarts] = 1;
+
+                if (ovec[0]==2) {
+			timemap2 = FindMRCA(ppTwoRowQuart[0][ntaxa+2],ppTwoRowQuart[1][ntaxa+2]);
+                	timemap3 = FindMRCA(ppTwoRowQuart[0][ntaxa+3],ppTwoRowQuart[1][ntaxa+2]);
+                        StoreQuarts[num_unique_quarts]->t2 = &TimeVec[timemap2];
+                        StoreQuarts[num_unique_quarts]->t3 = &TimeVec[timemap3];
+			if (optnode == timemap2) bl_ind[num_unique_quarts] = 2;
+			else if (optnode == timemap3) bl_ind[num_unique_quarts] = 3;
+                }
+                else if (ovec[0]==1) {
+			timemap2 = FindMRCA(ppTwoRowQuart[0][ntaxa+3],ppTwoRowQuart[1][ntaxa+2]);
+			timemap3 = FindMRCA(ppTwoRowQuart[0][ntaxa+3],ppTwoRowQuart[1][ntaxa+1]);
+                        StoreQuarts[num_unique_quarts]->t2 = &TimeVec[timemap2];
+                        StoreQuarts[num_unique_quarts]->t3 = &TimeVec[timemap3];
+			if (optnode == timemap2) bl_ind[num_unique_quarts] = 2;
+                        else if (optnode == timemap3) bl_ind[num_unique_quarts] = 3;
+                }
+
+                num_unique_quarts+=1;
+
+          }
+        }
+      }
+    }
+  }
+
+  for (i=0; i<num_unique_quarts; i++) {
+
+        printf("%d ",i);
+        //for (j=0; j<15; j++) printf("%d ",StoreQuarts[i]->spprobs[j]);
+        printf("%f %f %f ",*StoreQuarts[i]->t1,*StoreQuarts[i]->t2,*StoreQuarts[i]->t3);
+	printf("Opt node is %d, bl_ind is %d \n",optnode,bl_ind[i]);
+        //printf("%d\n",StoreQuarts[i]->ncherries);
+
+        if (StoreQuarts[i]->ncherries==2 && bl_ind[i]!=0) {
+		SymmetricQuartetLikelihoodDerivatives(i,bl_ind[i],bl_ders);
+		der1+=bl_ders[0];
+		der2+=bl_ders[1];
+	}
+        else if (StoreQuarts[i]->ncherries==1 && bl_ind[i]!=0) {
+		AsymmetricQuartetLikelihoodDerivatives(i,bl_ind[i],bl_ders);
+		printf("blders: %f %f\n",bl_ders[0],bl_ders[1]);
+                der1+=bl_ders[0];
+                der2+=bl_ders[1];
+	}
+
+  }
+
+
+  printf("The derviatives of the composite likelihood are %f  %f\n",der1,der2);
 
 }
 
