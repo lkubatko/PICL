@@ -995,6 +995,12 @@ int main(int argc, char *argv[]) {
 		if (anneal_bl==1) bl_uphill_genetree();
 		else if (anneal_bl==2) bl_anneal_genetree();
 	}
+	else if (model == 5) {
+		//bl_uphill_full();
+		anneal_full();
+		if (anneal_bl==1) bl_uphill_full();
+		else if (anneal_bl==2) bl_anneal_full();
+	}
 
 	//printf(" done\n\n");
 	if (verbose==1) {
@@ -1053,9 +1059,10 @@ int main(int argc, char *argv[]) {
 	}
 	printf("The composite likelihood of the best tree found by the algorithm is ");
 	if (model == 1) printf("%f\n",GetCompLik());
-        else if (model == 2) printf("%f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);    
-        else if (model == 3) printf("%f\n",GetCompLik_msnp());
+    else if (model == 2) printf("%f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);    
+    else if (model == 3) printf("%f\n",GetCompLik_msnp());
 	else if (model == 4) printf("%f\n",GetCompLik_genetree());
+	else if (model == 5) printf("%f\n",GetCompLik_popvar());
         printf("\n\n");
          
    	fprintf(out,"Best tree found by the algorithm in mutation units: \n");
