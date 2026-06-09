@@ -27,7 +27,7 @@ void anneal_full_popvar() {
    ci = U/(1+counteri*beta);
    while (counteri<burnin) {
 
-	trbldg();
+	trbldg_popvar();
 	if (fabs(curr_lik-curr_anneal_lik)>max_change) max_change=fabs(curr_lik-curr_anneal_lik);
       	counteri++;
 
@@ -42,7 +42,7 @@ void anneal_full_popvar() {
   num_reject = 0;
   curr_anneal_lik = GetCompLik_popvar();
   while (num_reject < bound1 && counteri < burnin+(int)max_it/2) {
-	trbldg();
+	trbldg_popvar();
 	ci = U/(1+counteri*beta);
 	xsum += log(counteri);
         ysum += log(-1.0*curr_anneal_lik);
@@ -74,7 +74,7 @@ void anneal_full_popvar() {
   num_reject = 0;
   startcount = counteri;
   while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
-        trbldg();
+        trbldg_popvar();
         ci = U/(1+counteri*beta);
 	xsum += log(counteri);
         ysum += log(-1.0*curr_anneal_lik);
