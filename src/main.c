@@ -1036,7 +1036,7 @@ int main(int argc, char *argv[]) {
   		for (i=0; i<ntaxa-1; i++) {
         		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
 				if (model == 5) {
-					printf("%f %f\n",TimeVec[i+ntaxa+1]);
+					printf("%f \n",TimeVec[i+ntaxa+1]);
 				}
 				else {
 					printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
@@ -1092,7 +1092,7 @@ int main(int argc, char *argv[]) {
 					if (model == 5){
 						for (i=0; i<ntaxa-1; i++) {
                         	printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);  
-                        	printf("%f %f\n",TimeVec[i+ntaxa+1]);
+                        	printf("%f \n",TimeVec[i+ntaxa+1]);
 					}
 					}
 					else {
