@@ -711,7 +711,7 @@ int main(int argc, char *argv[]) {
   printf("Verbose: %d\n\n",verbose);
 
   if (model == 5){ 
-	  theta = NULL;
+	  theta = NAN;
   	  
   }
   if (b1opt>0) printf("The target annealing slope (b1opt) must be negative; adaptive annealing is disabled.\n\n");
