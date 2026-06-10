@@ -91,7 +91,7 @@ void build_random_tree(int seed1, int seed2) {
   
   if (model == 5) {
     scale = (double)rand() / RAND_MAX;
-	printf("Model 5 using scale = %d",scale);
+	printf("Model 5 using scale = %f \n",scale);
   }
   else{
 	  scale = ((int)ntaxa)*theta;
