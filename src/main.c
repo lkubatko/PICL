@@ -932,7 +932,7 @@ int main(int argc, char *argv[]) {
 				printf("The tree after branch length optimization is (mutation units):\n");
     			for (i=0; i<ntaxa-1; i++) {
         				printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
-        				printf("%f %f\n",TimeVec[i+ntaxa+1]);
+        				printf("%f \n",TimeVec[i+ntaxa+1]);
 					}
 			}
 			else{
