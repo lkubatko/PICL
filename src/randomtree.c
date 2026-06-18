@@ -87,9 +87,15 @@ void build_random_tree(int seed1, int seed2) {
     }
   
   /* done memory allocation */
-
-  scale = ((int)ntaxa)*theta;
-
+	
+  
+  if (model == 5) {
+    scale = (double)rand() / RAND_MAX;
+	printf("Model 5 using scale = %f \n",scale);
+  }
+  else{
+	  scale = ((int)ntaxa)*theta;
+  }
   curr_length=ntaxa;
   new_counter=ntaxa+2;
   seedj = seed1;
@@ -198,7 +204,13 @@ double compute_times(int node){
    double t1, t2, t;
    double scale;
 
-   scale = ((int)ntaxa/2)*theta;
+   if (model == 5) {
+    scale = (double)rand() / RAND_MAX;
+	  printf("Model 5 using scale = %f \n",scale);
+    }
+    else{
+	    scale = ((int)ntaxa)*theta;
+    }
 
    if (node <= ntaxa) {
 	TimeVec[node] = 0.0;

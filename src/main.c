@@ -24,6 +24,10 @@
 #include "trbldg_ratevar.c"
 #include "trbldg_msnp.c"
 #include "trbldg_genetree.c"
+#include "complik_popvar.c"
+#include "treebldg_popvar.c"
+#include "anneal_popvar.c"
+
 
 // ntaxa = number of species
 // nseq = number of individuals
@@ -33,7 +37,7 @@ int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2],
 int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
 int pattern_index[16][16];
 double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
-float theta, beta, mu, ratepar, invpar;
+float lambda, theta, beta, mu, ratepar, invpar;
 double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
 double smat[10][10],amat[12][12];
 double base_weight_table[15][4]; 
@@ -634,6 +638,10 @@ int main(int argc, char *argv[]) {
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&theta);
   printf("Theta: %f\n",theta);
 
+  /* Lambda */
+  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&lambda);
+  printf("Lambda: %f\n",lambda);
+	
   /* Rate_param */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&ratepar);
   printf("Rate_param: %f\n",ratepar);
@@ -702,6 +710,10 @@ int main(int argc, char *argv[]) {
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&verbose);
   printf("Verbose: %d\n\n",verbose);
 
+  if (model == 5){ 
+	  theta = NAN;
+  	  
+  }
   if (b1opt>0) printf("The target annealing slope (b1opt) must be negative; adaptive annealing is disabled.\n\n");
 
   fscanf(set,"%d",&ntaxa);
@@ -747,8 +759,9 @@ int main(int argc, char *argv[]) {
   else if (model==2) printf("Estimation will be carried out using the CIS/multlilocus rate variation model (MSC-JC69 + G)\n");
   else if (model==3) printf("Estimation will be carried out using the SNP model\n");
   else if (model==4) printf("Estimation will be carried out using the JC69 model for gene trees\n");
-  else { printf("Model must be 1, 2, 3, or 4. Exiting.\n\n"); exit(1); }
-
+  else if (model==5) printf("Estimation will be carried out using the CIS/multilocus model (MSC-JC69) with variable population size\n");
+  else { printf("Model must be 1, 2, 3, 4 or 5. Exiting.\n\n"); exit(1); }
+ 
   /******* TO DO: need to free extra memory from storing taxon map *******/
 
   // set up look up table to deal with ambiguity codes efficiently
@@ -777,7 +790,9 @@ int main(int argc, char *argv[]) {
   	tf = fopen(tree_file,"r");
 	if (tf==NULL) { printf("File treefile.tre not found. Exiting.\n\n"); exit(1);}
   	temp_rate = ReadTree(tf);
+  	
   	totaltime = FindTotalTime();
+  	
   	CalcTimeVec(totaltime,1.0);
 	
   	// Transfer from temp and re-scale with theta if needed
@@ -790,20 +805,35 @@ int main(int argc, char *argv[]) {
 		compute_times(ntaxa+1);
 		for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
 	}
-  	for (i=0; i<2*ntaxa+1; i++) {
+	if(model != 5){
+	    for (i=0; i<2*ntaxa+1; i++) {
 		TimeVec[i] = theta*TimeVec_temp[i];
 		TimeVec_init[i] = theta*TimeVec_temp[i];
 		TimeVec_temp[i] = TimeVec[i];
-  	}
+  	    }
+	}
+  	
 
-  	if (verbose == 1 ) {
-    		printf("The tree read from the input file is (coalescent units, mutation units):\n");
-    		for (i=0; i<ntaxa-1; i++) {
-  		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
-  		printf("%f %f\n ",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
-  		}
-		printf("\n");
-        }
+  	if (verbose == 1) {
+  	    if(model !=5){
+  	        printf("The tree read from the input file is (coalescent units, mutation units):\n");
+      	    for (i=0; i<ntaxa-1; i++) {
+      		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+      		printf("%f %f\n ",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+      		}
+      		printf("\n");
+  	    }
+  	    else if(model ==5){
+  	        printf("The tree read from the input file is (mutation units):\n");
+      	    for (i=0; i<ntaxa-1; i++) {
+      		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+      		printf("%f \n ",TimeVec[i+ntaxa+1]);
+      		}
+  	    }
+    		
+    		
+		
+    }
   	printf("Tree succesfully read from file\n\n");        
    }
    else if (random_tree==1) {  // generate a starting tree under the Yule model
@@ -820,10 +850,19 @@ int main(int argc, char *argv[]) {
                 TimeVec_init[i] = TimeVec[i];
         }
  	if (verbose == 1 ) {
+				if (model == 5){
+					printf("The random tree generated is (mutation units):\n");
+                	for (i=0; i<ntaxa-1; i++) {
+               		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+                	printf("%f\n ",TimeVec[i+ntaxa+1]);
+				}
+				}
+				else{
                 printf("The random tree generated is (coalescent units, mutation units):\n");
                 for (i=0; i<ntaxa-1; i++) {
                 printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
                 printf("%f %f\n ",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+				}
         	}
 	printf("\n");
 	}
@@ -850,16 +889,22 @@ int main(int argc, char *argv[]) {
   /* end test */
 
   /* Compute the composite likelihood for the current tree */
+  if (model == 5) {
+	  ComputeAandS_popvar(lambda);
+  }
+  else {
   ComputeAandS(theta);
+  }
   for (i=0; i<nquarts+1; i++) qvec[i]=0; 
   if (model == 1) curr_anneal_lik = GetCompLik();
   else if (model == 2) curr_anneal_lik = GetCompLik_ratevar();
   else if (model == 3) curr_anneal_lik = GetCompLik_msnp();
   else if (model == 4) curr_anneal_lik = GetCompLik_genetree(); 
+  else if (model == 5) curr_anneal_lik = GetCompLik_popvar(); 
   printf("The composite likelihood of the initial tree is %f\n\n",curr_anneal_lik);
 
-  GetCompLikDerivatives(7);
-  exit(1);  
+  // GetCompLikDerivatives(7);
+  // exit(1);  
 
   /*************  Set-up complete ***************/
 
@@ -880,7 +925,7 @@ int main(int argc, char *argv[]) {
         	}
         	else if (model == 3) bl_uphill_msnp();
 		else if (model == 4) bl_uphill_genetree();
-
+		else if (model == 5) bl_uphill_full_popvar();
 	}
 	else if (anneal_bl==2) { // simulated annealing bl search
 		printf("Optimizing branch lengths using simulating annealing ...\n\n");
@@ -892,6 +937,7 @@ int main(int argc, char *argv[]) {
         	}
         	else if (model == 3) bl_anneal_msnp();
 		else if (model == 4) bl_anneal_genetree();
+		else if (model == 5) bl_anneal_full_popvar();
 	}
 	else if (anneal_bl==3) { // numerical optimization of branch lengths
 		printf("Numerical optimization of branch lengths is not yet implemented. Exiting.\n\n"); exit(1);
@@ -899,17 +945,27 @@ int main(int argc, char *argv[]) {
 	else { printf("Opt_bl must be 0, 1, 2, or 3. Exiting.\n\n"); exit(1); }
 
         if (verbose == 1 ) {
-    		printf("The tree after branch length optimization is (coalescent units, mutation units):\n");
-    		for (i=0; i<ntaxa-1; i++) {
-        		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
-        		printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+			if (model == 5){
+				printf("The tree after branch length optimization is (mutation units):\n");
+    			for (i=0; i<ntaxa-1; i++) {
+        				printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+        				printf("%f \n",TimeVec[i+ntaxa+1]);
+					}
+			}
+			else{
+	    		printf("The tree after branch length optimization is (coalescent units, mutation units):\n");
+	    		for (i=0; i<ntaxa-1; i++) {
+	        		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+	        		printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+				}
+			}
 		}
-	}
 
 	if (model == 1) printf("the composite likelihood of the tree is %f\n",GetCompLik());
   	else if (model == 2) printf("the composite likelihood of the tree is %f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);
   	else if (model == 3) printf("the composite likelihood of the tree is %f\n",GetCompLik_msnp());
 	else if (model == 4) printf("the composite likelihood of the tree is %f\n",GetCompLik_genetree());
+	else if (model == 5) printf("the composite likelihood of the tree is %f\n",GetCompLik_popvar());
   	printf("\n\n");
   	
 	// re-order ppTwoRow and write tree to outtree.tre
@@ -926,11 +982,13 @@ int main(int argc, char *argv[]) {
         fprintf(out,"Current tree in mutation units: \n");
         write_species_tree_out(ntaxa+1,ntaxa+1);
 	fprintf(out,";\n\n");
+	if (model != 5) {
 	fprintf(out,"Current tree in coalescent units: \n");
         for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta;
         write_species_tree_out(ntaxa+1,ntaxa+1);
         fprintf(out,";\n\n");
         for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta;
+	}
 	printf("Tree has been written to file outtree.tre\n\n");
 
   }
@@ -982,17 +1040,30 @@ int main(int argc, char *argv[]) {
 		if (anneal_bl==1) bl_uphill_genetree();
 		else if (anneal_bl==2) bl_anneal_genetree();
 	}
+	else if (model == 5) {
+		//bl_uphill_full();
+		anneal_full_popvar();
+		if (anneal_bl==1) bl_uphill_full_popvar();
+		else if (anneal_bl==2) bl_anneal_full_popvar();
+	}
 
 	//printf(" done\n\n");
 	if (verbose==1) {
 		printf("After search, tree is \n");
   		for (i=0; i<ntaxa-1; i++) {
         		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
-        		printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+				if (model == 5) {
+					printf("%f \n",TimeVec[i+ntaxa+1]);
+				}
+				else {
+					printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+				}
+        		
   		}
 		if (model == 1) printf("The composite likelihood of this tree is %f\n",GetCompLik());
                 else if (model == 2) printf("The composite likelihood of this tree is %f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);
                 else if (model == 3) printf("The composite likelihood of this tree is %f\n",GetCompLik_msnp());
+				else if (model == 5) printf("The composite likelihood of this tree is %f\n",GetCompLik_popvar());
                 printf("\n\n");
 	}
 
@@ -1010,12 +1081,14 @@ int main(int argc, char *argv[]) {
   	fprintf(out,"Current tree in mutation units: \n");
   	write_species_tree_out(ntaxa+1,ntaxa+1);
 	fprintf(out,";\n\n");
+	if (model != 5){
+		
 	fprintf(out,"Current tree in coalescent units: \n");
 	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta;
 	write_species_tree_out(ntaxa+1,ntaxa+1);
   	fprintf(out,";\n\n");   
 	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta; 
-  
+	}
   	// copy best tree to current tree and write to file outtree.tre
   	for (i=0; i<ntaxa; i++) {
          	ppTwoRow[0][i] = ppTwoRow_best[0][i];
@@ -1033,26 +1106,38 @@ int main(int argc, char *argv[]) {
         }
 	if (verbose == 1){
 		printf("After transfer from bessttree, tree is \n");
+					if (model == 5){
+						for (i=0; i<ntaxa-1; i++) {
+                        	printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);  
+                        	printf("%f \n",TimeVec[i+ntaxa+1]);
+					}
+					}
+					else {
+						
                 	for (i=0; i<ntaxa-1; i++) {
                         	printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);  
                         	printf("%f %f\n",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+					}
         	}
 	}
 	printf("The composite likelihood of the best tree found by the algorithm is ");
 	if (model == 1) printf("%f\n",GetCompLik());
-        else if (model == 2) printf("%f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);    
-        else if (model == 3) printf("%f\n",GetCompLik_msnp());
+    else if (model == 2) printf("%f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);    
+    else if (model == 3) printf("%f\n",GetCompLik_msnp());
 	else if (model == 4) printf("%f\n",GetCompLik_genetree());
+	else if (model == 5) printf("%f\n",GetCompLik_popvar());
         printf("\n\n");
          
    	fprintf(out,"Best tree found by the algorithm in mutation units: \n");
   	write_species_tree_out(ntaxa+1,ntaxa+1);
   	fprintf(out,";\n\n");
+	if (model != 5){
+		
 	fprintf(out,"Best tree found by the algorithm in coalescent units: \n");
         for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta; 
         write_species_tree_out(ntaxa+1,ntaxa+1);     
 	fprintf(out,";\n\n");
-
+	}
 	fclose(out);
 	printf("Results have been written to file outtree.tre -- exiting.\n\n");
 	//exit(1);
@@ -1065,9 +1150,16 @@ int main(int argc, char *argv[]) {
   /* print branch lengths to file */
   if (verbose==1) {
   	res = fopen(results_file,"w");
-  	for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]/theta);
-  	fprintf(res,"%f \n",ratepar);
+	if (model == 5){
+		for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]);
   	fclose(res);
+	}
+	  else{
+		  for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]/theta);
+  			fprintf(res,"%f \n",ratepar);
+  			fclose(res);
+	  }
+  	
   }
   /* done print branch lengths to file */
 

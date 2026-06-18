@@ -533,7 +533,17 @@ void bl_anneal_full() {
         }
 
   }
-
+  if (curr_lik > max_cl) {
+      max_cl = curr_lik;
+      
+      for (i=0; i<ntaxa-1; i++) {
+          ppTwoRow_best[0][i] = ppTwoRow[0][i];
+          ppTwoRow_best[1][i] = ppTwoRow[1][i];
+      }
+      for (i=0; i<2*ntaxa+1; i++) {
+          TimeVec_best[i] = TimeVec[i];
+      }
+  }
 }
 
 
@@ -646,6 +656,18 @@ void bl_uphill_full() {
 
         }
 
+  }
+
+  if (curr_lik > max_cl) {
+      max_cl = curr_lik;
+      
+      for (i=0; i<ntaxa-1; i++) {
+          ppTwoRow_best[0][i] = ppTwoRow[0][i];
+          ppTwoRow_best[1][i] = ppTwoRow[1][i];
+      }
+      for (i=0; i<2*ntaxa+1; i++) {
+          TimeVec_best[i] = TimeVec[i];
+      }
   }
 
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
