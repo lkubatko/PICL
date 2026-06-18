@@ -790,7 +790,9 @@ int main(int argc, char *argv[]) {
   	tf = fopen(tree_file,"r");
 	if (tf==NULL) { printf("File treefile.tre not found. Exiting.\n\n"); exit(1);}
   	temp_rate = ReadTree(tf);
+  	
   	totaltime = FindTotalTime();
+  	
   	CalcTimeVec(totaltime,1.0);
 	
   	// Transfer from temp and re-scale with theta if needed
@@ -803,20 +805,35 @@ int main(int argc, char *argv[]) {
 		compute_times(ntaxa+1);
 		for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
 	}
-  	for (i=0; i<2*ntaxa+1; i++) {
+	if(model != 5){
+	    for (i=0; i<2*ntaxa+1; i++) {
 		TimeVec[i] = theta*TimeVec_temp[i];
 		TimeVec_init[i] = theta*TimeVec_temp[i];
 		TimeVec_temp[i] = TimeVec[i];
-  	}
+  	    }
+	}
+  	
 
-  	if (verbose == 1 ) {
-    		printf("The tree read from the input file is (coalescent units, mutation units):\n");
-    		for (i=0; i<ntaxa-1; i++) {
-  		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
-  		printf("%f %f\n ",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
-  		}
-		printf("\n");
-        }
+  	if (verbose == 1) {
+  	    if(model !=5){
+  	        printf("The tree read from the input file is (coalescent units, mutation units):\n");
+      	    for (i=0; i<ntaxa-1; i++) {
+      		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+      		printf("%f %f\n ",TimeVec[i+ntaxa+1]/theta,TimeVec[i+ntaxa+1]);
+      		}
+      		printf("\n");
+  	    }
+  	    else if(model ==5){
+  	        printf("The tree read from the input file is (mutation units):\n");
+      	    for (i=0; i<ntaxa-1; i++) {
+      		printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
+      		printf("%f \n ",TimeVec[i+ntaxa+1]);
+      		}
+  	    }
+    		
+    		
+		
+    }
   	printf("Tree succesfully read from file\n\n");        
    }
    else if (random_tree==1) {  // generate a starting tree under the Yule model

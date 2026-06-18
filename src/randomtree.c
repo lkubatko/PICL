@@ -204,7 +204,13 @@ double compute_times(int node){
    double t1, t2, t;
    double scale;
 
-   scale = ((int)ntaxa/2)*theta;
+   if (model == 5) {
+    scale = (double)rand() / RAND_MAX;
+	  printf("Model 5 using scale = %f \n",scale);
+    }
+    else{
+	    scale = ((int)ntaxa)*theta;
+    }
 
    if (node <= ntaxa) {
 	TimeVec[node] = 0.0;
