@@ -812,7 +812,12 @@ int main(int argc, char *argv[]) {
 		TimeVec_temp[i] = TimeVec[i];
   	    }
 	}
-  	
+  	else if(model ==5) {
+		for (i=0; i<2*ntaxa+1; i++) {
+		TimeVec_init[i] = TimeVec[i];
+		TimeVec_temp[i] = TimeVec[i];
+		}
+	}
 
   	if (verbose == 1) {
   	    if(model !=5){
