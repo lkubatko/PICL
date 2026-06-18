@@ -18,7 +18,7 @@ void trbldg_popvar() {
 
      target = (floor)(ranf()*(ntaxa-2))+ntaxa+2;
      if (target<ntaxa+2 || target>2*ntaxa) {
-       	printf("\t\t Warning: There  was a target generating problem in file trbldg.c at line=%d",__LINE__);
+       	printf("\t\t Warning: There  was a target generating problem in file treebldg_popvar.c at line=%d",__LINE__);
        	target = ntaxa+2;
      }
 
