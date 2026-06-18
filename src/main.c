@@ -858,7 +858,8 @@ int main(int argc, char *argv[]) {
   else if (model == 4) curr_anneal_lik = GetCompLik_genetree(); 
   printf("The composite likelihood of the initial tree is %f\n\n",curr_anneal_lik);
 
-  GetCompLikDerivatives(7);
+  OptAllTimes(1,1,0.000001);
+  //OptTimeQuick(6,10);
   exit(1);  
 
   /*************  Set-up complete ***************/

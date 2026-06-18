@@ -119,7 +119,7 @@ double AsymmetricQuartetLikelihood_ratevar(int nn);
 double GetCompLik();
 void SymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *symders);
 void AsymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *asymders);
-void GetCompLikDerivatives(int optnode);
+void GetCompLikDerivatives(int optnode, double *ders);
 double GetCompLik_msnp();
 double GetCompLik_ratevar();
 void GetRateParams();
@@ -159,6 +159,8 @@ void boot_times(int nrep, const char *bootdata_file);
 
 /* in opt.c */
 void OptAlpha();
+void OptTimeQuick(int node, int reps);
+void OptAllTimes(int quick, int max, double tol);
 
 /* in trbldg.c */
 void trbldg();

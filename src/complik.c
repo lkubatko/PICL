@@ -1250,7 +1250,7 @@ void SymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *symders
   t1 = *StoreQuarts[nn]->t1;
   t2 = *StoreQuarts[nn]->t2;
   t3 = *StoreQuarts[nn]->t3;
-  printf("Times are %f %f %f\n",t1,t2,t3);
+  //printf("Times are %f %f %f\n",t1,t2,t3);
   expt1 = exp(-2.0*m*t1);
   expt2 = exp(-2.0*m*t2);
   expt3 = exp(-2.0*m*t3);
@@ -1381,7 +1381,7 @@ void SymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *symders
             ddq[9] += 24*smat[i][9]*sddbeta[i][0]; 
   }
 
-  for (i=1; i<10; i++) printf("%f %f %f\n",sdbeta[i][0],dq[i],ddq[i]);
+  //for (i=1; i<10; i++) printf("%f %f %f %f\n",sdbeta[i][0],sddbeta[i][0],dq[i],ddq[i]);
 
 
    // compute first derivative of the quartet likelihood
@@ -1408,7 +1408,7 @@ void SymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *symders
                 + StoreQuarts[nn]->spprobs[14]*((1.0/q[9])*ddq[9]-(1.0/(q[9]*q[9]))*(dq[9]*dq[9]));
 
    
-  if (verbose==1) printf("The derivatives of the likelihood of the symmetric quartet are %f %f\n\n",symders[0],symders[1]);
+  //if (verbose==1) printf("The derivatives of the likelihood of the symmetric quartet are %f %f\n\n",symders[0],symders[1]);
 
 }  
 
@@ -1417,7 +1417,7 @@ void AsymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *asymde
 
   int i, sump=0;
   double m = 4.0/3.0, t=2.0*theta; // t is 2*theta
-  double abeta[11][1], adbeta[11][1], addbeta[11][0];
+  double abeta[11][1], adbeta[11][1], addbeta[11][1];
   double q[12], dq[12], ddq[12], check_qsum, prsum;
   double quart_lik = 0.0;
   double t1, t2, t3, expt1, expt2, expt3, emt1, emt2;
@@ -1568,7 +1568,7 @@ void AsymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *asymde
 
    }
 
-  for (i=1; i<12; i++) printf("%f %f %f %f\n",abeta[i][0],adbeta[i][0],dq[i],ddq[i]);
+  //for (i=1; i<12; i++) printf("%f %f %f %f %f\n",abeta[i][0],adbeta[i][0],addbeta[i][0],dq[i],ddq[i]);
 
   // compute first derviative of the quartet likelihood
   asymders[0] = StoreQuarts[nn]->spprobs[0]*(1.0/q[1])*dq[1] 
@@ -1605,7 +1605,7 @@ void AsymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *asymde
                 + StoreQuarts[nn]->spprobs[14]*((1.0/q[11])*ddq[11]-(1.0/(q[11]*q[11]))*(dq[11]*dq[11])); 
 
 
-  if (verbose==1) printf("The derivatives of the likelihood of the asymmetric quartet are %f %f\n\n",asymders[0],asymders[1]);
+  //if (verbose==1) printf("The derivatives of the likelihood of the asymmetric quartet are %f %f\n\n",asymders[0],asymders[1]);
 
 }
 
@@ -1615,7 +1615,7 @@ void AsymmetricQuartetLikelihoodDerivatives(int nn, int blswitch, double *asymde
 /*** The argument optnode is the integer index of the   ***/
 /*** node whose time is being optimized.                ***/
 
-void GetCompLikDerivatives(int optnode) {
+void GetCompLikDerivatives(int optnode, double *ders) {
 
   int i, j, k, l, m;
   int ovec[5], bl_ind[nquarts+1];
@@ -1632,7 +1632,7 @@ void GetCompLikDerivatives(int optnode) {
     for (j=i+1; j<ntaxa+1; j++) {
       for (k=j+1; k<ntaxa+1; k++) {
         for (l=k+1; l<ntaxa+1; l++) {
-          printf("Quartet %d %d %d %d\n",i,j,k,l);
+          //printf("Quartet %d %d %d %d\n",i,j,k,l);
           //printf("\t %llu %d %d\n",subset_to_index(i-1,j-1,k-1,l-1),(int)subset_to_index(i-1,j-1,k-1,l-1),qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]);
           //printf("\t Have we looked at this quartet yet? %d\n",qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]); 
           if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
@@ -1676,10 +1676,10 @@ void GetCompLikDerivatives(int optnode) {
 
   for (i=0; i<num_unique_quarts; i++) {
 
-        printf("%d ",i);
+        //printf("%d ",i);
         //for (j=0; j<15; j++) printf("%d ",StoreQuarts[i]->spprobs[j]);
-        printf("%f %f %f ",*StoreQuarts[i]->t1,*StoreQuarts[i]->t2,*StoreQuarts[i]->t3);
-	printf("Opt node is %d, bl_ind is %d \n",optnode,bl_ind[i]);
+        //printf("%f %f %f ",*StoreQuarts[i]->t1,*StoreQuarts[i]->t2,*StoreQuarts[i]->t3);
+	//printf("Opt node is %d, bl_ind is %d \n",optnode,bl_ind[i]);
         //printf("%d\n",StoreQuarts[i]->ncherries);
 
         if (StoreQuarts[i]->ncherries==2 && bl_ind[i]!=0) {
@@ -1689,15 +1689,16 @@ void GetCompLikDerivatives(int optnode) {
 	}
         else if (StoreQuarts[i]->ncherries==1 && bl_ind[i]!=0) {
 		AsymmetricQuartetLikelihoodDerivatives(i,bl_ind[i],bl_ders);
-		printf("blders: %f %f\n",bl_ders[0],bl_ders[1]);
                 der1+=bl_ders[0];
                 der2+=bl_ders[1];
 	}
 
   }
 
+  ders[0] = der1;
+  ders[1] = der2;
 
-  printf("The derviatives of the composite likelihood are %f  %f\n",der1,der2);
+//  printf("The derviatives of the composite likelihood are %f  %f\n",der1,der2);
 
 }
 
