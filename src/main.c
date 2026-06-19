@@ -727,8 +727,14 @@ int main(int argc, char *argv[]) {
 
   // allocate memory
   memcheck = MemAlloc();
-  for (i=0; i<ntaxa+1; i++) seq_counter[i] = 0;
-
+  for (i=0; i<2*ntaxa; i++) {
+    filled_ind[i] = 0;
+  }
+  for (i=0;i<(ntaxa+1);i++){
+      ppTwoRow_temp[0][i] = 0;
+      ppTwoRow_temp[1][i] = 0;
+      seq_counter[i] = 0;
+  }
   taxname = (naym*)malloc(ntaxa*sizeof(naym));
   for (i=0; i<ntaxa; i++) fscanf(set,"%s",taxname[i]);
 
