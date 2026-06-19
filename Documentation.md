@@ -9,9 +9,9 @@ Kubatko, L., S. Kong, E. Webb, and Z. Chen. 2025. The promise of composite likel
 <br><br>
 
 ## Installation
-PICL is written in C. After cloning the repository or downloading the code, PICL will need to be compiled. 
+PICL is written in C. After cloning the repository or downloading the code, PICL will need to be compiled.   The MacOS version of PICL uses routines from the <a href="https://github.com/boostorg/boost">Boost C++ libraries</a>. These will need to installed prior to compilation (see below for instructions).
 
-On a Mac, open a terminal window, navigate to the directory where the source code is stored, and issue the command: `gcc main.c -lm -o picl`. The program can then be called with `./picl`.
+Open a terminal window, navigate to the directory where the source code is stored, and issue the command: `make`. The program can then be called with `./picl`.
 
 It is recommended that you run the two examples below before trying your own data. The first example will take about 30 minutes to run (reducing the number of optimization steps will reduce the time). The second should run in under 5 minutes. 
 
@@ -30,6 +30,7 @@ Model: 1 <br>
 Gaps: 1 <br>
 Bootstrap: 0 <br> 
 Theta: 0.002 <br>
+Lambda: 500.0 <br>
 Rate_param: 1.0<br>
 Random_tree: 0<br>
 Opt_bl: 1 <br>
@@ -64,6 +65,7 @@ In the settings file, each keyword (i.e., the words followed by a colon) should 
 <li> 2 = multilocus or CIS data with discrete gamma-distributed rate variation 
 <li> 3 = SNP data
 <li> 4 = JC69 model for gene trees (this computes composite likelihood under the JC69 model without the multispecies coalescent)
+<li>5 = multilocus or CIS data with variable population sizes
 </li>
 </ul>
 <br>
@@ -77,6 +79,9 @@ In the settings file, each keyword (i.e., the words followed by a colon) should 
 <br>
 
 <li> Theta: a value for the effective population size parameter; this parameter will eventually be estimated, but a fixed value specified by the user is currently required
+<br>
+
+<li> Lambda: a value for parameter in the variable population size model
 <br>
 
 <li> Rate_param: value for the rate parameter in the discrete gamma model of rate variation; this will be optimized if branch lengths are optimized or a tree search is performed
@@ -456,4 +461,13 @@ Several extensions of this method are under active development in the Kubatko Re
 <li> Posterior site pattern probabilities (Richards and Kubatko, 2021)
 <li> Site pattern probabilities under a relaxed clock (Richards and Kubatko, 2022)
 <li> Site pattern probabilities for gene tree estimation [done, 7/20/25]
+</ul>
+
+
+## Installation information for Boost libraries (MacOS)
+
+The <a href="">Boost libraries</a> can be installed with either of these two methods:
+<ul>
+<li> <b>Using homebrew:</b> brew install boost
+<li> <b>Manual install:</b> Go to <a href="https://www.boost.org/users/download/">https://www.boost.org/users/download/</a> and download the appropriate .gzip file. Expand the file ("gunzip boost_1_91_0.tar.gz") and move the tar file into the directory from which you'll run PICL. Then issue the command "tar xzf boost_1_91_0.tar".
 </ul>
