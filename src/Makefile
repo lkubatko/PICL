@@ -52,7 +52,7 @@ else ifeq ($(PLATFORM), windows)
 else
 
     all:
-	gcc -g main.c bessel_wrapper.cpp -lm -lstdc++ -std=c++17 -o $(TARGET)
+	gcc -g main.c bessel_wrapper.cpp -lm -lstdc++ -o $(TARGET)
 
     clean:
 	rm -f main.o bessel_wrapper.o $(TARGET)
