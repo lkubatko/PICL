@@ -812,7 +812,12 @@ int main(int argc, char *argv[]) {
 		TimeVec_temp[i] = TimeVec[i];
   	    }
 	}
-  	
+  	else if(model ==5) {
+		for (i=0; i<2*ntaxa+1; i++) {
+		TimeVec_init[i] = TimeVec[i];
+		TimeVec_temp[i] = TimeVec[i];
+		}
+	}
 
   	if (verbose == 1) {
   	    if(model !=5){
@@ -903,8 +908,6 @@ int main(int argc, char *argv[]) {
   else if (model == 5) curr_anneal_lik = GetCompLik_popvar(); 
   printf("The composite likelihood of the initial tree is %f\n\n",curr_anneal_lik);
 
-  // GetCompLikDerivatives(7);
-  // exit(1);  
 
   /*************  Set-up complete ***************/
 
