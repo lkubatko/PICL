@@ -16,10 +16,10 @@ can be carried out entirely within the GUI. For longer runs or use in an HPC env
 
 ## Installation from source code
 
-If you would like to compile PICL directly on your system, you can clone the repository or download the code. PICL will then need to be compiled.   The MacOS version of PICL uses routines from the <a href="https://github.com/boostorg/boost">Boost C++ libraries</a>. These will need to installed prior to compilation (see the Documentatino for instructions).
+If you would like to compile PICL directly on your system, you can clone the repository or download the source code. PICL will then need to be compiled.   The MacOS version of PICL uses routines from the <a href="https://github.com/boostorg/boost">Boost C++ libraries</a>. These will need to be installed prior to compilation (see the Documentation for instructions).
 
-After downloading the soruce code, open a terminal window, navigate to the directory where the source code is stored, and issue the command: `make`. The program can then be called with `./picl`.
+After downloading the source code, open a terminal window, navigate to the directory where the source code is stored, and issue the command: `make`. The program can then be called with `./picl`.
 
-<br><br>
+<br>
 
 <b> Please see the Documentation for additional details.</b>
