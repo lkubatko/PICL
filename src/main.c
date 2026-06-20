@@ -615,8 +615,8 @@ int main(int argc, char *argv[]) {
   // print opening message
   printf("\n\n----------------------------------------------------------------------------\n");
   printf("\t PICL: Phylogenetic Inference with Composite Likelihood \n");
-  printf("\t\t\t\t Beta Version  \n");
-  printf("\t\t\t         May 2026 \n");
+  printf("\t\t\t     Version 1.0  \n");
+  printf("\t\t\t    June 19, 2026 \n");
   printf("----------------------------------------------------------------------------\n\n");
 
   // read from settings file
@@ -845,7 +845,7 @@ int main(int argc, char *argv[]) {
     		
 		
     }
-  	printf("Tree succesfully read from file\n\n");        
+  	printf("Tree successfully read from file\n\n");        
    }
    else if (random_tree==1) {  // generate a starting tree under the Yule model
 

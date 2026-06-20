@@ -454,9 +454,10 @@ Several extensions of this method are under active development in the Kubatko Re
 <ul>
 <li> Remove requirement for the tree in the file treefile.tre to have branch lengths</li>
 <li> Bootstrap support values on nodes
-<li> Additional options for handling gaps and ambiguity codes (currently ignored at the quartet level)
+<li> Additional options for handling gaps and ambiguity codes (currently ignored at the quartet level) [ambiguity codes are supported in v 1.0 and above]
 <li> Derivative-based branch length estimation
-<li> Efficiency calculation of CL after NNI 
+<li> Efficient calculation of CL after NNI 
+<li> Parallel computation of CL
 <li> Estimation of the effective population size parameter $\theta$
 <li> Posterior site pattern probabilities (Richards and Kubatko, 2021)
 <li> Site pattern probabilities under a relaxed clock (Richards and Kubatko, 2022)
@@ -466,8 +467,8 @@ Several extensions of this method are under active development in the Kubatko Re
 
 ## Installation information for Boost libraries (MacOS)
 
-The <a href="">Boost libraries</a> can be installed with either of these two methods:
+The <a href="https://github.com/boostorg/boost">Boost libraries</a> can be installed with either of these two methods:
 <ul>
-<li> <b>Using homebrew:</b> brew install boost
-<li> <b>Manual install:</b> Go to <a href="https://www.boost.org/users/download/">https://www.boost.org/users/download/</a> and download the appropriate .gzip file. Expand the file ("gunzip boost_1_91_0.tar.gz") and move the tar file into the directory from which you'll run PICL. Then issue the command "tar xzf boost_1_91_0.tar".
+<li> <b>Using homebrew:</b> `brew install boost`
+<li> <b>Manual install:</b> Go to <a href="https://www.boost.org/users/download/">https://www.boost.org/users/download/</a> and download the appropriate .gzip file. Expand the file (e.g., `gunzip boost_1_91_0.tar.gz`) and move the tar file into the directory from which you'll run PICL. Then issue the command `tar xzf boost_1_91_0.tar`.
 </ul>
