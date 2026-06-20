@@ -6,18 +6,20 @@ under the MSC, both multilocus and SNP data can be analyzed, and rate variation 
 
 Kubatko, L., S. Kong, E. Webb, and Z. Chen. 2025. The promise of composite likelihood for species-level phylogenomic inference, Evolutionary Journal of the Linnean Society [<a href="https://academic.oup.com/evolinnean/advance-article/doi/10.1093/evolinnean/kzaf008/8127126?login=true">web link</a>]
 
+<br>
 
-
-
-## Installation
-
-PICL is written in C. After cloning the repository or downloading the code, PICL will need to be compiled.
-
-On a Mac, open a terminal window, navigate to the directory where the source code is stored, and issue the command: `gcc -g main.c bessel_wrapper.cpp -lm -lstdc++ -o picl`. The program can then be called with `./picl`.
-
-On a Windows machine, compilation has been successfully tested using three methods: w64devkit, MinGW and Microsoft Visual Studio. For MinGW, open a terminal window, navigate to the source code directory, and issue the command: `gcc -g main.c bessel_wrapper.cpp -lm -lstdc++ -o picl`. The program can then be called with `./picl` (or `picl` if using command prompt). For Visual Studio, open a developer powershell/command prompt for VS or the VS GUI, navigate to the source code directory, and issue the command: `gcc -g main.c bessel_wrapper.cpp -lm -lstdc++ -o picl`. The program can then be called with `./picl`.
-
-It is recommended that you run the two examples before trying your own data. The first example will take about 30 minutes to run (reducing the number of optimization steps will reduce this time). The second should run in under 5 minutes.
+## jPICL -- a GUI for the PICL program
+<a href="https://uni-tuebingen.de/en/fakultaeten/mathematisch-naturwissenschaftliche-fakultaet/fachbereiche/informatik/lehrstuehle/algorithms-in-bioinformatics/people/daniel-huson/">Daniel Huson</a> has created a GUI for the PICL program, called jPICL. You can download jPICL <a href="https://github.com/husonlab/jpicl/releases">here.</a>  We recommend getting started with PICL using jPICL. Shorter runs
+can be carried out entirely within the GUI. For longer runs or use in an HPC environment, jPICL can be used to generate a `settings` file that is compatible with PICL.
 
 <br>
+
+## Installation from source code
+
+If you would like to compile PICL directly on your system, you can clone the repository or download the code. PICL will then need to be compiled.   The MacOS version of PICL uses routines from the <a href="https://github.com/boostorg/boost">Boost C++ libraries</a>. These will need to installed prior to compilation (see the Documentatino for instructions).
+
+After downloading the soruce code, open a terminal window, navigate to the directory where the source code is stored, and issue the command: `make`. The program can then be called with `./picl`.
+
+<br><br>
+
 <b> Please see the Documentation for additional details.</b>
