@@ -463,7 +463,7 @@ Several extensions of this method are under active development in the Kubatko Re
 <li> Derivative-based branch length estimation
 <li> Efficient calculation of CL after NNI 
 <li> Parallel computation of CL
-<li> Estimation of the effective population size parameter $\theta$
+<li> Estimation of the effective population size parameter $\theta$ (models 1, 2, and 3)
 <li> Posterior site pattern probabilities (Richards and Kubatko, 2021)
 <li> Site pattern probabilities under a relaxed clock (Richards and Kubatko, 2022)
 <li> Site pattern probabilities for gene tree estimation [done, 7/20/25]
