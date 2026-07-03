@@ -41,6 +41,7 @@ Seed2: 67890 <br>
 Num_cat: 4 <br>
 Tree_search: 0<br>
 Num_iter: 10000 <br>
+Multi_iter: 3<br>
 Prob_bound: 0.05 <br>
 Test_incr: 250 <br>
 Opt_slope: -0.01 <br>
@@ -118,6 +119,8 @@ In the settings file, each keyword (i.e., the words followed by a colon) should 
 <br>
 <li> Num_iter: number of iterations for the tree search (both methods)
 <br>
+<li> Multi_iter: number of iterations for tree scaling (both methods)
+<br>
 
 <li> Prob_bound: probability that a node has NOT been selected for rearrangement; this is used to specify a stopping rule in the annealing tree search and should be set to some small number (recommended is 0.05); this value is ignored unless Tree_search = 2
 <br>
@@ -138,7 +141,7 @@ Following this, the number of species is listed. The next line contains a list o
 
 As the settings file is read, the information will be printed to the console. Users should check that all model options are being set as expected.  You should also check that the lineage-to-species assignments are being read correctly. 
 
-The third, optional input file is a treefile formatted in Newick format that must be called `treefile.tre`. This should be provided if a user would like to estimate speciation times for a fixed species-level phylogeny. It can optionally be provided as a starting point for a tree search.
+The third, optional input file is a treefile formatted in Newick format that must be called `treefile.tre`. This should be provided if a user would like to estimate speciation times for a fixed species-level phylogeny. It can optionally be provided as a starting point for a tree search. Note that in version 1.0, branch lengths MUST be provided in the input tree (even if branch lengths will be optimized).
 
 All files must be included in the directory from which PICL is called and must be named as above (i.e., `data.phy`, `settings`, and `treefile.tre`).
 
@@ -149,7 +152,7 @@ All files must be included in the directory from which PICL is called and must b
 
 Much of the information of interest to users is written directly to the console, so users should read through the output. In addition, optimized trees will be written to a file called `outtree.tre`.  If the analysis involves optimization along a fixed tree, this file will contain the tree with optimized branch lengths as a Newick string in both coalescent units and mutation units. If the analysis includes a tree search, then this file will contain both the current tree (i.e., the tree at the last iteration of the search) as well as the best tree encountered during the search in both coalescent units and mutation units, all in Newick format. 
 
-If a bootstrapping analysis was carried out in order to estimate confidence intervals for speciation times on a fixed tree, the results of the bootstrap replicate analyses will be written to a file called `boot.dat`. The estimated speciation times for each bootstrap replicate are written in same order, with the times for one replicate per line (so the number of lines in the file will be equal to the number of bootstrap replicates). In order to determine the order in which the times are printed, the user must currently do a little work (improving the interface is on the list of future work) -- this is most easily done by comparing the printed times with the Newick tree that appears in `outtree.tre`.  Confidence intervals are obtained by importing the data into other software (e.g., R, Excel) and finding the percentiles to achieve the desired coverage. For example, for a 95\% confidence interval, one would find the $2.5^{th}$ percentile and the $97.5^{th}$ percentile of each column to obtain the lower and upper bounds, respectively, of the confidence interval.
+If a bootstrapping analysis was carried out in order to estimate confidence intervals for speciation times on a fixed tree, the results of the bootstrap replicate analyses will be written to a file called `boots.dat`. The estimated speciation times for each bootstrap replicate are written in same order, with the times for one replicate per line (so the number of lines in the file will be equal to the number of bootstrap replicates). In order to determine the order in which the times are printed, the user must currently do a little work (improving the interface is on the list of future work) -- this is most easily done by comparing the printed times with the Newick tree that appears in `outtree.tre`.  Confidence intervals are obtained by importing the data into other software (e.g., R, Excel) and finding the percentiles to achieve the desired coverage. For example, for a 95\% confidence interval, one would find the $2.5^{th}$ percentile and the $97.5^{th}$ percentile of each column to obtain the lower and upper bounds, respectively, of the confidence interval.
 
 
 <br><br>
@@ -205,6 +208,7 @@ Seed2: 67890<br>
 Num_cat: 4<br>
 Tree_search: 2<br>
 Num_iter: 30000<br>
+Multi_iter: 3<br>
 Prob_bound: 0.05 <br>
 Test_incr: 250 <br>
 Opt_slope: -0.01  <br>
@@ -279,6 +283,7 @@ Seed2: 67890 <br>
 Num_cat: 4 <br>
 Tree_search: 0 <br>
 Num_iter: 30000 <br>
+Multi_iter: 3<br>
 Prob_bound: 0.05 <br>
 Test_incr: 250<br>
 Opt_slope: -0.01 <br>
@@ -308,7 +313,7 @@ J J.1 <br>
 J J.2 <br>
 </details>
 
-As the analysis runs, the number of the current bootstrap replicate is written to the console. Upon completion, the optimized tree is written to `outtree.tre` and the speciation time estimates from the bootstrap replicates are written to the file `boot.dat`. Upon completion, that file should look like the following:
+As the analysis runs, the number of the current bootstrap replicate is written to the console. Upon completion, the optimized tree is written to `outtree.tre` and the speciation time estimates from the bootstrap replicates are written to the file `boots.dat`. Upon completion, that file should look like the following:
 
 <details>
 <summary>Show boot.dat</summary>

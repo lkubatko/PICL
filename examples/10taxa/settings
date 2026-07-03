@@ -2,6 +2,7 @@ Model: 1
 Gaps: 1
 Bootstrap: 0
 Theta: 0.002
+Lambda: 300
 Rate_param: 1.0
 Random_tree: 1
 Opt_bl: 1
