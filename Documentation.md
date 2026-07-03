@@ -41,6 +41,7 @@ Seed2: 67890 <br>
 Num_cat: 4 <br>
 Tree_search: 0<br>
 Num_iter: 10000 <br>
+Multi_iter: 3<br>
 Prob_bound: 0.05 <br>
 Test_incr: 250 <br>
 Opt_slope: -0.01 <br>
@@ -118,6 +119,8 @@ In the settings file, each keyword (i.e., the words followed by a colon) should 
 <br>
 <li> Num_iter: number of iterations for the tree search (both methods)
 <br>
+<li> Multi_iter: number of iterations for tree scaling (both methods)
+<br>
 
 <li> Prob_bound: probability that a node has NOT been selected for rearrangement; this is used to specify a stopping rule in the annealing tree search and should be set to some small number (recommended is 0.05); this value is ignored unless Tree_search = 2
 <br>
@@ -138,7 +141,7 @@ Following this, the number of species is listed. The next line contains a list o
 
 As the settings file is read, the information will be printed to the console. Users should check that all model options are being set as expected.  You should also check that the lineage-to-species assignments are being read correctly. 
 
-The third, optional input file is a treefile formatted in Newick format that must be called `treefile.tre`. This should be provided if a user would like to estimate speciation times for a fixed species-level phylogeny. It can optionally be provided as a starting point for a tree search.
+The third, optional input file is a treefile formatted in Newick format that must be called `treefile.tre`. This should be provided if a user would like to estimate speciation times for a fixed species-level phylogeny. It can optionally be provided as a starting point for a tree search. Note that in version 1.0, branch lengths MUST be provided in the input tree (even if branch lengths will be optimized).
 
 All files must be included in the directory from which PICL is called and must be named as above (i.e., `data.phy`, `settings`, and `treefile.tre`).
 
@@ -205,6 +208,7 @@ Seed2: 67890<br>
 Num_cat: 4<br>
 Tree_search: 2<br>
 Num_iter: 30000<br>
+Multi_iter: 3<br>
 Prob_bound: 0.05 <br>
 Test_incr: 250 <br>
 Opt_slope: -0.01  <br>
@@ -279,6 +283,7 @@ Seed2: 67890 <br>
 Num_cat: 4 <br>
 Tree_search: 0 <br>
 Num_iter: 30000 <br>
+Multi_iter: 3<br>
 Prob_bound: 0.05 <br>
 Test_incr: 250<br>
 Opt_slope: -0.01 <br>
