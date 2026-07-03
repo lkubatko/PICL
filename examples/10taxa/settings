@@ -13,10 +13,10 @@ Seed2: 67890
 Num_cat: 4
 Tree_search: 2
 Multi_iter: 3
+Num_iter: 30000
 Prob_bound: 0.05
 Test_incr: 250
 Opt_slope: -0.01
-Num_iter: 30000
 Beta: 0.005
 Verbose: 1
 10
