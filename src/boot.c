@@ -235,6 +235,6 @@ void boot_times(int nrep, const char *bootdata_file){
    /******************/
 
    fclose(boot);
-   printf("\n\n Done bootstrapping. Results have been written to boot.dat.\n\n");
+   printf("\n\n Done bootstrapping. Results have been written to boots.dat.\n\n");
 
 }
