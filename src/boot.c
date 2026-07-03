@@ -219,14 +219,20 @@ void boot_times(int nrep, const char *bootdata_file){
         	if (model == 1) bl_uphill_full();
 		else if (model == 2) bl_uphill_ratevar();
         	else if (model == 3) bl_uphill_msnp();
+		else if (model == 4) bl_uphill_genetree();
+		else if (model == 5) bl_uphill_full_popvar();
         }
   	else {
         	if (model == 1) bl_anneal_full();  
 		else if (model == 2) bl_anneal_ratevar();
         	else if (model == 3) bl_anneal_msnp();
+		else if (model == 4) bl_anneal_genetree();
+		else if (model == 5) bl_anneal_full_popvar();
         }
 
-        for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]/theta);
+        if (model < 5) for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]/theta);
+	else if (model == 5) for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]);
+	else fprintf(boot,"Model selected is not implemented for bootstrapping\n\n");
         fprintf(boot,"\n");
 	fflush(0);
 
@@ -235,6 +241,6 @@ void boot_times(int nrep, const char *bootdata_file){
    /******************/
 
    fclose(boot);
-   printf("\n\n Done bootstrapping. Results have been written to boot.dat.\n\n");
+   printf("\n\n Done bootstrapping. Results have been written to boots.dat.\n\n");
 
 }

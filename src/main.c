@@ -615,8 +615,8 @@ int main(int argc, char *argv[]) {
   // print opening message
   printf("\n\n----------------------------------------------------------------------------\n");
   printf("\t PICL: Phylogenetic Inference with Composite Likelihood \n");
-  printf("\t\t\t     Version 1.0  \n");
-  printf("\t\t\t    June 19, 2026 \n");
+  printf("\t\t\t     Version 1.01  \n");
+  printf("\t\t\t    July 3, 2026 \n");
   printf("----------------------------------------------------------------------------\n\n");
 
   // read from settings file
