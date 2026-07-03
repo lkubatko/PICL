@@ -230,8 +230,8 @@ void boot_times(int nrep, const char *bootdata_file){
 		else if (model == 5) bl_anneal_full_popvar();
         }
 
-        if (model < 5) for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]/theta);
-	else if (model == 5) for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]);
+        if (model < 4) for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]/theta);
+	else if (model == 4 || model == 5) for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]);
 	else fprintf(boot,"Model selected is not implemented for bootstrapping\n\n");
         fprintf(boot,"\n");
 	fflush(0);
