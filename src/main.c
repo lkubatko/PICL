@@ -18,7 +18,6 @@
 #include "complik_genetree.c"
 #include "nodeopt.c"
 #include "anneal.c"
-#include "boot.c"
 #include "opt.c"
 #include "trbldg.c"
 #include "trbldg_ratevar.c"
@@ -27,21 +26,23 @@
 #include "complik_popvar.c"
 #include "treebldg_popvar.c"
 #include "anneal_popvar.c"
+#include "boot.c"
+#include "boot_times.c"
 
 
 // ntaxa = number of species
 // nseq = number of individuals
 int ntaxa, nspecies, nseq, nsite, nquarts, num_unique_quarts, num_unique, include_gaps, num_no_gaps, verbose, model, ncat, random_tree;
 int anneal, anneal_bl, user_bl, max_it, mult_iter, num_reject, max_it_bl, test_increment, seedj, seedk;
-int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
+int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRow_best_orig[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
 int pattern_index[16][16];
 double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
 float lambda, theta, beta, mu, ratepar, invpar;
-double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
+double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVec_best_orig, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
 double smat[10][10],amat[12][12];
 double base_weight_table[15][4]; 
-FILE *out, *pt;
+FILE *out, *pt, *boot;
 
 Link Head, currenttree;
 naym *taxname=NULL, *speciesname=NULL, *psname=NULL;
@@ -76,6 +77,13 @@ int MemAlloc() {
   if (TimeVec_best==NULL)
     {
       printf("Can't memalloc TimeVec_best\n");
+      return 0;
+    }
+
+  TimeVec_best_orig = (double*)malloc((2*ntaxa+1)*sizeof(double));
+  if (TimeVec_best_orig==NULL)
+    {
+      printf("Can't memalloc TimeVec_best_orig\n");
       return 0;
     }
 
@@ -120,6 +128,16 @@ int MemAlloc() {
       if (ppTwoRow_best[i]==NULL)
         {
           printf("Can't memalloc ppTwoRow_best[%d]\n",i);
+          return 0;
+        }
+    }
+
+  for (i=0; i<2; i++)
+    {
+      ppTwoRow_best_orig[i] = (int*)malloc((2*ntaxa)*sizeof(int));
+      if (ppTwoRow_best_orig[i]==NULL)
+        {
+          printf("Can't memalloc ppTwoRow_best_orig[%d]\n",i);
           return 0;
         }
     }
@@ -573,11 +591,11 @@ int main(int argc, char *argv[]) {
   char keyword;
   int memcheck, i, j, k, l;
   int i2, j2, k2, l2;
-  int nboot, ntquarts;
+  int boottype, nboot, ntquarts;
   int table_initialized = 0;
   naym tempname1, tempname2;
   float temp_rate;
-  double totaltime;
+  double totaltime, beta_init;
 
   /* --- defaults --- */
   const char *settings_file   = "settings";
@@ -615,8 +633,8 @@ int main(int argc, char *argv[]) {
   // print opening message
   printf("\n\n----------------------------------------------------------------------------\n");
   printf("\t PICL: Phylogenetic Inference with Composite Likelihood \n");
-  printf("\t\t\t     Version 1.01  \n");
-  printf("\t\t\t    July 3, 2026 \n");
+  printf("\t\t\t     Version 1.0.5  \n");
+  printf("\t\t\t    July 22, 2026 \n");
   printf("----------------------------------------------------------------------------\n\n");
 
   // read from settings file
@@ -630,9 +648,13 @@ int main(int argc, char *argv[]) {
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&include_gaps);
   printf("Gaps: %d\n",include_gaps);
 
-  /* Bootstrap */
+  /* Boot_type */
+  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&boottype);
+  printf("Boot_type: %d\n",boottype);
+
+  /* Nboot */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&nboot);
-  printf("Bootstrap: %d\n",nboot);
+  printf("Nboot: %d\n",nboot);
 
   /* Theta */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&theta);
@@ -705,6 +727,7 @@ int main(int argc, char *argv[]) {
   /* Beta */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&beta);
   printf("Beta: %f\n",beta);
+  beta_init = beta;
 
   /* Verbose */
   keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&verbose);
@@ -796,7 +819,9 @@ int main(int argc, char *argv[]) {
   	tf = fopen(tree_file,"r");
 	if (tf==NULL) { printf("File treefile.tre not found. Exiting.\n\n"); exit(1);}
   	temp_rate = ReadTree(tf);
-  	
+  
+	printf("Tree has been read\n");
+	
   	totaltime = FindTotalTime();
   	
   	CalcTimeVec(totaltime,1.0);
@@ -811,7 +836,7 @@ int main(int argc, char *argv[]) {
 		compute_times(ntaxa+1);
 		for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];
 	}
-	if(model != 5){
+	if(model != 5){  /* convert to mutation units */
 	    for (i=0; i<2*ntaxa+1; i++) {
 		TimeVec[i] = theta*TimeVec_temp[i];
 		TimeVec_init[i] = theta*TimeVec_temp[i];
@@ -904,7 +929,7 @@ int main(int argc, char *argv[]) {
 	  ComputeAandS_popvar(lambda);
   }
   else {
-  ComputeAandS(theta);
+  	ComputeAandS(theta);
   }
   for (i=0; i<nquarts+1; i++) qvec[i]=0; 
   if (model == 1) curr_anneal_lik = GetCompLik();
@@ -992,14 +1017,13 @@ int main(int argc, char *argv[]) {
         write_species_tree_out(ntaxa+1,ntaxa+1);
 	fprintf(out,";\n\n");
 	if (model != 5) {
-	fprintf(out,"Current tree in coalescent units: \n");
-        for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta;
-        write_species_tree_out(ntaxa+1,ntaxa+1);
-        fprintf(out,";\n\n");
-        for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta;
+		fprintf(out,"Current tree in coalescent units: \n");
+        	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta;
+        	write_species_tree_out(ntaxa+1,ntaxa+1);
+        	fprintf(out,";\n\n");
+        	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta;
 	}
 	printf("Tree has been written to file outtree.tre\n\n");
-
   }
 
   // Uphill tree search 
@@ -1091,19 +1115,22 @@ int main(int argc, char *argv[]) {
   	write_species_tree_out(ntaxa+1,ntaxa+1);
 	fprintf(out,";\n\n");
 	if (model != 5){
-		
-	fprintf(out,"Current tree in coalescent units: \n");
-	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta;
-	write_species_tree_out(ntaxa+1,ntaxa+1);
-  	fprintf(out,";\n\n");   
-	for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta; 
+		fprintf(out,"Current tree in coalescent units: \n");
+		for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]/theta;
+		write_species_tree_out(ntaxa+1,ntaxa+1);
+  		fprintf(out,";\n\n");   
+		for (i=1;i<ntaxa; i++) TimeVec[ntaxa+i] = TimeVec[ntaxa+i]*theta; 
 	}
   	// copy best tree to current tree and write to file outtree.tre
   	for (i=0; i<ntaxa; i++) {
          	ppTwoRow[0][i] = ppTwoRow_best[0][i];
          	ppTwoRow[1][i] = ppTwoRow_best[1][i];
+		ppTwoRow_best_orig[0][i] = ppTwoRow_best[0][i];
+		ppTwoRow_best_orig[1][i] = ppTwoRow_best[1][i];
   	}
   	for (i=0; i<2*ntaxa+1; i++) TimeVec[i] = TimeVec_best[i];
+	for (i=0; i<2*ntaxa+1; i++) TimeVec_best_orig[i] = TimeVec_best[i];
+
 	// re-order ppTwoRow to write to outtree.tre
 
         for (i=0; i<ntaxa; i++) {
@@ -1131,8 +1158,8 @@ int main(int argc, char *argv[]) {
 	}
 	printf("The composite likelihood of the best tree found by the algorithm is ");
 	if (model == 1) printf("%f\n",GetCompLik());
-    else if (model == 2) printf("%f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);    
-    else if (model == 3) printf("%f\n",GetCompLik_msnp());
+    	else if (model == 2) printf("%f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);    
+    	else if (model == 3) printf("%f\n",GetCompLik_msnp());
 	else if (model == 4) printf("%f\n",GetCompLik_genetree());
 	else if (model == 5) printf("%f\n",GetCompLik_popvar());
         printf("\n\n");
@@ -1148,8 +1175,7 @@ int main(int argc, char *argv[]) {
 	fprintf(out,";\n\n");
 	}
 	fclose(out);
-	printf("Results have been written to file outtree.tre -- exiting.\n\n");
-	//exit(1);
+	printf("Results have been written to file outtree.tre.\n\n");
 
   }
   else { printf("Tree_search must be 0, 1, or 2. Exiting.\n\n"); exit(1); }
@@ -1159,11 +1185,11 @@ int main(int argc, char *argv[]) {
   /* print branch lengths to file */
   if (verbose==1) {
   	res = fopen(results_file,"w");
-	if (model == 5){
+	if (model == 5) {
 		for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]);
   	fclose(res);
 	}
-	  else{
+	  else {
 		  for (i=1; i<ntaxa; i++) fprintf(res,"%f ",TimeVec[ntaxa+i]/theta);
   			fprintf(res,"%f \n",ratepar);
   			fclose(res);
@@ -1181,9 +1207,22 @@ int main(int argc, char *argv[]) {
 
 
   /* bootstrapping */
-  if(nboot>0) {
-	if (anneal_bl == 0) { printf("Please set Opt_bl = 1 to carry out bootstrapping -- exiting.\n\n"); exit(1); }
-	else boot_times(nboot,bootdata_file);
+  if (nboot>0 && boottype==1) {
+	if (anneal == 2) {
+		printf("Beginning bootstrap for trees\n\n");
+		boot = fopen(bootdata_file,"w");
+		bootstrap(nboot,beta_init);
+		fclose(boot);
+	}
+	else printf("Tree bootstrapping can only be done following tree estimation. Please re-run with tree search set to 2.\n\n");	
+  }
+  else if(nboot>0 && boottype==2) {
+	if (anneal_bl == 0) { printf("Please set Opt_bl = 1 to carry out bootstrapping for the branch lengths along a fixed tree -- exiting.\n\n"); exit(1); }
+	else if (anneal != 0) { printf("Branch length bootstrapping can only be done on a fixed input tree. Please set Tree_search to 0 and be sure that the tree of interest is in the file treefile.tre.\n\n"); exit(1); }
+	else {
+		printf("Beginnning bootstrapping for branch lengths along a fixed tree\n\n");
+		boot_times(nboot,bootdata_file);
+	}
   }
 
   printf("\n\nAnalysis complete - exiting.\n\n");

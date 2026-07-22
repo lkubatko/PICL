@@ -195,6 +195,70 @@ void write_species_tree_out_file(int node, int previous_node) {
 }
 
 
+/***********************************************************/
+/*** Write tree to file boot.dat                         ***/
+/***********************************************************/
+
+void write_species_tree_boot(int node, int previous_node) {
+
+  if (ppTwoRow_best[0][node-(ntaxa+1)]<=ntaxa && ppTwoRow_best[1][node-(ntaxa+1)]<=ntaxa) {
+
+    //printf("(%d",ppTwoRow_best[0][node-(ntaxa+1)]);
+    fprintf(boot,"(%s",taxname[ppTwoRow_best[0][node-(ntaxa+1)]-1]);
+    fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[ppTwoRow_best[0][node-(ntaxa+1)]]-TimeVec_best[node])));
+    //printf(",%d",ppTwoRow_best[1][node-(ntaxa+1)]);
+    fprintf(boot,",%s",taxname[ppTwoRow_best[1][node-(ntaxa+1)]-1]);
+    fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[ppTwoRow_best[1][node-(ntaxa+1)]]-TimeVec_best[node])));
+    fprintf(boot,")");
+    if (node != previous_node) {
+      fprintf(out,":%f",fabs((-1.0)*(TimeVec_best[node]-TimeVec_best[previous_node])));
+      }
+
+  }
+
+   if (ppTwoRow_best[0][node-(ntaxa+1)]<=ntaxa && ppTwoRow_best[1][node-(ntaxa+1)]>ntaxa) {
+
+    //printf("(%d",ppTwoRow_best[0][node-(ntaxa+1)]);
+    fprintf(boot,"(%s",taxname[ppTwoRow_best[0][node-(ntaxa+1)]-1]);
+    fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[ppTwoRow_best[0][node-(ntaxa+1)]]-TimeVec_best[node])));
+    fprintf(boot,",");
+    write_species_tree_boot(ppTwoRow_best[1][node-(ntaxa+1)],node);
+    fprintf(boot,")");
+    if (node != previous_node) {
+      fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[node]-TimeVec_best[previous_node])));
+      }
+
+  }
+
+  if (ppTwoRow_best[0][node-(ntaxa+1)]>ntaxa && ppTwoRow_best[1][node-(ntaxa+1)]<=ntaxa) {
+
+    //printf("(%d",ppTwoRow_best[1][node-(ntaxa+1)]);
+    fprintf(boot,"(%s",taxname[ppTwoRow_best[1][node-(ntaxa+1)]-1]);
+    fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[ppTwoRow_best[1][node-(ntaxa+1)]]-TimeVec_best[node])));
+    fprintf(boot,",");
+    write_species_tree_boot(ppTwoRow_best[0][node-(ntaxa+1)],node);
+    fprintf(boot,")");
+    if (node != previous_node) {
+      fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[node]-TimeVec_best[previous_node])));
+      }
+
+  }
+
+  if (ppTwoRow_best[0][node-(ntaxa+1)]>ntaxa && ppTwoRow_best[1][node-(ntaxa+1)]>ntaxa) {
+
+    fprintf(boot,"(");
+    write_species_tree_boot(ppTwoRow_best[0][node-(ntaxa+1)],node);
+    fprintf(boot,",");
+    write_species_tree_boot(ppTwoRow_best[1][node-(ntaxa+1)],node);
+    fprintf(boot,")");
+    if (node != previous_node) {
+      fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[node]-TimeVec_best[previous_node])));
+      }
+
+  }
+
+}
+
 
 /***********************************************************/
 /*** Function to print data in data.phy in PHYLIP format ***/

@@ -80,8 +80,8 @@ void trbldg() {
      }
 
 
-    //printf("Index was %d, Tree has been re-arranged :) The proposed tree is\n",index);
-    /*for (i=0; i<ntaxa-1; i++) {
+    /*printf("Index was %d, Tree has been re-arranged :) The proposed tree is\n",index);
+    for (i=0; i<ntaxa-1; i++) {
         printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
         printf("%f %f\n ",TimeVec[i+ntaxa+1],TimeVec_temp[i+ntaxa+1]);
     }*/
@@ -90,6 +90,7 @@ void trbldg() {
     /*  Generation of new time for the target node */
     if (TimeVec[ppTwoRow[0][target-(ntaxa+1)]] > TimeVec[ppTwoRow[1][target-(ntaxa+1)]]) min_time = TimeVec[ppTwoRow[0][target-(ntaxa+1)]];
     else min_time = TimeVec[ppTwoRow[1][target-(ntaxa+1)]];
+    //printf("parent is %d\n",parent);
     //printf("min_time is %10.8f, max time is %10.8f\n",min_time,TimeVec[parent]);
     diff = TimeVec[parent]-min_time;
     //printf("diff is %f\n",diff);

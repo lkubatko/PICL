@@ -3,16 +3,17 @@
 /*************************************************************/
 
 
-void bootstrap(int nrep, double init_beta){
+void boot_times(int nrep, const char *bootdata_file){
 
   int i, j, k, l, align_length;
-  int nbatch, leftover, temptax;
+  int nbatch, leftover;
   long *bs_sample, *subsample, *lsubsample;
   float *obs_site_pat_freqs;
   double lastbatch, **input_freqs;
   float *finput_freqs, *flinput_freqs;
-
-
+  FILE *boot;
+	
+  boot = fopen(bootdata_file,"w");
   printf("Beginning bootstrapping ....\n");
 
   /*******************/
@@ -104,9 +105,9 @@ void bootstrap(int nrep, double init_beta){
 
   // temp check
   //  printf("The observed pattern frequencies are:\n");
-  double sum = 0.0;
-  for (i=0; i<num_unique; i++) sum += obs_site_pat_freqs[i];
-  //printf("sum is %f\n",sum);	 
+  // double sum = 0.0;
+  // for (i=0; i<num_unique; i++) sum += obs_site_pat_freqs[i];
+  // printf("sum is %f\n",sum);	 
   //for (i=0; i<num_unique; i++) printf("%f ",obs_site_pat_freqs[i]);
 
   // find probability in each batch of 200
@@ -131,7 +132,6 @@ void bootstrap(int nrep, double init_beta){
   }
 
 
-  //printf("lastbatch is %f\n",lastbatch);
   double tsum=0.0;
   for (l=0; l<leftover-1; l++) {
 	input_freqs[nbatch][l] = (double)obs_site_pat_freqs[200*nbatch+l]/(double)lastbatch;
@@ -157,30 +157,27 @@ void bootstrap(int nrep, double init_beta){
   /*****************/
   /* now bootstrap */
 
+  printf("\n Bootstrap rep: ");
   for (j=0; j<nrep; j++) {
   
-        printf("Bootstrap rep: %d ",j+1);
-	fflush(0);
+        printf("%d ",j);
 
-	/*for (k=0; k<nbatch; k++) printf("%f ",batch_sums[k]);
-	printf("\nAlign length is %ld\n",(long)align_length);*/
+	//for (k=0; k<nbatch; k++) printf("%f ",batch_sums[k]);
+	//printf("Align length is %ld\n",(long)align_length);
 
 	/* first generate number of sites in each batch */
 	if (nbatch>0) genmul((long)align_length,fbatch_sums,nbatch+1,batch_totals);
 	else batch_totals[0] = align_length;
 
-	//printf("Batch totals: "); for (k=0; k<nbatch; k++) { printf("%ld ",batch_totals[k]);} printf("\n");
-
 	long mycount;
 
 	/* Then generate the specific sites in each batch */
 	/* Use the first category as the missing one, to deal with float precision issues */
-	/* Specifically, in genmul(), the sum of the category probabilities of the first  */
-	/* n-1 categories must be less than 0.99999F. With most site patterns being       */
-	/* and in general the site patterns being ordered in decreasing frequency, this   */
-	/* is commonly violated. Putting the first site pattern "at the end" takes care   */
-	/* of this issue.								  */
-
+        /* Specifically, in genmul(), the sum of the category probabilities of the first  */
+        /* n-1 categories must be less than 0.99999F. With most site patterns being       */
+        /* and in general the site patterns being ordered in decreasing frequency, this   */
+        /* is commonly violated. Putting the first site pattern "at the end" takes care   */
+        /* of this issue.                                                                 */
 
 	for (k=0; k<nbatch; k++) {
 
@@ -189,7 +186,7 @@ void bootstrap(int nrep, double init_beta){
 
 		/*mycount=0;
 		for (l=0; l<200; l++) mycount += subsample[l];
-  		printf("For batch %d, total number sampled is %ld\n",k,mycount);*/
+		printf("For batch %d, total number sampled is %ld\n",k,mycount);*/
 
 		for (l=1; l<200; l++) site_counter[200*k+l] = subsample[l-1];
 		site_counter[200*k] = subsample[199];
@@ -220,76 +217,36 @@ void bootstrap(int nrep, double init_beta){
 	//printf("Total number of sampled sites is %d\n",bootcount);
 
 	/* bootstrap sample is generated, now do estimation */
+	for (i=1; i<2*ntaxa+1; i++) TimeVec[i] = TimeVec_init[i];
 
-	// copy starting tree to besttree before beginning annealing
-	// copy the tree estimated from the initial annealing to ppTwoRow and TimeVec
-        for (i=0; i<ntaxa; i++) {
-		ppTwoRow[0][i] = ppTwoRow_best_orig[0][i];
-		ppTwoRow[1][i] = ppTwoRow_best_orig[1][i];
-		ppTwoRow_temp[0][i] = ppTwoRow_best_orig[0][i];
-		ppTwoRow_temp[1][i] = ppTwoRow_best_orig[1][i];
-                ppTwoRow_best[0][i] = ppTwoRow[0][i];
-                ppTwoRow_best[1][i] = ppTwoRow[1][i];
+        if (anneal == 0) {
+        	if (model == 1) bl_uphill_full();
+		else if (model == 2) bl_uphill_ratevar();
+        	else if (model == 3) bl_uphill_msnp();
+		else if (model == 4) bl_uphill_genetree();
+		else if (model == 5) bl_uphill_full_popvar();
         }
-        for (i=0; i<2*ntaxa+1; i++) {
-		TimeVec[i] = TimeVec_best_orig[i];
-		TimeVec_temp[i] = TimeVec_best_orig[i];
-		TimeVec_best[i] = TimeVec[i];
-	}
-	make_indmat();
-  	for (i=1; i<2*ntaxa; i++) {
-        	parents[i] = find_parent(i);
-        	parents_temp[i] = parents[i];
-  	}
-
-	/* check */
-	/*printf("Starting tree is:\n");
-	for (i=0; i<ntaxa-1; i++) {  
-        	printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
-        	printf("%f %f\n ",TimeVec[i+ntaxa+1],TimeVec_temp[i+ntaxa+1]);
-    	} */ 
-
-	/* Compute the composite likelihood for the current tree */
-  	if (model == 5) {
-          	ComputeAandS_popvar(lambda);
-  	}
   	else {
-        	ComputeAandS(theta);
-  	}
-  	for (i=0; i<nquarts+1; i++) qvec[i]=0; 
-  	if (model == 1) curr_anneal_lik = GetCompLik();
-  	else if (model == 2) curr_anneal_lik = GetCompLik_ratevar();
-  	else if (model == 3) curr_anneal_lik = GetCompLik_msnp();
-  	else if (model == 4) curr_anneal_lik = GetCompLik_genetree(); 
-  	else if (model == 5) curr_anneal_lik = GetCompLik_popvar(); 
-  	//printf("The composite likelihood of the initial tree is %f\n\n",curr_anneal_lik);
-
-	/* restore beta to starting value and anneal */
-
-	beta = init_beta;
-        if (model == 1) anneal_full();
-	else if (model == 2) anneal_ratevar();
-        else if (model == 3) anneal_msnp();
-	else if (model == 4) anneal_genetree();
-	else if (model == 5) anneal_full_popvar();
-
-	/* Re-order besttree and write to file */
-	for (i=0; i<ntaxa; i++) {
-                if (ppTwoRow_best[0][i]>ppTwoRow_best[1][i]) {
-                temptax = ppTwoRow_best[0][i];
-                ppTwoRow_best[0][i] = ppTwoRow_best[1][i];
-                ppTwoRow_best[1][i] = temptax;
-                }
+        	if (model == 1) bl_anneal_full();  
+		else if (model == 2) bl_anneal_ratevar();
+        	else if (model == 3) bl_anneal_msnp();
+		else if (model == 4) bl_anneal_genetree();
+		else if (model == 5) bl_anneal_full_popvar();
         }
- 	write_species_tree_boot(ntaxa+1,ntaxa+1);
-        fprintf(boot,";\n");
+
+	/* print in mutation units for all models */
+        /*if (model < 4) for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]/theta);
+	else if (model == 4 || model == 5) */
+	if (model < 6) for (i=0; i<ntaxa-1; i++) fprintf(boot,"%1.12f ",TimeVec[i+ntaxa+1]);
+	else fprintf(boot,"Model selected is not implemented for bootstrapping\n\n");
+        fprintf(boot,"\n");
 	fflush(0);
 
    }
    /* done bootstrap */
    /******************/
 
-   //fclose(boot);
+   fclose(boot);
    printf("\n\n Done bootstrapping. Results have been written to boots.dat.\n\n");
 
 }

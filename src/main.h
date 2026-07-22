@@ -17,15 +17,15 @@ extern int anneal, anneal_bl, user_bl, max_it, mult_iter, num_reject, max_it_bl,
 extern double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
 extern float lambda, theta, beta, mu, ratepar, invpar;
 
-extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
+extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRow_best_orig[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 extern int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
 extern int pattern_index[16][16];
 
-extern double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *rvals, *TimeVecQuart, **ppLengthMat, **ppMatrix;
+extern double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVec_best_orig, *rvals, *TimeVecQuart, **ppLengthMat, **ppMatrix;
 extern double smat[10][10],amat[12][12];
 extern double base_weight_table[15][4];
 
-extern FILE *out, *pt;
+extern FILE *out, *pt, *boot;
 
 typedef char naym[16000];
 
@@ -87,6 +87,7 @@ void CalcTimeVec(double total, double rate);
 void write_species_tree(int node, int previous_node);
 void write_species_tree_out(int node, int previous_node);
 void write_species_tree_out_file(int node, int previous_node);
+void write_species_tree_boot(int node, int previous_node);
 void print_PHYLIP();
 void remove_CONSTANT();
 void remove_CONSTANT_MSNP();
@@ -165,6 +166,9 @@ void bl_anneal_full_popvar();
 void bl_uphill_full_popvar();
 
 /* in boot.c */
+void bootstrap(int nrep, double init_beta);
+
+/* in boot_times.c */
 void boot_times(int nrep, const char *bootdata_file);
 
 /* in opt.c */
