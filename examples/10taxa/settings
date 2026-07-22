@@ -1,6 +1,7 @@
 Model: 1
 Gaps: 1
-Bootstrap: 0
+Boot_type: 0
+Nboot: 0
 Theta: 0.002
 Lambda: 300
 Rate_param: 1.0
