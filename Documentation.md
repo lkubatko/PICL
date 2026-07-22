@@ -441,11 +441,11 @@ If random_tree = 1, the method starts from a random tree generated from a Yule m
 
 The maximum value for the rate parameter is set to 1000.0. This indicates that a model with no rate variation is likely appropriate. In this case, users may want to re-run their analysis with model=1 (instead of model=2), as the composite likelihood score may improve a bit without modeling rate variation (due to the upper limit on the rate parameter in model=2).
 
-<b>Simulated annealing search:</b> The version of the simulated annealing search that is currently implemented is naive in several ways:
+<b>Simulated annealing search:</b> The version of the simulated annealing search that is currently implemented is as follows:
 <ul>
-<li> A fixed number of iterations (100) is used for the burnin period to set parameters in the cooling schedule. The cooling schedule is not currently optimized, and problem-specific information is not used for tuning.
+<li> A fixed number of iterations (1000) is used for the burnin period to set parameters in the cooling schedule. After burnin, an adaptive annealing schedule is used to tune the algorithm. The adaptive step is carried out every 250 iterations by default.
+<li> The algorithm terminates when no new moves have been accepted after a specified number of proposals, and the chance of proposing a new accepted move is very low.
 <li> Following an NNI move, a new time for the affected node is generated uniformly over the allowable interval.  A better strategy is to use derivative information to propose a fairly good value for the new time.
-<li> No stopping rule is currently implemented, so the algorithm will use the maximum number of iterations specified by the user, even in the case that most proposed moves are being rejected.
 <li> In the rate variation model, a new time for the node affected by the NNI is proposed jointly with a new value of the rate parameter $\alpha$. The 
 </ul>
 
