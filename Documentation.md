@@ -77,8 +77,9 @@ In the settings file, each keyword (i.e., the words followed by a colon) should 
 <li> 1 = all sites are included; gapped sites are currently ignored at the quartet level
 </ul>
 <br>
-<li>Boot_type: if 1, tree bootstrapping is done; if 2, branch length bootstrapping on a fixed tree is done. In both cases, results are written to file boots.dat</li>
-  <br>
+<li>Boot_type: if 1, tree bootstrapping is done; if 2, branch length bootstrapping on a fixed tree is done. In both cases, results are written to file boots.dat
+<br>
+  
 <li> Nboot: number of bootstrap replicates for either bootstrap option
 <br>
 
