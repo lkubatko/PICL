@@ -444,7 +444,7 @@ The maximum value for the rate parameter is set to 1000.0. This indicates that a
 <b>Simulated annealing search:</b> The version of the simulated annealing search that is currently implemented is as follows:
 <ul>
 <li> A fixed number of iterations (1000) is used for the burnin period to set parameters in the cooling schedule. After burnin, an adaptive annealing schedule is used to tune the algorithm. The adaptive step is carried out every 250 iterations by default.
-<li> The algorithm terminates when no new moves have been accepted after a specified number of proposals, and the chance of proposing a new accepted move is very low.
+<li> The algorithm terminates when no new moves have been accepted after a specified number of proposals, and the chance of proposing a new accepted move is very low OR when the maximum user-specified number of iterations is reached. If the algorithm returns a number of iterations that is a multiple of 1,000, you should raise the maximum and re-run the algorithm.
 <li> Following an NNI move, a new time for the affected node is generated uniformly over the allowable interval.  A better strategy is to use derivative information to propose a fairly good value for the new time.
 <li> In the rate variation model, a new time for the node affected by the NNI is proposed jointly with a new value of the rate parameter $\alpha$. The 
 </ul>
