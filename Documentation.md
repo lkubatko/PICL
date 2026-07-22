@@ -28,7 +28,8 @@ The second required file is a settings file that provides instructions for what 
   <summary>Show settings file</summary>
 Model: 1 <br>
 Gaps: 1 <br>
-Bootstrap: 0 <br> 
+Boot_type: 1<br>
+Nboot: 100 <br> 
 Theta: 0.002 <br>
 Lambda: 500.0 <br>
 Rate_param: 1.0<br>
@@ -76,7 +77,9 @@ In the settings file, each keyword (i.e., the words followed by a colon) should 
 <li> 1 = all sites are included; gapped sites are currently ignored at the quartet level
 </ul>
 <br>
-<li> Bootstrap: if 0, no bootstrapping is done; if >0, this specifies the number of bootstrap replicates used to obtain confidence intervals on the speciation times of a fixed species tree. The Opt_bl option below must not be set to 0 to carry out bootstrapping.
+<li>Boot_type: if 1, tree bootstrapping is done; if 2, branch length bootstrapping on a fixed tree is done. In both cases, results are written to file boots.dat</li>
+  <br>
+<li> Nboot: number of bootstrap replicates for either bootstrap option
 <br>
 
 <li> Theta: a value for the effective population size parameter; this parameter will eventually be estimated, but a fixed value specified by the user is currently required
