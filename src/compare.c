@@ -211,7 +211,7 @@ void write_species_tree_boot(int node, int previous_node) {
     fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[ppTwoRow_best[1][node-(ntaxa+1)]]-TimeVec_best[node])));
     fprintf(boot,")");
     if (node != previous_node) {
-      fprintf(out,":%f",fabs((-1.0)*(TimeVec_best[node]-TimeVec_best[previous_node])));
+      fprintf(boot,":%f",fabs((-1.0)*(TimeVec_best[node]-TimeVec_best[previous_node])));
       }
 
   }
