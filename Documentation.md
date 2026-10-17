@@ -30,7 +30,8 @@ Model: 1 <br>
 Gaps: 1 <br>
 Boot_type: 1<br>
 Nboot: 100 <br> 
-Theta: 0.002 <br>
+Theta: 0.004 <br>
+Alpha: 10.0 <br>
 Lambda: 500.0 <br>
 Rate_param: 1.0<br>
 Random_tree: 0<br>
@@ -267,6 +268,8 @@ Best tree found by the algorithm in coalescent units:
 ((A:2.912863,((D:0.939681,E:0.939681):0.931364,(B:0.915871,C:0.915871):0.955173):1.041819):0.995043,(F:2.813526,((I:0.962947,J:0.962947):1.025063,(G:0.992345,H:0.992345):0.995665):0.825515):1.094381);<br>
 </details>
 
+<br>
+It is recommended that the search be run several times from multiple random starting trees. The tree with the highest composite likelihood across the replicates is the composite likelihood estimate. This can be done by running PICL with different random number seeds.
 <br>
 
 ### Analysis 2:  Confidence intervals for speciation times along the user-provided species treee
