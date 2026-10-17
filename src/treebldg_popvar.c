@@ -94,7 +94,8 @@ void trbldg_popvar() {
     diff = TimeVec[parent]-min_time;
     //printf("diff is %f\n",diff);
     if (diff > 0.0001) {
-    	TimeVec[target] = genunf((float)min_time+diff/4,(float)TimeVec[parent]-diff/4);
+	TimeVec[target] = genunf((float)min_time+0.000055,(float)TimeVec[parent]-0.000045);
+        //TimeVec[target] = genunf((float)min_time+diff/4,(float)TimeVec[parent]-diff/4); 
     	//printf("New time of target %d is %10.8f\n",target,TimeVec[target]);
 
     	/* Compute CL of new tree and make decision */

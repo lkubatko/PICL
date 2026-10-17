@@ -96,7 +96,8 @@ void trbldg_msnp() {
   //printf("min_time is %f, max time is %f\n",min_time,TimeVec[parent]);
   diff = TimeVec[parent]-min_time;
   if (diff > 0.0001) {
-	TimeVec[target] = genunf((float)min_time+0.0000051,(float)TimeVec[parent]-0.0000049);
+	TimeVec[target] = genunf((float)min_time+0.000055,(float)TimeVec[parent]-0.000045);
+        //TimeVec[target] = genunf((float)min_time+diff/4,(float)TimeVec[parent]-diff/4); 
   	//printf("New time of target is %f\n",TimeVec[target]);
 
   	/* Compute CL of new time and make decision */
