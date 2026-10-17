@@ -237,10 +237,13 @@ BaseWeights get_base_weights(int base_code) {
 
 
 
-/***  Function to search through ppTwoRow to find parent ***/
-/***  of a specified node.                               ***/
+/***  Function to search through ppTwoRow to find parent  ***/
+/***  of a specified node -- O(ntaxa) linear scan. Only   ***/
+/***  used to populate the parents[] array from scratch   ***/
+/***  (main.c and boot.c); every other call should use    ***/
+/***  find_parent() below instead.                        ***/
 
-int find_parent(int target) {
+int find_parent_scan(int target) {
 
 int i, j, parent=0;
 
@@ -253,9 +256,16 @@ int i, j, parent=0;
    }
  }
 
- //if (parent==0) { printf("Could not find parent in find_parent for target = %d\n",target); }
+ //if (parent==0) { printf("Could not find parent in find_parent_scan for target = %d\n",target); }
  return(parent);
 
+}
+
+/*** Function to return the parent of a target node by referencing the      ***/
+/*** parents array. This array is kept up-to-date during the tree search    ***/
+
+int find_parent(int target) {
+   return parents[target];
 }
 
 
@@ -276,10 +286,8 @@ int IsCherryQuartet(int q, int r, int w, int x) {
 
    if (find_parent(q) == find_parent(r)) return 1; // easy -- q and r are a cherry in the full tree
    else {
-      //printf("where I want to be\n");
     if ((ppMatrix[q][r] < ppMatrix[q][w]) && (ppMatrix[q][r] < ppMatrix[r][w]) && (ppMatrix[q][r] < ppMatrix[q][x]) && (ppMatrix[q][r] < ppMatrix[r][x])) return 1;
     else {
-       //printf("leaving is cherry quartet\n");
        //printf("%f %f %f %f %f \n",ppMatrix[q][r],ppMatrix[q][w],ppMatrix[r][w],ppMatrix[q][x],ppMatrix[r][x]);
         return 0;
         }
@@ -366,7 +374,6 @@ void make_indmat() {
 
       }
 
-      //ppMatrix[q][r] = dist1 + dist2;
       //printf("For taxa %d and %d, parent1 is %d, parent2 is %d\n",q,r,parent1,parent2); 
       if (parent1>parent2) time_parent = parent2;
       else time_parent = parent1;
@@ -374,7 +381,6 @@ void make_indmat() {
 
       if ((parent1 == ntaxa+1 || parent2 == ntaxa+1) && check == 0) {
 
-        //ppMatrix[q][r] = find_gen(q) + find_gen(r) - 1;
 	ppMatrix[q][r] = TimeVec[ntaxa+1];
         check = 1;
 
@@ -443,24 +449,33 @@ int FindMRCA(int q, int r) {
 
 }
 
+/*** Function to collect the descendants of node into out[], appending as ***/
+/*** it goes; *count is both the starting offset and running count. Calls ***/
+/*** pass 0 and get back the number written                               ***/
+
+static int CollectLeafDescendants(int node, int *out, int count) {
+    if (node <= ntaxa) {
+        out[count] = node;
+        return count + 1;
+    }
+    count = CollectLeafDescendants(ppTwoRow[0][node-(ntaxa+1)], out, count);
+    count = CollectLeafDescendants(ppTwoRow[1][node-(ntaxa+1)], out, count);
+    return count;
+}
+
+static int cmp_int_asc(const void *a, const void *b) {
+    return (*(const int*)a) - (*(const int*)b);
+}
+
 /*** Populates ppNodeChildrenLeftQuart row 0 with left children ***/
 /*** of node mynode; [0][0] entry is number of children         ***/
 
 void AllMyChildrenLeftQuartLeft(int mynode) {
 
-  int i, j=0, currentpar;
   int leftpar = ppTwoRow[0][mynode-(ntaxa+1)];
-
-  for (i=1; i<ntaxa+1; i++)  {
-
-        currentpar = i;
-        while (currentpar != leftpar && currentpar != ntaxa+1) currentpar = find_parent(currentpar);
-        if (currentpar!=ntaxa+1) {
-                j++;
-                ppNodeChildrenLeftQuart[0][j] = i;
-        }
-  }
-  ppNodeChildrenLeftQuart[0][0] = j;
+  int count = CollectLeafDescendants(leftpar, &ppNodeChildrenLeftQuart[0][1], 0);
+  qsort(&ppNodeChildrenLeftQuart[0][1], count, sizeof(int), cmp_int_asc);
+  ppNodeChildrenLeftQuart[0][0] = count;
 
 }
 
@@ -469,91 +484,57 @@ void AllMyChildrenLeftQuartLeft(int mynode) {
 
 void AllMyChildrenRightQuartetLeft(int mynode) {
 
-  int i, j=0, currentpar;
   int rightpar = ppTwoRow[1][mynode-(ntaxa+1)];
-
-  for (i=1; i<ntaxa+1; i++)  {
-
-        currentpar = i;
-        while (currentpar != rightpar && currentpar != ntaxa+1) currentpar = find_parent(currentpar);
-        if (currentpar != ntaxa+1) {
-                j++;
-                ppNodeChildrenLeftQuart[1][j] = i;
-        }
-  }
-  ppNodeChildrenLeftQuart[1][0] = j;
+  int count = CollectLeafDescendants(rightpar, &ppNodeChildrenLeftQuart[1][1], 0);
+  qsort(&ppNodeChildrenLeftQuart[1][1], count, sizeof(int), cmp_int_asc);
+  ppNodeChildrenLeftQuart[1][0] = count;
 
 }
 
 
 /*** Populates ppNodeChildrenRightQuart row 0 with left children ***/
-/*** of node mynode; [0][0] entry is number of children         ***/
-  
+/*** of node mynode; [0][0] entry is number of children          ***/
+
 void AllMyChildrenLeftQuartRight(int mynode) {
-  
-  int i, j=0, currentpar;
+
   int leftpar = ppTwoRow[0][mynode-(ntaxa+1)];
-        
-  for (i=1; i<ntaxa+1; i++)  {
-                
-        currentpar = i;
-        while (currentpar != leftpar && currentpar != ntaxa+1) currentpar = find_parent(currentpar);
-        if (currentpar!=ntaxa+1) {
-                j++;
-                ppNodeChildrenRightQuart[0][j] = i;
-        }
-  }  
-  ppNodeChildrenRightQuart[0][0] = j;
+  int count = CollectLeafDescendants(leftpar, &ppNodeChildrenRightQuart[0][1], 0);
+  qsort(&ppNodeChildrenRightQuart[0][1], count, sizeof(int), cmp_int_asc);
+  ppNodeChildrenRightQuart[0][0] = count;
 
 }
 
 
 /*** Populates ppNodeChildrenRightQuart row 1 with right children ***/
 /*** of node mynode; [1][0] entry is number of children          ***/
-  
+
 void AllMyChildrenRightQuartetRight(int mynode) {
-  
-  int i, j=0, currentpar;
+
   int rightpar = ppTwoRow[1][mynode-(ntaxa+1)];
-        
-  for (i=1; i<ntaxa+1; i++)  {
-                
-        currentpar = i;
-        while (currentpar != rightpar && currentpar != ntaxa+1) currentpar = find_parent(currentpar);
-        if (currentpar != ntaxa+1) { 
-                j++;
-                ppNodeChildrenRightQuart[1][j] = i;
-        }
-  }  
-  ppNodeChildrenRightQuart[1][0] = j;
+  int count = CollectLeafDescendants(rightpar, &ppNodeChildrenRightQuart[1][1], 0);
+  qsort(&ppNodeChildrenRightQuart[1][1], count, sizeof(int), cmp_int_asc);
+  ppNodeChildrenRightQuart[1][0] = count;
 
 }
 
 
 /*** This function finds the children of the parent of mynode on the "other" ***/
-/*** side; populates row 2 of ppNodeChildrenRightQuart; [2][0] entry is    ***/
+/*** side; populates row 2 of ppNodeChildrenRightQuart; [2][0] entry is      ***/
 /*** number of children                                                      ***/
 
 void AllMyChildrenQuartet(int mynode) {
 
-  int i, j=0, currentpar;
   int par, startnode;
 
   par = find_parent(mynode);
   if (ppTwoRow[0][par-(ntaxa+1)] == mynode) startnode = ppTwoRow[1][par-(ntaxa+1)];
   else startnode = ppTwoRow[0][par-(ntaxa+1)];
-   
-  for (i=1; i<ntaxa+1; i++) {
 
-        currentpar = i;
-        while(currentpar != startnode && currentpar != ntaxa+1) currentpar = find_parent(currentpar);
-        if (currentpar != ntaxa+1) {
-                j++;
-                ppNodeChildrenRightQuart[2][j] = i;
-        }
-
+  {
+    int count = CollectLeafDescendants(startnode, &ppNodeChildrenRightQuart[2][1], 0);
+    qsort(&ppNodeChildrenRightQuart[2][1], count, sizeof(int), cmp_int_asc);
+    ppNodeChildrenRightQuart[2][0] = count;
   }
-  ppNodeChildrenRightQuart[2][0] = j;
 }
 
 
@@ -561,13 +542,14 @@ void AllMyChildrenQuartet(int mynode) {
 /*** their site pattern counts; uses current values  ***/
 /*** of ppTwoRowQuart and TimeVecQuart               ***/
 
-void FindDupQuarts(int is_symm, double spcounts[15]) {
+void FindDupQuarts(int is_symm, double spcounts[15], int slot_marker) {
 
   int i, j, k, l, m;
   int mrca, mrca3, parent1, parent2, leftnode, sideind;
   int mytaxarr[4];
+  int nind_total=0;
   double dupspcounts[15];
- 
+
   /* set ppNodeChildrenLeftQuart and ppNodeChildrenRightQuart to 0 */
   for (i=0; i<ntaxa+1; i++) {
 	ppNodeChildrenLeftQuart[0][i] = 0;
@@ -609,7 +591,7 @@ void FindDupQuarts(int is_symm, double spcounts[15]) {
   	AllMyChildrenLeftQuartRight(parent2);
   	AllMyChildrenRightQuartetRight(parent2);
 
-  	//for (i=0; i<ntaxa; i++) printf("%d %d %d %d\n",ppNodeChildrenLeftQuart[0][i],ppNodeChildrenLeftQuart[1][i],ppNodeChildrenRightQuart[0][i],ppNodeChildrenRightQuart[1][i]);
+	//printf("Sym - taxa are %d %d %d %d\n",ppTwoRowQuart[0][ntaxa+2],ppTwoRowQuart[1][ntaxa+2],ppTwoRowQuart[0][ntaxa+3],ppTwoRowQuart[1][ntaxa+3]);
 
    	/* now get counts */
 	for (i=0; i<ppNodeChildrenLeftQuart[0][0]; i++) {
@@ -621,18 +603,19 @@ void FindDupQuarts(int is_symm, double spcounts[15]) {
 		mytaxarr[2] = ppNodeChildrenRightQuart[0][k+1];
 		mytaxarr[3] = ppNodeChildrenRightQuart[1][l+1];
 		CountQuartetSitePatterns(mytaxarr[0],mytaxarr[1],mytaxarr[2],mytaxarr[3],dupspcounts);
-		//CountQuartetSitePatterns(ppNodeChildrenLeftQuart[0][i+1],ppNodeChildrenLeftQuart[1][j+1],ppNodeChildrenRightQuart[0][k+1],ppNodeChildrenRightQuart[1][l+1],dupspcounts);
 		for (m=0; m<15; m++) spcounts[m] = spcounts[m]+dupspcounts[m];
+		nind_total += seq_counter[mytaxarr[0]-1]*seq_counter[mytaxarr[1]-1]*seq_counter[mytaxarr[2]-1]*seq_counter[mytaxarr[3]-1];
 		sort4(mytaxarr);
-		qvec[(int)subset_to_index(mytaxarr[0]-1,mytaxarr[1]-1,mytaxarr[2]-1,mytaxarr[3]-1)]=1;
+		qvec[(int)subset_to_index(mytaxarr[0]-1,mytaxarr[1]-1,mytaxarr[2]-1,mytaxarr[3]-1)]=slot_marker;
 		//printf("Marking quartet %d %d %d %d done\n",mytaxarr[0],mytaxarr[1],mytaxarr[2],mytaxarr[3]);
 	      }
             }
           }
 	}
-        //printf("The overall counts are:\n");
-	//for (m=0; m<15; m++) printf("%f ",dupspcounts[m]);
-	//printf("\n");
+
+	//for (m=0; m<15; m++) spcounts[m] = spcounts[m]/nind_total; -- no
+	//printf("The overall counts are:\n");
+	//for (m=0; m<15; m++) printf("%f ",spcounts[m]);
   }
 
   // case 2: asymmetric
@@ -682,6 +665,7 @@ void FindDupQuarts(int is_symm, double spcounts[15]) {
         }
 
 	//for (i=0; i<ntaxa; i++) printf("%d %d %d %d %d\n",ppNodeChildrenLeftQuart[0][i],ppNodeChildrenLeftQuart[1][i],ppNodeChildrenRightQuart[0][i],ppNodeChildrenRightQuart[1][i],ppNodeChildrenRightQuart[2][i]);
+	//printf("Asym - taxa are %d %d %d %d\n",ppTwoRowQuart[1][ntaxa+2],ppTwoRowQuart[1][ntaxa+3],ppTwoRowQuart[0][ntaxa+3],ppTwoRowQuart[1][ntaxa+1]);
 
 	/* now get counts */
         for (i=0; i<ppNodeChildrenLeftQuart[sideind][0]; i++) {
@@ -695,18 +679,26 @@ void FindDupQuarts(int is_symm, double spcounts[15]) {
 		CountQuartetSitePatterns(mytaxarr[0],mytaxarr[1],mytaxarr[2],mytaxarr[3],dupspcounts);
                 //CountQuartetSitePatterns(ppNodeChildrenLeftQuart[sideind][i+1],ppNodeChildrenRightQuart[2][j+1],ppNodeChildrenRightQuart[0][k+1],ppNodeChildrenRightQuart[1][l+1],dupspcounts);
                 for (m=0; m<15; m++) spcounts[m] = spcounts[m]+dupspcounts[m];
+		nind_total += seq_counter[mytaxarr[0]-1]*seq_counter[mytaxarr[1]-1]*seq_counter[mytaxarr[2]-1]*seq_counter[mytaxarr[3]-1];
 		sort4(mytaxarr);
-                qvec[(int)subset_to_index(mytaxarr[0]-1,mytaxarr[1]-1,mytaxarr[2]-1,mytaxarr[3]-1)]=1;
+                qvec[(int)subset_to_index(mytaxarr[0]-1,mytaxarr[1]-1,mytaxarr[2]-1,mytaxarr[3]-1)]=slot_marker;
                 //printf("Marking quartet %d %d %d %d done\n",mytaxarr[0],mytaxarr[1],mytaxarr[2],mytaxarr[3]);
               }
             }
           }
         }
-        //printf("The overall counts are:\n");
-        //for (m=0; m<15; m++) printf("%f ",dupspcounts[m]);
-        //printf("\n");
 
+	//for (m=0; m<15; m++) spcounts[m] = spcounts[m]/nind_total; -- no
+        //printf("The overall counts are:\n");
+        //for (m=0; m<15; m++) printf("%f ",spcounts[m]);
   }
+
+
+  //printf("The overall counts are:\n");
+  //for (m=0; m<15; m++) printf("%f ",spcounts[m]/nsite);
+  //double total_counts=0.0;
+  //for (m=0; m<15; m++) total_counts += spcounts[m];
+  //printf("The total number of sites is %f\n",total_counts);
 
 }
 
@@ -720,8 +712,6 @@ int GetQuartetTree(int tax1, int tax2, int tax3, int tax4, int OrderedVec[5]) {
    int i, sum=0, leftover1, leftover2;
    int resvec[5];  // element 0 = is_symmetric; elements 1-4 gives the ordering of the taxa
    for (i=0; i<5;i++) resvec[i]=0;
-
-   make_indmat();
 
    // tax1 and tax2
    if (IsCherryQuartet(tax1,tax2,tax3,tax4) == 1) {
@@ -932,120 +922,209 @@ int GetQuartetTree(int tax1, int tax2, int tax3, int tax4, int OrderedVec[5]) {
 /*** gaps in at least one taxa are excluded. If = 1, sites   ***/
 /*** for which a particular quartet has no gap are included. ***/
 
+/*** The speed-up below was suggested by Claude (8/26) and   ***/
+/*** its logical has been verified. It has been tested       ***/
+/*** extensively against the previous implementation         ***/ 
+/* ---------------------------------------------------------------------
+ * Quartet site-pattern cache.
+ *
+ * CountQuartetSitePatterns(tax1,tax2,tax3,tax4,pvec) tallies the 15
+ * site-pattern counts for a set of 4 SPECIES. Its result depends only
+ * on the four species indices and the current sequence data
+ * (site_counter/ppBase_unique/ppSp_assign/seq_counter) -- it never
+ * looks at the current tree topology, node ordering, or branch
+ * lengths. GetCompLik() itself, and the equivalent inlined block at
+ * the top of every bl_uphill and bl_anneal function (in anneal.c and
+ * anneal_popvar.c), always visit the same set of species-quartets
+ * (every i<j<k<l in 1..ntaxa) on every single call, regardless of
+ * what tree/topology is being scored. During a simulated-annealing
+ * topology search this function can therefore be called with the
+ * exact same (tax1,tax2,tax3,tax4)
+ * many thousands of times, and for multi-individual data (several
+ * sequences per species) each call itself does O(sequences-per-species^4
+ * x num_unique_site_patterns) work -- this was measured to be the
+ * dominant cost of the annealing phase on multi-sequence-per-species
+ * datasets.
+ *
+ * Caching per (tax1,tax2,tax3,tax4) is exact, not an approximation:
+ * given the same data, the same inputs always produce the same
+ * output. The one place the underlying data legitimately changes
+ * mid-run is bootstrapping (boot.c/boot_times.c resample
+ * site_counter for each replicate) -- those call
+ * InvalidateQuartetSitePatternCache() right after resampling, before
+ * any likelihood computation for the new replicate begins.
+ */
+static double *cqsp_cache = NULL;      /* flat [ntaxa^4][15], slot for tuple (t1,t2,t3,t4) */
+static int    *cqsp_cache_gen = NULL;  /* generation the slot was computed in, flat [ntaxa^4] */
+static long    cqsp_cache_ntaxa = 0;   /* ntaxa the cache arrays were sized for */
+int cqsp_data_generation = 1;          /* bumped by InvalidateQuartetSitePatternCache() */
+
+void InvalidateQuartetSitePatternCache(void) {
+    cqsp_data_generation++;
+}
+
+static void EnsureQuartetSitePatternCache(void) {
+    long n4;
+    if (cqsp_cache != NULL && cqsp_cache_ntaxa == ntaxa) return;
+    free(cqsp_cache);
+    free(cqsp_cache_gen);
+    n4 = (long)ntaxa*ntaxa*ntaxa*ntaxa;
+    cqsp_cache = (double*)malloc((n4 > 0 ? n4 : 1)*15*sizeof(double));
+    cqsp_cache_gen = (int*)calloc((n4 > 0 ? n4 : 1), sizeof(int)); /* 0 = never computed, never matches data_generation>=1 */
+    cqsp_cache_ntaxa = ntaxa;
+}
+
+/* CountQuartetSitePatterns -- rewritten to avoid the O(seq_counter^4) cost
+ * of enumerating every individual-quartet combination directly, which
+ * dominates runtime on datasets with many individuals per species (e.g.
+ * one species with 14 sampled individuals) combined with many unique site
+ * patterns.
+ *
+ * Key idea: for a given site, the only thing that determines a given
+ * individual-combination's contribution is the four base CODES involved
+ * (which pattern category it falls into, and with what weight) -- not
+ * which specific individuals produced them. So instead of visiting every
+ * (i2,j2,k2,l2) combination directly, for each site we build a small
+ * per-species histogram of how many individuals have each base code
+ * (at most 4 distinct values in the always-common ACGT-only case), then
+ * combine the (at most 4x4x4x4=256, usually far fewer once zero-count
+ * entries are skipped) histogram cells -- work that no longer grows with
+ * how many individuals a species has.
+ *
+ * Bit-exactness: every fast-path contribution (all four codes 0-3) is
+ * site_counter[s] (an integer count) times an integer multiplicity, and
+ * IEEE-754 double addition of integers is exactly associative as long as
+ * partial sums stay within 2^53 (true here by a wide margin for any
+ * realistic dataset: sites, individuals, and their product are nowhere
+ * close to that bound) -- so batching these contributions in a different
+ * order than the original per-individual-combination loop is PROVABLY
+ * bit-identical, not merely mathematically equivalent. The one place this
+ * doesn't automatically hold is the fractional-weight slow path for true
+ * IUPAC ambiguity codes (R/Y/S/W/K/M/B/D/H/V, base codes 5-14 -- gaps and
+ * N are handled by the always-skip rule below, matching the original), so
+ * any site where such a code appears in any of the four species falls
+ * back to the exact original per-individual-combination computation for
+ * just that site, unchanged. That fallback is what guarantees bit-exact
+ * output in general; it just isn't the hot path for typical sequence
+ * data, where ambiguity codes are rare (often entirely absent, as in the
+ * dataset this rewrite was developed against).
+ */
 void CountQuartetSitePatterns(int tax1, int tax2, int tax3, int tax4, double pvec[15]) {
 
-    int i, j, k, l;
-    int i2, j2, k2, l2;
-    int ltax1, ltax2, ltax3, ltax4;
-    double count_array[16][16], p[15];
-    double count_sites=0.0, sumps=0.0, datasum=0.0;
-    double site_total=0.0;
+    int i;
+    double sumps=0.0, datasum=0.0;
+    long cqsp_idx;
 
-    //printf("Ordered taxa are %d %d %d %d\n",tax1,tax2,tax3,tax4);
+    EnsureQuartetSitePatternCache();
+    cqsp_idx = (((long)(tax1-1)*ntaxa + (tax2-1))*ntaxa + (tax3-1))*ntaxa + (tax4-1);
+    if (cqsp_cache_gen[cqsp_idx] == cqsp_data_generation) {
+        for (i=0; i<15; i++) pvec[i] = cqsp_cache[cqsp_idx*15+i];
+        return;
+    }
 
-    for (i=0; i<15; i++) pvec[i]=0.0; 
-  
-    for (i2=0; i2<seq_counter[tax1-1]; i2++) {
-    	for (j2=0; j2<seq_counter[tax2-1]; j2++) {
-            for (k2=0; k2<seq_counter[tax3-1]; k2++) {
-                for (l2=0; l2<seq_counter[tax4-1]; l2++) {
+    for (i=0; i<15; i++) pvec[i]=0.0;
 
-			count_sites = 0.0;
-			for (i=0; i<15; i++) p[i]=0.0; 
-			for (i=0; i<16; i++) for (j=0; j<16; j++) count_array[i][j]=0.0;
+    {
+    int n1 = seq_counter[tax1-1], n2 = seq_counter[tax2-1], n3 = seq_counter[tax3-1], n4 = seq_counter[tax4-1];
+    int *sp1 = ppSp_assign[tax1-1], *sp2 = ppSp_assign[tax2-1], *sp3 = ppSp_assign[tax3-1], *sp4 = ppSp_assign[tax4-1];
+    int s;
 
-			//if (verbose==1) printf("Sequences are %d %d %d %d\n, ",ppSp_assign[tax1-1][i2],ppSp_assign[tax2-1][j2],ppSp_assign[tax3-1][k2],ppSp_assign[tax4-1][l2]);
+    for (s=0; s<num_unique; s++) {
 
-		   for (i=0; i<num_unique; i++) {
+        int cnt1[4]={0,0,0,0}, cnt2[4]={0,0,0,0}, cnt3[4]={0,0,0,0}, cnt4[4]={0,0,0,0};
+        int any_ambig = 0;
+        int ii, b1,b2,b3,b4;
 
-			int b1 = ppBase_unique[ppSp_assign[tax1-1][i2]][i];
-    			int b2 = ppBase_unique[ppSp_assign[tax2-1][j2]][i];
-    			int b3 = ppBase_unique[ppSp_assign[tax3-1][k2]][i];
-    			int b4 = ppBase_unique[ppSp_assign[tax4-1][l2]][i];
+        for (ii=0; ii<n1; ii++) { b1=ppBase_unique[sp1[ii]][s]; if (b1<4) cnt1[b1]++; else if (b1!=4 && b1<=14) any_ambig=1; }
+        for (ii=0; ii<n2; ii++) { b1=ppBase_unique[sp2[ii]][s]; if (b1<4) cnt2[b1]++; else if (b1!=4 && b1<=14) any_ambig=1; }
+        for (ii=0; ii<n3; ii++) { b1=ppBase_unique[sp3[ii]][s]; if (b1<4) cnt3[b1]++; else if (b1!=4 && b1<=14) any_ambig=1; }
+        for (ii=0; ii<n4; ii++) { b1=ppBase_unique[sp4[ii]][s]; if (b1<4) cnt4[b1]++; else if (b1!=4 && b1<=14) any_ambig=1; }
 
-			// Fast path: no ambiguity codes
-    			if (b1 < 4 && b2 < 4 && b3 < 4 && b4 < 4) {
-        			count_sites += site_counter[i];
-				p[pattern_index[b1*4 + b2][b3*4 + b4]] += site_counter[i];
-        			continue;
-    			}
+        if (!any_ambig) {
 
-    			// Skip sites where any base is a gap/unknown (weight sums to 0)
-    			// You can define a max valid code, e.g. 14 for N
-    			if (b1 > 14 || b2 > 14 || b3 > 14 || b4 > 14) continue;
+            /* Fast path: batched over base-code histograms, not individuals. */
+            double sc = (double)site_counter[s];
+            for (b1=0; b1<4; b1++) {
+              if (!cnt1[b1]) continue;
+              for (b2=0; b2<4; b2++) {
+                if (!cnt2[b2]) continue;
+                int row = b1*4+b2;
+                double m12 = (double)(cnt1[b1]*cnt2[b2]);
+                for (b3=0; b3<4; b3++) {
+                  if (!cnt3[b3]) continue;
+                  for (b4=0; b4<4; b4++) {
+                    if (!cnt4[b4]) continue;
+                    double mult = m12 * (double)(cnt3[b3]*cnt4[b4]);
+                    pvec[pattern_index[row][b3*4+b4]] += sc * mult;
+                    datasum += sc * mult;
+                  }
+                }
+              }
+            }
 
-			// Slow path: ambiguity codes
-			//BaseWeights w1 = get_base_weights(b1);
-                        //BaseWeights w2 = get_base_weights(b2);
-                        //BaseWeights w3 = get_base_weights(b3);
-                        //BaseWeights w4 = get_base_weights(b4);
-			double *w1 = base_weight_table[b1];
-    			double *w2 = base_weight_table[b2];
-    			double *w3 = base_weight_table[b3];
-    			double *w4 = base_weight_table[b4];
+        } else {
 
-			double w12[16], w34[16];
-    			for (int a = 0; a < 4; a++)
-        		  for (int b = 0; b < 4; b++)
-            		    w12[a*4+b] = w1[a] * w2[b];
-    			for (int c = 0; c < 4; c++)
-        		  for (int d = 0; d < 4; d++)
-            		    w34[c*4+d] = w3[c] * w4[d];
+            /* Slow path: a true ambiguity code is present somewhere among
+             * these four species at this site -- fall back to the exact
+             * original per-individual-combination computation, unchanged,
+             * for just this site. */
+            int i2,j2,k2,l2;
+            for (i2=0; i2<n1; i2++) {
+              b1 = ppBase_unique[sp1[i2]][s];
+              for (j2=0; j2<n2; j2++) {
+                b2 = ppBase_unique[sp2[j2]][s];
+                for (k2=0; k2<n3; k2++) {
+                  b3 = ppBase_unique[sp3[k2]][s];
+                  for (l2=0; l2<n4; l2++) {
+                    b4 = ppBase_unique[sp4[l2]][s];
 
-    			count_sites += site_counter[i];
-    			double sc = (double)site_counter[i];
-			for (int row = 0; row < 16; row++) {
-    			 if (w12[row] == 0.0) continue;
-    			  double contrib = sc * w12[row];
-    			  for (int col = 0; col < 16; col++) {
-			   p[pattern_index[row][col]] += contrib * w34[col];
-    			  }
-			 }
+                    if (b1 < 4 && b2 < 4 && b3 < 4 && b4 < 4) {
+                        pvec[pattern_index[b1*4 + b2][b3*4 + b4]] += site_counter[s];
+                        datasum += site_counter[s];
+                        continue;
+                    }
 
-			}
+                    /* Same always-skip rule as the fast-path histogram build
+                       above (gap == code 4, or code > 14 == N/unknown). */
+                    if (b1 > 14 || b2 > 14 || b3 > 14 || b4 > 14 || b1 == 4 || b2 == 4 || b3 == 4 || b4 == 4) continue;
 
-    			//printf(" \n\n\t\tcount_sites is %f, ",count_sites);
-    			// order is: 0 = xxxx; 1 = xxxy; 2 = xxyx; 3 = xyxx; 4 = yxxx
-    			// 5 = xyxy; 6 = yxxy; 7 = xxyy; 8 = xyxz; 9 = xyzx; 10 = yxxz
-    			// 11 = yxzx; 12 = xxyz; 13 = yzxx; 14 = xyzw
+                    double *w1 = base_weight_table[b1];
+                    double *w2 = base_weight_table[b2];
+                    double *w3 = base_weight_table[b3];
+                    double *w4 = base_weight_table[b4];
 
-    			sumps = 0.0;
-    			for (i=0; i<15; i++) sumps += p[i];
-			//printf(" sumps is %f, ",sumps);
-    			if (fabs((1.0/count_sites)*sumps - 1.0) > 0.005) {
-        			printf("There was a problem counting site patterns ... exiting.");
-        			exit(1);
-    			}
+                    double w12[16], w34[16];
+                    { int a,b,c,d;
+                      for (a=0; a<4; a++) for (b=0; b<4; b++) w12[a*4+b] = w1[a]*w2[b];
+                      for (c=0; c<4; c++) for (d=0; d<4; d++) w34[c*4+d] = w3[c]*w4[d];
+                    }
 
-    			/*if (verbose==1) { 
-				printf("\tSite pattern counts are: ");
-    				for (i=0; i<15; i++) printf("%f ",p[i]);
-    				printf("\n"); 
-			}*/
-			
-
-			for (i=0; i<15; i++) pvec[i] = pvec[i] + p[i]; 
-    
-			datasum = datasum + count_sites;
-			//printf("\tcount_sites is %f, datasum is %f\n",count_sites,datasum);
- 
-		    }
-		}
-	     }
-	}
-
-	/*if (verbose==1) {
-		printf("\n\n The overall site pattern counts are: ");
-		for (i=0; i<15; i++) printf("%f ",pvec[i]);
-		printf("\n");
-	}*/
-	sumps = 0.0;
-        for (i=0; i<15; i++) sumps += pvec[i];
-	//if (verbose==1) printf("The total number of site patterns is %f, datasum is %f\n",sumps,datasum);
-        if (fabs((1.0/datasum)*sumps - 1.0) > 0.005) {
-            printf("There was a problem counting overall site patterns ... exiting.");                                                        
-            exit(1);
+                    double sc = (double)site_counter[s];
+                    datasum += sc;
+                    { int row,col;
+                      for (row=0; row<16; row++) {
+                        if (w12[row] == 0.0) continue;
+                        double contrib = sc * w12[row];
+                        for (col=0; col<16; col++) pvec[pattern_index[row][col]] += contrib * w34[col];
+                      }
+                    }
+                  }
+                }
+              }
+            }
         }
+    }
+    }
+
+    sumps = 0.0;
+    for (i=0; i<15; i++) sumps += pvec[i];
+    if (fabs((1.0/datasum)*sumps - 1.0) > 0.005) {
+        printf("There was a problem counting overall site patterns ... exiting.");
+        exit(1);
+    }
+
+    for (i=0; i<15; i++) cqsp_cache[cqsp_idx*15+i] = pvec[i];
+    cqsp_cache_gen[cqsp_idx] = cqsp_data_generation;
 }
 
 
@@ -1100,7 +1179,24 @@ double SymmetricQuartetLikelihood(int nn){
    quart_lik = StoreQuarts[nn]->spprobs[0]*log(q[1]) + StoreQuarts[nn]->spprobs[1]*log(q[2]) + StoreQuarts[nn]->spprobs[2]*log(q[2]) + StoreQuarts[nn]->spprobs[3]*log(q[3]) + StoreQuarts[nn]->spprobs[4]*log(q[3]) 
                     + StoreQuarts[nn]->spprobs[5]*log(q[4]) + StoreQuarts[nn]->spprobs[6]*log(q[4]) + StoreQuarts[nn]->spprobs[7]*log(q[5]) + StoreQuarts[nn]->spprobs[12]*log(q[6]) 
                     + StoreQuarts[nn]->spprobs[13]*log(q[7]) + StoreQuarts[nn]->spprobs[8]*log(q[8]) + StoreQuarts[nn]->spprobs[10]*log(q[8]) + StoreQuarts[nn]->spprobs[9]*log(q[8]) + StoreQuarts[nn]->spprobs[11]*log(q[8]) + StoreQuarts[nn]->spprobs[14]*log(q[9]);
-   
+
+  /*printf("\n\n%f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n\n",
+ StoreQuarts[nn]->spprobs[0]/nsite,q[1],
+ StoreQuarts[nn]->spprobs[1]/nsite,q[2],
+ StoreQuarts[nn]->spprobs[2]/nsite,q[2],
+ StoreQuarts[nn]->spprobs[3]/nsite,q[3],
+ StoreQuarts[nn]->spprobs[4]/nsite,q[3],
+ StoreQuarts[nn]->spprobs[5]/nsite,q[4],
+ StoreQuarts[nn]->spprobs[6]/nsite,q[4],
+ StoreQuarts[nn]->spprobs[7]/nsite,q[5],
+ StoreQuarts[nn]->spprobs[12]/nsite,q[6],                                                                                                    
+ StoreQuarts[nn]->spprobs[13]/nsite,q[7],
+ StoreQuarts[nn]->spprobs[8]/nsite,q[8],
+StoreQuarts[nn]->spprobs[10]/nsite,q[8],
+StoreQuarts[nn]->spprobs[9]/nsite,q[8],
+StoreQuarts[nn]->spprobs[11]/nsite,q[8],
+ StoreQuarts[nn]->spprobs[14],q[9]);*/
+
   //if (verbose==1) printf("The likelihood of the symmetric quartet is %f\n\n",quart_lik);
   return(quart_lik);
 
@@ -1116,7 +1212,6 @@ double AsymmetricQuartetLikelihood(int nn){
   double quart_lik = 0.0;
   double t1, t2, t3, expt1, expt2, expt3;
 
-
   // t1 = TimeVecQuart[ntaxa+3]; t2 = TimeVecQuart[ntaxa+2]; t3 = TimeVecQuart[ntaxa+1]
   t1 = *StoreQuarts[nn]->t1;
   t2 = *StoreQuarts[nn]->t2;
@@ -1125,16 +1220,16 @@ double AsymmetricQuartetLikelihood(int nn){
   expt2 = exp(-2.0*m*t2);
   expt3 = exp(-2.0*m*t3);
 
-  abeta[1][0]=1.0; 
+  abeta[1][0]=1.0;
   abeta[2][0]=expt1;
-  abeta[3][0]=expt2; 
-  abeta[4][0]=exp(-m*t1)*expt2; 
-  abeta[5][0]=expt3; 
-  abeta[6][0]=exp(-m*t1)*expt3; 
-  abeta[7][0]=expt1*expt3; 
-  abeta[8][0]=exp(-m*t2)*expt3; 
+  abeta[3][0]=expt2;
+  abeta[4][0]=exp(-m*t1)*expt2;
+  abeta[5][0]=expt3;
+  abeta[6][0]=exp(-m*t1)*expt3;
+  abeta[7][0]=expt1*expt3;
+  abeta[8][0]=exp(-m*t2)*expt3;
   abeta[9][0]=exp(-m*t1)*exp(-m*t2)*expt3;
-  abeta[10][0]=exp((2.0/t)*(t1-t2))*expt2*expt3; 
+  abeta[10][0]=exp((2.0/t)*(t1-t2))*expt2*expt3;
 
   // order is: xxxx; xxxy = xxyx; xyxx; yxxx; xxyy; xyxy = yxxy; xxyz
   // yzxx; xyxz = xyzx; yxxz = yxzx; xyzw
@@ -1161,9 +1256,115 @@ double AsymmetricQuartetLikelihood(int nn){
                     + StoreQuarts[nn]->spprobs[7]*log(q[5]) + StoreQuarts[nn]->spprobs[5]*log(q[6]) + StoreQuarts[nn]->spprobs[6]*log(q[6]) + StoreQuarts[nn]->spprobs[12]*log(q[7]) + StoreQuarts[nn]->spprobs[13]*log(q[8])
                     + StoreQuarts[nn]->spprobs[8]*log(q[9]) + StoreQuarts[nn]->spprobs[9]*log(q[9]) + StoreQuarts[nn]->spprobs[10]*log(q[10]) + StoreQuarts[nn]->spprobs[11]*log(q[10]) + StoreQuarts[nn]->spprobs[14]*log(q[11]);
 
+/*printf("\n\n%f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n %f %f\n\n",
+StoreQuarts[nn]->spprobs[0],q[1], 
+ StoreQuarts[nn]->spprobs[1],q[2],  
+ StoreQuarts[nn]->spprobs[2],q[2], 
+ StoreQuarts[nn]->spprobs[3],q[3], 
+ StoreQuarts[nn]->spprobs[4],q[4],    
+ StoreQuarts[nn]->spprobs[7],q[5], 
+ StoreQuarts[nn]->spprobs[5],q[6], 
+ StoreQuarts[nn]->spprobs[6],q[6], 
+ StoreQuarts[nn]->spprobs[12],q[7], 
+ StoreQuarts[nn]->spprobs[13],q[8],    
+ StoreQuarts[nn]->spprobs[8],q[9],
+StoreQuarts[nn]->spprobs[9],q[9], 
+ StoreQuarts[nn]->spprobs[10],q[10], 
+ StoreQuarts[nn]->spprobs[11],q[10], 
+StoreQuarts[nn]->spprobs[14],q[11]);  */
+
   //if (verbose==1) printf("The likelihood of the quartet is %f\n\n",quart_lik);
   return(quart_lik);
 
+}
+
+/*** The speed-up below was suggested by Claude (8/26) and   ***/
+/*** its logical has been verified. It has been tested       ***/
+/*** extensively against the previous implementation         ***/
+/********************************************************************/
+/* Quartet-dependency index, used to speed up branch-length         */
+/* hill-climbing and annealing (the bl_uphill_ and bl_anneal_       */
+/* family of functions).                                            */
+/*                                                                  */
+/* Each StoreQuarts[i] holds three pointers (t1,t2,t3) directly     */
+/* into the TimeVec array. A proposal in those loops changes the    */
+/* time of exactly one node (one TimeVec entry) per iteration, but  */
+/* the original code recomputed the composite likelihood by         */
+/* summing SymmetricQuartetLikelihood / AsymmetricQuartetLikelihood */
+/* over every quartet in StoreQuarts[0..num_unique_quarts-1] on     */
+/* every single iteration - the vast majority of which do not       */
+/* depend on the node that changed at all.                          */
+/*                                                                  */
+/* QuartDeps records, for each TimeVec index, exactly which unique  */
+/* quartets depend on it (via t1, t2, or t3). Built once per call   */
+/* to a bl_uphill/bl_anneal function (an O(num_unique_quarts)       */
+/* one-time cost, the same order as a single old-style full sum),   */
+/* it lets each iteration recompute only the handful of quartets    */
+/* that actually depend on the node being proposed, and update the  */
+/* running composite log-likelihood incrementally:                  */
+/*     new_total = curr_lik - (old contribution of affected quarts) */
+/*                          + (new contribution of affected quarts) */
+/* This is mathematically exact (not an approximation) because      */
+/* every other quartet's likelihood is provably unchanged.          */
+/********************************************************************/
+
+typedef struct {
+    int *offset;      /* size nnode+1; deps for node n are        */
+                       /* dep_quart[offset[n] .. offset[n+1]-1]    */
+    int *dep_quart;    /* flat list of quartet indices, size offset[nnode] */
+    int  nnode;
+} QuartDeps;
+
+static QuartDeps BuildQuartDeps(int nnode) {
+
+    QuartDeps qd;
+    int *count, *cursor;
+    int i, k, nu, uniq[3], idx1, idx2, idx3, node;
+
+    count = (int*)calloc(nnode, sizeof(int));
+
+    for (i=0; i<num_unique_quarts; i++) {
+        idx1 = (int)(StoreQuarts[i]->t1 - TimeVec);
+        idx2 = (int)(StoreQuarts[i]->t2 - TimeVec);
+        idx3 = (int)(StoreQuarts[i]->t3 - TimeVec);
+        nu = 0;
+        uniq[nu++] = idx1;
+        if (idx2 != idx1) uniq[nu++] = idx2;
+        if (idx3 != idx1 && idx3 != idx2) uniq[nu++] = idx3;
+        for (k=0; k<nu; k++) count[uniq[k]]++;
+    }
+
+    qd.nnode = nnode;
+    qd.offset = (int*)malloc((nnode+1)*sizeof(int));
+    qd.offset[0] = 0;
+    for (node=0; node<nnode; node++) qd.offset[node+1] = qd.offset[node] + count[node];
+
+    qd.dep_quart = (int*)malloc((qd.offset[nnode] > 0 ? qd.offset[nnode] : 1)*sizeof(int));
+    cursor = (int*)malloc(nnode*sizeof(int));
+    for (node=0; node<nnode; node++) cursor[node] = qd.offset[node];
+
+    for (i=0; i<num_unique_quarts; i++) {
+        idx1 = (int)(StoreQuarts[i]->t1 - TimeVec);
+        idx2 = (int)(StoreQuarts[i]->t2 - TimeVec);
+        idx3 = (int)(StoreQuarts[i]->t3 - TimeVec);
+        nu = 0;
+        uniq[nu++] = idx1;
+        if (idx2 != idx1) uniq[nu++] = idx2;
+        if (idx3 != idx1 && idx3 != idx2) uniq[nu++] = idx3;
+        for (k=0; k<nu; k++) qd.dep_quart[cursor[uniq[k]]++] = i;
+    }
+
+    free(cursor);
+    free(count);
+
+    return qd;
+}
+
+static void FreeQuartDeps(QuartDeps *qd) {
+    free(qd->offset);
+    free(qd->dep_quart);
+    qd->offset = NULL;
+    qd->dep_quart = NULL;
 }
 
 
@@ -1176,6 +1377,10 @@ double GetCompLik() {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  // ppMatrix depends only on the current tree topology (ppTwoRow/parents),
+  // not on which quartet is being resolved, so it only needs rebuilding
+  // once per call, here -- see the note in GetQuartetTree().
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -1188,8 +1393,13 @@ double GetCompLik() {
 
 		GetQuartetTree(i,j,k,l,ovec);
   		//printf("ovec is: %d %d %d %d %d\n",ovec[0],ovec[1],ovec[2],ovec[3],ovec[4]);
-                FindDupQuarts(ovec[0],duppvec);
-            
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+      
+		//printf("Returning from FindDupQuarts with: ");
+		//double myqc=0.0;
+		//for (m=0; m<15; m++) myqc+=duppvec[m];
+		//printf("%f\n\n",myqc);
+      
    		// Fill the information for the current quartet into the struct StoreQuarts
    		for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
    		StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -1627,6 +1837,7 @@ void GetCompLikDerivatives(int optnode, double *ders) {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) { qvec[i]=0; bl_ind[i]=0;}
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -1639,7 +1850,7 @@ void GetCompLikDerivatives(int optnode, double *ders) {
 
                 GetQuartetTree(i,j,k,l,ovec);
                 //printf("ovec is: %d %d %d %d %d\n",ovec[0],ovec[1],ovec[2],ovec[3],ovec[4]);
-                FindDupQuarts(ovec[0],duppvec);
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
             
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
@@ -1793,16 +2004,16 @@ double AsymmetricQuartetLikelihood_msnp(int nn){
   t3 = *StoreQuarts[nn]->t3;
   //printf("Times are %f %f %f\n",t1,t2,t3);
 
-  abeta[1][0]=1.0; 
+  abeta[1][0]=1.0;
   abeta[2][0]=exp(-2.0*m*t1);
-  abeta[3][0]=exp(-2.0*m*t2); 
-  abeta[4][0]=exp(-m*t1)*exp(-2.0*m*t2); 
-  abeta[5][0]=exp(-2.0*m*t3); 
-  abeta[6][0]=exp(-m*t1)*exp(-2.0*m*t3); 
-  abeta[7][0]=exp(-2.0*m*t1)*exp(-2.0*m*t3); 
-  abeta[8][0]=exp(-m*t2)*exp(-2.0*m*t3); 
+  abeta[3][0]=exp(-2.0*m*t2);
+  abeta[4][0]=exp(-m*t1)*exp(-2.0*m*t2);
+  abeta[5][0]=exp(-2.0*m*t3);
+  abeta[6][0]=exp(-m*t1)*exp(-2.0*m*t3);
+  abeta[7][0]=exp(-2.0*m*t1)*exp(-2.0*m*t3);
+  abeta[8][0]=exp(-m*t2)*exp(-2.0*m*t3);
   abeta[9][0]=exp(-m*t1)*exp(-m*t2)*exp(-2.0*m*t3);
-  abeta[10][0]=exp((2.0/t)*(t1-t2))*exp(-2.0*m*(t2+t3)); 
+  abeta[10][0]=exp((2.0/t)*(t1-t2))*exp(-2.0*m*(t2+t3));
 
   // order is: xxxx; xxxy = xxyx; xyxx; yxxx; xxyy; xyxy = yxxy; xxyz
   // yzxx; xyxz = xyzx; yxxz = yxzx; xyzw
@@ -1849,6 +2060,7 @@ double GetCompLik_msnp() {
   num_unique_quarts = 0;
 
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -1861,7 +2073,7 @@ double GetCompLik_msnp() {
  
 		GetQuartetTree(i,j,k,l,ovec);
                 //printf("ovec is: %d %d %d %d %d\n",ovec[0],ovec[1],ovec[2],ovec[3],ovec[4]);
-                FindDupQuarts(ovec[0],duppvec);
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
             
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
@@ -2016,28 +2228,28 @@ double AsymmetricQuartetLikelihood_ratevar(int nn){
   double t1, t2, t3;
 
   GetRateParams();
-                        
+
    // t1 = TimeVecQuart[ntaxa+3]; t2 = TimeVecQuart[ntaxa+2]; t3 = TimeVecQuart[ntaxa+1]
   t1 = *StoreQuarts[nn]->t1;
   t2 = *StoreQuarts[nn]->t2;
   t3 = *StoreQuarts[nn]->t3;
-  //printf("Times are %f %f %f\n",t1,t2,t3);   
+  //printf("Times are %f %f %f\n",t1,t2,t3);
 
   for (i=1; i<12; i++) q[i]=0.0;
 	for (k=0; k<ncat; k++) {
 
 		// printf("for category %d, rate is %f\n",k,rvals[k+1]);
 
-        	abeta[1][0]=1.0; 
+        	abeta[1][0]=1.0;
         	abeta[2][0]=exp(-2.0*m*rvals[k+1]*t1);
-        	abeta[3][0]=exp(-2.0*m*rvals[k+1]*t2); 
-        	abeta[4][0]=exp(-m*rvals[k+1]*t1)*exp(-2.0*m*rvals[k+1]*t2); 
-        	abeta[5][0]=exp(-2.0*m*rvals[k+1]*t3); 
-        	abeta[6][0]=exp(-m*rvals[k+1]*t1)*exp(-2.0*m*rvals[k+1]*t3); 
-        	abeta[7][0]=exp(-2.0*m*rvals[k+1]*t1)*exp(-2.0*m*rvals[k+1]*t3); 
-        	abeta[8][0]=exp(-m*rvals[k+1]*t2)*exp(-2.0*m*rvals[k+1]*t3); 
+        	abeta[3][0]=exp(-2.0*m*rvals[k+1]*t2);
+        	abeta[4][0]=exp(-m*rvals[k+1]*t1)*exp(-2.0*m*rvals[k+1]*t2);
+        	abeta[5][0]=exp(-2.0*m*rvals[k+1]*t3);
+        	abeta[6][0]=exp(-m*rvals[k+1]*t1)*exp(-2.0*m*rvals[k+1]*t3);
+        	abeta[7][0]=exp(-2.0*m*rvals[k+1]*t1)*exp(-2.0*m*rvals[k+1]*t3);
+        	abeta[8][0]=exp(-m*rvals[k+1]*t2)*exp(-2.0*m*rvals[k+1]*t3);
         	abeta[9][0]=exp(-m*rvals[k+1]*t1)*exp(-m*rvals[k+1]*t2)*exp(-2.0*m*rvals[k+1]*t3);
-        	abeta[10][0]=exp((2.0/t)*(rvals[k+1]*t1-rvals[k+1]*t2))*exp(-2.0*m*(rvals[k+1]*t2+rvals[k+1]*t3)); 
+        	abeta[10][0]=exp((2.0/t)*(rvals[k+1]*t1-rvals[k+1]*t2))*exp(-2.0*m*(rvals[k+1]*t2+rvals[k+1]*t3));
 
         	// order is: xxxx; xxxy = xxyx; xyxx; yxxx; xxyy; xyxy = yxxy; xxyz
         	// yzxx; xyxz = xyzx; yxxz = yxzx; xyzw
@@ -2084,6 +2296,7 @@ double GetCompLik_ratevar() {
   num_unique_quarts = 0;
 
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -2096,7 +2309,7 @@ double GetCompLik_ratevar() {
         
 		GetQuartetTree(i,j,k,l,ovec);
                 //printf("ovec is: %d %d %d %d %d\n",ovec[0],ovec[1],ovec[2],ovec[3],ovec[4]);
-                FindDupQuarts(ovec[0],duppvec);
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
             
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];

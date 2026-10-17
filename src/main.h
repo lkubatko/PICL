@@ -15,7 +15,7 @@ extern int ntaxa, nspecies, nseq, nsite, nquarts, num_unique_quarts, num_unique,
 extern int anneal, anneal_bl, user_bl, max_it, mult_iter, num_reject, max_it_bl, test_increment, seedj, seedk;
 
 extern double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
-extern float lambda, theta, beta, mu, ratepar, invpar;
+extern float alpha, lambda, theta, beta, mu, ratepar, invpar;
 
 extern int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2], *ppTwoRow_best_orig[2], *ppTwoRowQuart[2], *filled_ind, *seq_counter, *qvec, *site_counter;
 extern int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
@@ -57,12 +57,14 @@ typedef struct {
 
 extern Link Head, currenttree;
 extern naym *taxname, *speciesname, *psname;
+extern naym **assignment_vector;
 extern CLq **StoreQuarts;
 
 /* in main.c */
 //long int random_seed();
 int MemAlloc();
 void transfer(char **cbase, int **nbase, int pres_loc, int trans_length);
+int same_seq_name(const char *a, const char *b);
 naym* getSequenceData(FILE *infile);
 void unique_sites();
 
@@ -97,6 +99,7 @@ void index_to_subset(unsigned long long index, int *a, int *b, int *c, int *d, i
 
 /* in complik.c */
 int find_parent(int target);
+int find_parent_scan(int target);
 int IsCherry(int q, int r);
 int IsCherryQuartet(int q, int r, int w, int x);
 int CountCherries(int q, int r, int s, int t);
@@ -108,9 +111,10 @@ void AllMyChildrenRightQuartetLeft(int mynode);
 void AllMyChildrenLeftQuartRight(int mynode);
 void AllMyChildrenRightQuartetRight(int mynode);
 void AllMyChildrenQuartet(int mynode);
-void FindDupQuarts(int is_symm, double spcounts[15]);
+void FindDupQuarts(int is_symm, double spcounts[15], int slot_marker);
 int GetQuartetTree(int tax1, int tax2, int tax3, int tax4, int OrderedVec[5]);
 void CountQuartetSitePatterns(int tax1, int tax2, int tax3, int tax4, double pvec[15]);
+void InvalidateQuartetSitePatternCache(void);
 double SymmetricQuartetLikelihood(int nn);
 double AsymmetricQuartetLikelihood(int nn);
 double SymmetricQuartetLikelihood_msnp(int nn);

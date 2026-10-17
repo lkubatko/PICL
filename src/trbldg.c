@@ -41,7 +41,7 @@ void trbldg() {
        	side_target = 1;
      }
 
-     //printf("parent is %d, left_child is %d, right child is %d, sib is %d, side_target is %d\n",parent,left_child,right_child,sib,side_target);
+     //printf("\n target is %d, parent is %d, target,left_child is %d, right child is %d, sib is %d, side_target is %d\n",target,parent,left_child,right_child,sib,side_target);
   
      /* Generate 1, 2, or 3 at random to decide which of the three  */
      /* possible local rearrangements will be made.  1 = no change, */
@@ -56,7 +56,7 @@ void trbldg() {
      }
 
      if (index==2) {
-   
+ 
        	ppTwoRow[side_target][parent-(ntaxa+1)]=right_child;
        	ppTwoRow[(side_target+1)%2][parent-(ntaxa+1)]=target;
        	ppTwoRow[side_target][target-(ntaxa+1)]=left_child;
@@ -68,7 +68,7 @@ void trbldg() {
   
      else { 
        	if (index==3){
-      
+
          ppTwoRow[side_target][parent-(ntaxa+1)]=left_child;
          ppTwoRow[(side_target+1)%2][parent-(ntaxa+1)]=target;
          ppTwoRow[side_target][target-(ntaxa+1)]=right_child;
@@ -79,8 +79,8 @@ void trbldg() {
        	 }
      }
 
-
-    /*printf("Index was %d, Tree has been re-arranged :) The proposed tree is\n",index);
+    /*
+    printf("Index was %d, Tree has been re-arranged :) The proposed tree is\n",index);
     for (i=0; i<ntaxa-1; i++) {
         printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
         printf("%f %f\n ",TimeVec[i+ntaxa+1],TimeVec_temp[i+ntaxa+1]);
@@ -93,10 +93,11 @@ void trbldg() {
     //printf("parent is %d\n",parent);
     //printf("min_time is %10.8f, max time is %10.8f\n",min_time,TimeVec[parent]);
     diff = TimeVec[parent]-min_time;
-    //printf("diff is %f\n",diff);
+    //printf("target is %d, diff is %f\n",target,diff);
     if (diff > 0.0001) {
-    	TimeVec[target] = genunf((float)min_time+diff/4,(float)TimeVec[parent]-diff/4);
-    	//printf("New time of target %d is %10.8f\n",target,TimeVec[target]);
+	TimeVec[target] = genunf((float)min_time+0.000055,(float)TimeVec[parent]-0.000045);
+	//TimeVec[target] = genunf((float)min_time+diff/4,(float)TimeVec[parent]-diff/4); 
+    	//printf("New time of target %d is %10.8f, range for the new time is %f to %f\n",target,TimeVec[target],(float)min_time+diff/4,(float)TimeVec[parent]-diff/4);
 
     	/* Compute CL of new tree and make decision */
     	prop_lik = GetCompLik();
@@ -126,7 +127,7 @@ void trbldg() {
 
 		if (ran_num<=exp((prop_lik-curr_anneal_lik)/ci)) { /* accept */
 			//printf("ACCEPT lower\n");
-			num_reject=0; 
+			num_reject=0;
         		curr_anneal_lik = prop_lik;
         		ppTwoRow_temp[0][parent-(ntaxa+1)] = ppTwoRow[0][parent-(ntaxa+1)];
         		ppTwoRow_temp[1][parent-(ntaxa+1)] = ppTwoRow[1][parent-(ntaxa+1)];
@@ -142,7 +143,7 @@ void trbldg() {
 		else {
 			//printf("Reject\n");
  			num_reject++;
-			curr_anneal_lik = old_lik; 
+			curr_anneal_lik = old_lik;
 			ppTwoRow[0][parent-(ntaxa+1)] = ppTwoRow_temp[0][parent-(ntaxa+1)];
     			ppTwoRow[1][parent-(ntaxa+1)] = ppTwoRow_temp[1][parent-(ntaxa+1)];
     			ppTwoRow[0][target-(ntaxa+1)] = ppTwoRow_temp[0][target-(ntaxa+1)];
@@ -244,9 +245,6 @@ void RescaleTree() {
 	}
 
  }
-
- 
-
 }
 
 

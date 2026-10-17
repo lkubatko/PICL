@@ -126,6 +126,7 @@ double GetCompLik_genetree() {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -138,7 +139,7 @@ double GetCompLik_genetree() {
 
 		GetQuartetTree(i,j,k,l,ovec);
   		//printf("ovec is: %d %d %d %d %d\n",ovec[0],ovec[1],ovec[2],ovec[3],ovec[4]);
-                FindDupQuarts(ovec[0],duppvec);
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
             
    		// Fill the information for the current quartet into the struct StoreQuarts
    		for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];

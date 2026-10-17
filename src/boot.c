@@ -9,7 +9,7 @@ void bootstrap(int nrep, double init_beta){
   int nbatch, leftover, temptax;
   long *bs_sample, *subsample, *lsubsample;
   float *obs_site_pat_freqs;
-  double lastbatch, **input_freqs;
+  double lastbatch, **input_freqs, **last_input_freqs;
   float *finput_freqs, *flinput_freqs;
 
 
@@ -56,11 +56,10 @@ void bootstrap(int nrep, double init_beta){
          align_length = num_no_gaps;
   }
 
-  //printf("Alignment length is %d and num_unique is %d and num_no_gaps is %d\n",align_length,num_unique,num_no_gaps);
-
   /* When the number of unique sites is large, we need to break the multinomial categories up in */
   /* order to draw bootstrap samples - see Malefaki and Iliopoulos, CSDA 51: 5471-5476, 2007     */
   /* Do those in batchs of 200 after some testing with genmul                                    */
+  /* The last batch will include 200 + whatever is leftover                                      */
 
   /* An annoying thing is that the genmul routine wants float precision for the input probs      */
   /* but when we normalize in each batch, we need double precision - so there's an extra step    */
@@ -70,84 +69,70 @@ void bootstrap(int nrep, double init_beta){
   leftover = num_unique % 200;
 
   /* Memalloc for specific sequence features */
-  input_freqs = (double**)malloc((nbatch+1)*sizeof(double*));
-  for (k=0; k<nbatch+1; k++) input_freqs[k] = (double*)malloc(200*sizeof(double));
+  if (nbatch>1) {
+	input_freqs = (double**)malloc((nbatch-1)*sizeof(double*));
+	for (k=0; k<nbatch-1; k++) input_freqs[k] = (double*)malloc(200*sizeof(double));
+  }
+  else {
+	input_freqs = (double**)malloc(1*sizeof(double*));
+	input_freqs[0] = (double*)malloc((200+leftover)*sizeof(double));
+  }
+  last_input_freqs = (double**)malloc(1*sizeof(double*));
+  last_input_freqs[0] = (double*)malloc((200+leftover)*sizeof(double));
 
-  double batch_sums[nbatch];
-  float fbatch_sums[nbatch];
-  //long *batch_totals[nbatch+1];
+  double batch_sums[nbatch-1];
+  float fbatch_sums[nbatch-1];
   long *batch_totals;
 
-  batch_totals = (long*)malloc((nbatch+1)*sizeof(long));
+  if (nbatch>1) batch_totals = (long*)malloc((nbatch)*sizeof(long));
+  else batch_totals = (long*)malloc(sizeof(long));
   if (batch_totals==NULL)
     {
       printf("     Can't memalloc batch_totals.\n");
     }
   
-  flinput_freqs = (float*)malloc((leftover-1)*sizeof(float));
+  flinput_freqs = (float*)malloc((200+leftover-1)*sizeof(float));
   if (flinput_freqs==NULL)
    {
      printf("     Can't memalloc flinput_freqs.\n");
    }
 
-  lsubsample = (long*)malloc(leftover*sizeof(long));
+  lsubsample = (long*)malloc((200+leftover)*sizeof(long));
   if (lsubsample==NULL)
    {
      printf("     Can't memalloc lsubsample.\n");
    }
   /* Done memalloc */
 
-  //printf("The number of batches is %d and the leftover is %d\n",nbatch,leftover);
- 
+
+
   // get site pattern frequencies
   for (i=0; i<num_unique; i++) obs_site_pat_freqs[i] = (float)site_counter[i]/align_length; 
 
-  // temp check
-  //  printf("The observed pattern frequencies are:\n");
-  double sum = 0.0;
-  for (i=0; i<num_unique; i++) sum += obs_site_pat_freqs[i];
-  //printf("sum is %f\n",sum);	 
-  //for (i=0; i<num_unique; i++) printf("%f ",obs_site_pat_freqs[i]);
-
-  // find probability in each batch of 200
+  // find probabilities in each batch of 200
   lastbatch = 1.0;
   if (nbatch > 0) {
-  	for (k=0; k<nbatch; k++) {
+  	for (k=0; k<nbatch-1; k++) {
 		batch_sums[k]=0.0;
 		for (l=0; l<200; l++) batch_sums[k] += obs_site_pat_freqs[200*k+l]; 
 		lastbatch = lastbatch - batch_sums[k];
   	}
   }
 
-  double check_probs;
-  for (k=0; k<nbatch; k++) {
+  for (k=0; k<nbatch-1; k++) {
 	fbatch_sums[k] = (float)batch_sums[k];
-	check_probs=0.0;
 	for (l=0; l<200; l++) {
 		input_freqs[k][l] = obs_site_pat_freqs[200*k+l]/batch_sums[k];
-		check_probs += input_freqs[k][l];
 	}
-	//printf("The total prob for batch %d is %f\n",k,check_probs);
   }
 
-
-  //printf("lastbatch is %f\n",lastbatch);
+  // find probabilities for the last batch
   double tsum=0.0;
-  for (l=0; l<leftover-1; l++) {
-	input_freqs[nbatch][l] = (double)obs_site_pat_freqs[200*nbatch+l]/(double)lastbatch;
- 	tsum += input_freqs[nbatch][l];
+  for (l=0; l<200+leftover-1; l++) {
+	last_input_freqs[0][l] = (double)obs_site_pat_freqs[200*(nbatch-1)+l]/(double)(lastbatch);
+ 	tsum += last_input_freqs[0][l];
 	}
-  input_freqs[nbatch][leftover-1] = 1.0-tsum;
-  for (l=leftover; l<200; l++) input_freqs[nbatch][l] = 0.0;
-
-  double temp_check=0.0;
-  double minn= 1.0;
-  for (l=0; l<leftover-1; l++) {
-	temp_check+=input_freqs[nbatch][l];
-	if (input_freqs[nbatch][l]<minn) minn = input_freqs[nbatch][l];
-	}
-  //printf("temp_check %f,total is %f\n",temp_check,temp_check+input_freqs[nbatch][leftover-1]);
-  //printf("minn is %f %f\n",minn,(float)minn);
+  last_input_freqs[0][200+leftover-1] = 1.0-tsum;
 
   /* done init */
   /*****************************************************/
@@ -160,13 +145,9 @@ void bootstrap(int nrep, double init_beta){
   for (j=0; j<nrep; j++) {
   
         printf("Bootstrap rep: %d ",j+1);
-	fflush(0);
-
-	/*for (k=0; k<nbatch; k++) printf("%f ",batch_sums[k]);
-	printf("\nAlign length is %ld\n",(long)align_length);*/
 
 	/* first generate number of sites in each batch */
-	if (nbatch>0) genmul((long)align_length,fbatch_sums,nbatch+1,batch_totals);
+	if (nbatch>0) genmul((long)align_length,fbatch_sums,nbatch,batch_totals);
 	else batch_totals[0] = align_length;
 
 	//printf("Batch totals: "); for (k=0; k<nbatch; k++) { printf("%ld ",batch_totals[k]);} printf("\n");
@@ -182,14 +163,10 @@ void bootstrap(int nrep, double init_beta){
 	/* of this issue.								  */
 
 
-	for (k=0; k<nbatch; k++) {
+	for (k=0; k<nbatch-1; k++) {
 
 		for (l=1; l<200; l++) finput_freqs[l-1] = (float)input_freqs[k][l];
         	genmul(batch_totals[k],finput_freqs,200,subsample);
-
-		/*mycount=0;
-		for (l=0; l<200; l++) mycount += subsample[l];
-  		printf("For batch %d, total number sampled is %ld\n",k,mycount);*/
 
 		for (l=1; l<200; l++) site_counter[200*k+l] = subsample[l-1];
 		site_counter[200*k] = subsample[199];
@@ -201,25 +178,26 @@ void bootstrap(int nrep, double init_beta){
         /* which can cause problems in genmul, use the first category     */
         /* as the missing one                                             */
 
-	//printf("need to sample %ld more; nbatch is %d\n",batch_totals[nbatch],nbatch);
+	//printf("need to sample %ld more\n",batch_totals[nbatch-1]);
 
-	float check_sum = 0.0;
-	double my_check_sum = 0.0;
-        for (l=1; l<leftover; l++) { 
-		flinput_freqs[l-1] = (float)input_freqs[nbatch][l];
-		check_sum += flinput_freqs[l-1];
-		my_check_sum += input_freqs[nbatch][l];
+        for (l=1; l<200+leftover; l++) { 
+		flinput_freqs[l-1] = (float)last_input_freqs[0][l];
 	}
-        //printf("checksum %f, mychecksum is %f\n",check_sum,my_check_sum);
-	genmul(batch_totals[nbatch],flinput_freqs,leftover,lsubsample);
-	for (l=1; l<leftover; l++) site_counter[200*nbatch+l] = lsubsample[l-1];
-	site_counter[200*nbatch] = lsubsample[leftover-1];
+
+	genmul(batch_totals[nbatch-1],flinput_freqs,200+leftover,lsubsample);
+	for (l=1; l<200+leftover; l++) site_counter[200*(nbatch-1)+l] = lsubsample[l-1];
+	site_counter[200*(nbatch-1)] = lsubsample[200+leftover-1];
 
 	int bootcount=0;
 	for (i=0; i<num_unique; i++) bootcount+=site_counter[i];
-	//printf("Total number of sampled sites is %d\n",bootcount);
 
-	/* bootstrap sample is generated, now do estimation */
+	/* The site_counter vector is resampled for each bootstrap   */
+        /* replicate, so the cached per-species quartet site pattern */
+        /* counts in complik.c must be deleted and re-computed       */
+
+	InvalidateQuartetSitePatternCache();
+
+	/* The bootstrap sample is generated, now do estimation */
 
 	// copy starting tree to besttree before beginning annealing
 	// copy the tree estimated from the initial annealing to ppTwoRow and TimeVec
@@ -238,20 +216,13 @@ void bootstrap(int nrep, double init_beta){
 	}
 	make_indmat();
   	for (i=1; i<2*ntaxa; i++) {
-        	parents[i] = find_parent(i);
+        	parents[i] = find_parent_scan(i);
         	parents_temp[i] = parents[i];
   	}
 
-	/* check */
-	/*printf("Starting tree is:\n");
-	for (i=0; i<ntaxa-1; i++) {  
-        	printf("%d %d ",ppTwoRow[0][i],ppTwoRow[1][i]);
-        	printf("%f %f\n ",TimeVec[i+ntaxa+1],TimeVec_temp[i+ntaxa+1]);
-    	} */ 
-
 	/* Compute the composite likelihood for the current tree */
   	if (model == 5) {
-          	ComputeAandS_popvar(lambda);
+          	ComputeAandS_popvar(alpha, lambda);
   	}
   	else {
         	ComputeAandS(theta);

@@ -93,7 +93,7 @@ void trbldg_genetree() {
     //printf("min_time is %f, max time is %f\n",min_time,TimeVec[parent]);
     diff = TimeVec[parent]-min_time;
     if (diff > 0.0001) {
-    	TimeVec[target] = genunf((float)min_time,(float)TimeVec[parent]);
+	TimeVec[target] = genunf((float)min_time+0.0000051,(float)TimeVec[parent]-0.0000049);
     	//printf("New time of target is %f\n",TimeVec[target]);
 
     	/* Compute CL of new time and make decision */

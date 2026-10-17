@@ -45,7 +45,10 @@ double ReadLength(FILE *fp) {
 
   float length=0.0;
 
-  fscanf(fp,"%18f",&length);
+  if(fscanf(fp,"%18f",&length) != 1){
+    printf("ReadLength function failed");
+    exit(1);
+  }
   return (double)length;
 
 }

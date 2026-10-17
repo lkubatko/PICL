@@ -7,7 +7,7 @@
 void anneal_full() {
 
    int i, counteri, burnin, samplesize, startcount;
-   int bound1;
+   int bound1, max_it_bl_switch;
    double curr_lik, max_change=0.0, U;
    double xsum=0.0, ysum=0.0, xsumsq=0.0, covarsum=0.0;
    double b0, b1, b1old, R;    
@@ -35,8 +35,7 @@ void anneal_full() {
    U = max_change;
    max_cl = curr_anneal_lik;
    b1old = 0.0;
-   printf("\nburnin is complete ... \nstarting first annealing ...\n");
-
+   printf("\n   Burnin is complete.  \n   Starting first annealing ...");
 
   /* Step 2: annealing 1 */
   num_reject = 0;
@@ -63,17 +62,18 @@ void anneal_full() {
 		RescaleTree();
 	}
   }
-  printf("first annealing is complete ...\n");
+  printf(" first annealing is complete.\n");
 
   /* Step 3: branch length optimization */
-  bl_uphill_full();
-  for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
+  //bl_uphill_full();
+  //for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
 
   /* Step 4: annealing 2 */
-  printf("starting second annealing ...\n");
+  printf("   Starting second annealing ...");
   num_reject = 0;
   startcount = counteri;
   while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
+
         trbldg();
         ci = U/(1+counteri*beta);
 	xsum += log(counteri);
@@ -94,13 +94,13 @@ void anneal_full() {
 		RescaleTree();
         }
   }
-  printf("second annealing is complete ...\n");
+  printf(" second annealing is complete.\n");
 
   /* Step 5: branch length optimization of estimated tree */
   bl_uphill_full();
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
 
-  printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
+  printf("   Final optimization is complete. \n   The total number of iterations used for simulated annealing was %d.\n\n",counteri);
   if (counteri == max_it) printf("WARNING: maximum number of iterations reached without satisfying the stopping criterion.\n\n");
 
 }
@@ -137,7 +137,7 @@ void anneal_ratevar() {
    U = max_change;
    max_cl = curr_anneal_lik;
    b1old = 0.0;
-   printf("\nburnin is complete ... \nstarting first annealing ...\n");
+   printf("\n   Burnin is complete. \n   Starting first annealing ...");
 
   /* Step 2: annealing 1 */
   num_reject = 0;
@@ -165,7 +165,7 @@ void anneal_ratevar() {
 		OptAlpha();
         }
   }
-  printf("first annealing is complete ...\n");
+  printf(" first annealing is complete.\n");
 
   /* Step 3: branch length optimization */
   bl_uphill_ratevar();
@@ -173,7 +173,7 @@ void anneal_ratevar() {
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i];   
 
   /* Step 4: annealing 2 */
-  printf("starting second annealing ...\n");
+  printf("   Starting second annealing ...");
   num_reject = 0;
   startcount = counteri;
   while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
@@ -199,13 +199,13 @@ void anneal_ratevar() {
         }
   }
 
-  printf("second annealing is complete ....\n");
+  printf(" second annealing is complete.\n");
   /* Step 5: branch length optimization of estimated tree */
   bl_uphill_ratevar();
   OptAlpha();
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
 
-  printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
+  printf("   Final optimization is complete. \n   The total number of iterations used for simulated annealing was %d.\n\n",counteri);
   if (counteri == max_it) printf("WARNING: maximum number of iterations reached without satisfying the stopping criterion.\n\n");
 
 }
@@ -243,7 +243,7 @@ void anneal_msnp() {
    U = max_change;
    max_cl = curr_anneal_lik;
    b1old = 0.0;
-   printf("\nburnin is complete ... \nstarting first annealing ...\n");
+   printf("\n   Burnin is complete. \n   Starting first annealing ...");
 
   /* Step 2: annealing 1 */
   num_reject = 0;
@@ -270,14 +270,14 @@ void anneal_msnp() {
                 RescaleTree_msnp();
         }
   }
-  printf("first annealing is complete ...\n");
+  printf(" first annealing is complete.\n");
 
  /* Step 3: branch length optimization */
   bl_uphill_msnp();
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
 
   /* Step 4: annealing 2 */
-  printf("starting second annealing ...\n");
+  printf("   Starting second annealing ...");
   num_reject = 0;
   startcount = counteri;
   while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
@@ -302,13 +302,13 @@ void anneal_msnp() {
         }
 
   }
-  printf("second annealing is complete ...\n");
+  printf(" second annealing is complete.\n");
 
   /* Step 5: branch length optimization of estimated tree */
   bl_uphill_ratevar();
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
 
-  printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
+  printf("   Final optimization is complete. \n   The total number of iterations used for simulated annealing was %d.\n\n",counteri);
   if (counteri == max_it) printf("WARNING: maximum number of iterations reached without satisfying the stopping criterion.\n\n");
 
 }
@@ -344,7 +344,7 @@ void anneal_genetree() {
    U = max_change;
    max_cl = curr_anneal_lik;
    b1old = 0.0;
-   printf("\nburnin is complete ... \nstarting first annealing ...\n");
+   printf("\n   Burnin is complete. \n   Starting first annealing ...");
 
   /* Step 2: annealing 1 */
   num_reject = 0;
@@ -370,14 +370,14 @@ void anneal_genetree() {
                 RescaleTree_genetree();
         }
   }
-  printf("first annealing is complete ...\n");
+  printf(" first annealing is complete.\n");
 
   /* Step 3: branch length optimization */
   bl_uphill_genetree();
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
 
   /* Step 4: annealing 2 */
-  printf("starting second annealing ...\n");
+  printf("   Starting second annealing ...");
   num_reject = 0;
   startcount = counteri;
   while (num_reject < mult_iter*bound1 && counteri < burnin+max_it) {
@@ -401,13 +401,13 @@ void anneal_genetree() {
                 RescaleTree_genetree();
         }
   }
-  printf("second annealing is complete ...\n");
+  printf(" second annealing is complete.\n");
 
   /* Step 5: branch length optimization of estimated tree */
   bl_uphill_genetree();
   for (i=0; i<2*ntaxa+1; i++) TimeVec_temp[i] = TimeVec[i]; 
 
-  printf("final optimization is complete ... \nthe total number of iterations used for simulated annealing was %d.\n\n",counteri);
+  printf("   Final optimization is complete. \n   The total number of iterations used for simulated annealing was %d.\n\n",counteri);
   if (counteri == max_it) printf("WARNING: maximum number of iterations reached without satisfying the stopping criterion.\n\n");
 
 }
@@ -419,10 +419,12 @@ void anneal_genetree() {
 
 void bl_anneal_full() {
 
-  int it, rnode;
+  int it, rnode, node, dk, qi;
   double par_time, child_time;
   double curr_time, prop_time;
   double curr_lik, prop_lik, U;
+  QuartDeps qd;
+  double *quart_lik_cache, *old_vals;
 
   int i, j, k, l, m;
   int ovec[5];
@@ -431,6 +433,7 @@ void bl_anneal_full() {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -439,8 +442,8 @@ void bl_anneal_full() {
            if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
 
                 GetQuartetTree(i,j,k,l,ovec);
-                 FindDupQuarts(ovec[0],duppvec);
-            
+                 FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
                 StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -460,47 +463,57 @@ void bl_anneal_full() {
     }
   }
 
+  quart_lik_cache = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
   for (i=0; i<num_unique_quarts; i++) {
 
-        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood(i);
-        else if (StoreQuarts[i]->ncherries==1) complik+=AsymmetricQuartetLikelihood(i);
+        if (StoreQuarts[i]->ncherries==2) quart_lik_cache[i] = SymmetricQuartetLikelihood(i);
+        else if (StoreQuarts[i]->ncherries==1) quart_lik_cache[i] = AsymmetricQuartetLikelihood(i);
         else { printf("There was an error forming quartets .... exiting.\n"); exit(1);}
-        //printf("\t %f\n",complik);
+        complik += quart_lik_cache[i];
 
   }
- 
+
   curr_lik = complik;
+
+  qd = BuildQuartDeps(2*ntaxa+1);
+  old_vals = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
 
   for (it=0; it<max_it_bl; it++) {
 
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
-        curr_time = TimeVec[rnode+(ntaxa+1)];
+        node = rnode+(ntaxa+1);
+        curr_time = TimeVec[node];
         //printf("random node is %d\n",rnode);
         //printf("time of random node is %f\n",TimeVec[rnode+(ntaxa+1)]);
 
         if (rnode!=0) {  // non-root node
-                par_time = TimeVec[find_parent(rnode+(ntaxa+1))];
-               
+                par_time = TimeVec[find_parent(node)];
+
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
-      
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-		complik = 0.0;
-		for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-        		if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood(i);
-        		else complik+=AsymmetricQuartetLikelihood(i);
-                	
-  		}
+                TimeVec[node]  =  child_time + prop_time;
 
-                prop_lik = complik;
-      
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood(qi) : AsymmetricQuartetLikelihood(qi);
+                }
+
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
                 if (curr_lik > prop_lik) {
                 	//printf("acceptance probability is %f\n",exp((prop_lik-curr_lik)/ci));
-                        if (exp((prop_lik-curr_lik)/ci) < ranf()) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                        if (exp((prop_lik-curr_lik)/ci) < ranf()) {
+                                TimeVec[node]  = curr_time;
+                                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                        }
 			else curr_lik = prop_lik;
 		}
                 else curr_lik = prop_lik;
@@ -510,22 +523,27 @@ void bl_anneal_full() {
                 par_time = 2*TimeVec[ntaxa+1];
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
- 
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-		complik = 0.0;
-		for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-        		if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood(i);
-        		else complik+=AsymmetricQuartetLikelihood(i);
-          	}
+                TimeVec[node]  =  child_time + prop_time;
 
-                prop_lik = complik;
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood(qi) : AsymmetricQuartetLikelihood(qi);
+                }
+
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
 
                 if (curr_lik > prop_lik) {
                 	//printf("acceptance probability is %f\n",exp((prop_lik-curr_lik)/ci));
-                     	if (exp((prop_lik-curr_lik)/ci) < ranf()) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                        if (exp((prop_lik-curr_lik)/ci) < ranf()) {
+                                TimeVec[node]  = curr_time;
+                                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                        }
 			else curr_lik = prop_lik;
 		}
                 else curr_lik = prop_lik;
@@ -533,9 +551,14 @@ void bl_anneal_full() {
         }
 
   }
+
+  free(old_vals);
+  FreeQuartDeps(&qd);
+  free(quart_lik_cache);
+
   if (curr_lik > max_cl) {
       max_cl = curr_lik;
-      
+
       for (i=0; i<ntaxa-1; i++) {
           ppTwoRow_best[0][i] = ppTwoRow[0][i];
           ppTwoRow_best[1][i] = ppTwoRow[1][i];
@@ -544,6 +567,7 @@ void bl_anneal_full() {
           TimeVec_best[i] = TimeVec[i];
       }
   }
+
 }
 
 
@@ -553,10 +577,12 @@ void bl_anneal_full() {
 
 void bl_uphill_full() {
 
-  int it, rnode;
+  int it, rnode, node, dk, qi;
   double par_time, child_time;
   double curr_time, prop_time;
   double curr_lik, prop_lik, U;
+  QuartDeps qd;
+  double *quart_lik_cache, *old_vals;
 
   int i, j, k, l, m;
   int ovec[5];
@@ -565,6 +591,7 @@ void bl_uphill_full() {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -573,8 +600,8 @@ void bl_uphill_full() {
           if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
 
                 GetQuartetTree(i,j,k,l,ovec);
-                FindDupQuarts(ovec[0],duppvec);
-            
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
                 StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -595,72 +622,101 @@ void bl_uphill_full() {
     }
   }
 
+  /* quart_lik_cache[i] always holds SymmetricQuartetLikelihood(i) or
+     AsymmetricQuartetLikelihood(i) evaluated at the *current* TimeVec state -
+     i.e. exactly what a fresh call would return right now. Below we only
+     ever refresh the entries whose dependencies changed (see QuartDeps
+     comment above GetCompLik), and always sum the full cache in ascending
+     index order, so the composite log-likelihood is computed with the exact
+     same terms in the exact same order as the original full-recompute loop
+     - bit-identical, not just mathematically-equivalent. */
+  quart_lik_cache = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
   for (i=0; i<num_unique_quarts; i++) {
 
-        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood(i);
-        else if (StoreQuarts[i]->ncherries==1) complik+=AsymmetricQuartetLikelihood(i);
+        if (StoreQuarts[i]->ncherries==2) quart_lik_cache[i] = SymmetricQuartetLikelihood(i);
+        else if (StoreQuarts[i]->ncherries==1) quart_lik_cache[i] = AsymmetricQuartetLikelihood(i);
         else { printf("There was an error forming quartets .... exiting.\n"); exit(1);}
+        complik += quart_lik_cache[i];
 
   }
 
   curr_lik = complik;
 
+  qd = BuildQuartDeps(2*ntaxa+1);
+  old_vals = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
   for (it=0; it<max_it_bl; it++) {
 
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
-        curr_time = TimeVec[rnode+(ntaxa+1)];
+        node = rnode+(ntaxa+1);
+        curr_time = TimeVec[node];
         //printf("random node is %d\n",rnode);
         //printf("time of random node is %f\n",TimeVec[rnode+(ntaxa+1)]);
 
         if (rnode!=0) {  // non-root node
-                par_time = TimeVec[find_parent(rnode+(ntaxa+1))];
-               
+                par_time = TimeVec[find_parent(node)];
+
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
-      
+
                 prop_time = ranf()*(par_time-child_time);
-		if (par_time - child_time > 0.00001 && prop_time > 0.001) TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-		complik = 0.0;
-		for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-        		if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood(i);
-        		else complik+=AsymmetricQuartetLikelihood(i);
-     		}
+		if (par_time - child_time > 0.00001 && prop_time > 0.001) TimeVec[node]  =  child_time + prop_time;
 
-                prop_lik = complik;
-      
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood(qi) : AsymmetricQuartetLikelihood(qi);
+                }
+
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
+                if (curr_lik > prop_lik) {
+                        TimeVec[node]  = curr_time;
+                        for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                }
                 else curr_lik = prop_lik;
         }
         else {  // adjust the time of the root
                 par_time = 2*TimeVec[ntaxa+1];
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
- 
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-		complik = 0.0;
-		for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-        		if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood(i);
-        		else complik+=AsymmetricQuartetLikelihood(i);
-     		}
+                TimeVec[node]  =  child_time + prop_time;
 
-                prop_lik = complik;
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood(qi) : AsymmetricQuartetLikelihood(qi);
+                }
 
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
+                if (curr_lik > prop_lik) {
+                        TimeVec[node]  = curr_time;
+                        for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                }
                 else curr_lik = prop_lik;
 
         }
 
   }
 
+  free(old_vals);
+  FreeQuartDeps(&qd);
+  free(quart_lik_cache);
+
   if (curr_lik > max_cl) {
       max_cl = curr_lik;
-      
+
       for (i=0; i<ntaxa-1; i++) {
           ppTwoRow_best[0][i] = ppTwoRow[0][i];
           ppTwoRow_best[1][i] = ppTwoRow[1][i];
@@ -683,10 +739,12 @@ void bl_uphill_full() {
 
 void bl_anneal_msnp() {
 
-  int it, rnode;
+  int it, rnode, node, dk, qi;
   double par_time, child_time;
   double curr_time, prop_time;
   double curr_lik, prop_lik;
+  QuartDeps qd;
+  double *quart_lik_cache, *old_vals;
 
   int i, j, k, l, m;
   int ovec[5];
@@ -695,6 +753,7 @@ void bl_anneal_msnp() {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -703,8 +762,8 @@ void bl_anneal_msnp() {
            if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
 
                 GetQuartetTree(i,j,k,l,ovec);
-                 FindDupQuarts(ovec[0],duppvec);
-            
+                 FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
                 StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -723,48 +782,58 @@ void bl_anneal_msnp() {
       }
     }
   }
-   
+
+  quart_lik_cache = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
     for (i=0; i<num_unique_quarts; i++) {
 
-        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_msnp(i);
-        else if (StoreQuarts[i]->ncherries==1) complik+=AsymmetricQuartetLikelihood_msnp(i);
+        if (StoreQuarts[i]->ncherries==2) quart_lik_cache[i] = SymmetricQuartetLikelihood_msnp(i);
+        else if (StoreQuarts[i]->ncherries==1) quart_lik_cache[i] = AsymmetricQuartetLikelihood_msnp(i);
         else { printf("There was an error forming quartets .... exiting.\n"); exit(1);}
-        //printf("\t %f\n",complik);
+        complik += quart_lik_cache[i];
 
   }
- 
+
   curr_lik = complik;
+
+  qd = BuildQuartDeps(2*ntaxa+1);
+  old_vals = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
 
   for (it=0; it<max_it_bl; it++) {
 
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
-        curr_time = TimeVec[rnode+(ntaxa+1)];
+        node = rnode+(ntaxa+1);
+        curr_time = TimeVec[node];
         //printf("random node is %d\n",rnode);
         //printf("time of random node is %f\n",TimeVec[rnode+(ntaxa+1)]);
 
         if (rnode!=0) {  // non-root node
-                par_time = TimeVec[find_parent(rnode+(ntaxa+1))];
-               
+                par_time = TimeVec[find_parent(node)];
+
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
-      
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_msnp(i);
-                        else complik+=AsymmetricQuartetLikelihood_msnp(i);
-                        
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood_msnp(qi) : AsymmetricQuartetLikelihood_msnp(qi);
                 }
 
-                prop_lik = complik;
-      
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
                 if (curr_lik > prop_lik) {
                         //printf("acceptance probability is %f\n",exp((prop_lik-curr_lik)/ci));
-                        if (exp((prop_lik-curr_lik)/ci) < ranf()) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                        if (exp((prop_lik-curr_lik)/ci) < ranf()) {
+                                TimeVec[node]  = curr_time;
+                                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                        }
                         else curr_lik = prop_lik;
                 }
                 else curr_lik = prop_lik;
@@ -775,22 +844,27 @@ void bl_anneal_msnp() {
                 par_time = 2*TimeVec[ntaxa+1];
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
- 
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_msnp(i);
-                        else complik+=AsymmetricQuartetLikelihood_msnp(i);
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood_msnp(qi) : AsymmetricQuartetLikelihood_msnp(qi);
                 }
 
-                prop_lik = complik;
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
 
                 if (curr_lik > prop_lik) {
                         //printf("acceptance probability is %f\n",exp((prop_lik-curr_lik)/ci));
-                        if (exp((prop_lik-curr_lik)/ci) < ranf()) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                        if (exp((prop_lik-curr_lik)/ci) < ranf()) {
+                                TimeVec[node]  = curr_time;
+                                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                        }
                         else curr_lik = prop_lik;
                 }
                 else curr_lik = prop_lik;
@@ -798,6 +872,10 @@ void bl_anneal_msnp() {
         }
 
   }
+
+  free(old_vals);
+  FreeQuartDeps(&qd);
+  free(quart_lik_cache);
 
 }
 
@@ -808,10 +886,12 @@ void bl_anneal_msnp() {
 
 void bl_uphill_msnp() {
 
-int it, rnode;
+int it, rnode, node, dk, qi;
   double par_time, child_time;
   double curr_time, prop_time;
   double curr_lik, prop_lik, U;
+  QuartDeps qd;
+  double *quart_lik_cache, *old_vals;
 
   int i, j, k, l, m;
   int ovec[5];
@@ -820,6 +900,7 @@ int it, rnode;
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -828,8 +909,8 @@ int it, rnode;
           if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
 
                 GetQuartetTree(i,j,k,l,ovec);
-                FindDupQuarts(ovec[0],duppvec);
-            
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
                 StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -850,43 +931,55 @@ int it, rnode;
     }
   }
 
+  quart_lik_cache = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
   for (i=0; i<num_unique_quarts; i++) {
 
-        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_msnp(i);
-        else if (StoreQuarts[i]->ncherries==1) complik+=AsymmetricQuartetLikelihood_msnp(i);
+        if (StoreQuarts[i]->ncherries==2) quart_lik_cache[i] = SymmetricQuartetLikelihood_msnp(i);
+        else if (StoreQuarts[i]->ncherries==1) quart_lik_cache[i] = AsymmetricQuartetLikelihood_msnp(i);
         else { printf("There was an error forming quartets .... exiting.\n"); exit(1);}
+        complik += quart_lik_cache[i];
 
   }
 
   curr_lik = complik;
 
+  qd = BuildQuartDeps(2*ntaxa+1);
+  old_vals = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
   for (it=0; it<max_it_bl; it++) {
 
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
-        curr_time = TimeVec[rnode+(ntaxa+1)];
+        node = rnode+(ntaxa+1);
+        curr_time = TimeVec[node];
         //printf("random node is %d\n",rnode);
         //printf("time of random node is %f\n",TimeVec[rnode+(ntaxa+1)]);
 
         if (rnode!=0) {  // non-root node
-                par_time = TimeVec[find_parent(rnode+(ntaxa+1))];
-               
+                par_time = TimeVec[find_parent(node)];
+
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
-      
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_msnp(i);
-                        else complik+=AsymmetricQuartetLikelihood_msnp(i);
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood_msnp(qi) : AsymmetricQuartetLikelihood_msnp(qi);
                 }
 
-                prop_lik = complik;
-      
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
+                if (curr_lik > prop_lik) {
+                        TimeVec[node]  = curr_time;
+                        for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                }
                 else curr_lik = prop_lik;
         }
 
@@ -894,26 +987,33 @@ int it, rnode;
                 par_time = 2*TimeVec[ntaxa+1];
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
- 
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_msnp(i);
-                        else complik+=AsymmetricQuartetLikelihood_msnp(i);
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood_msnp(qi) : AsymmetricQuartetLikelihood_msnp(qi);
                 }
 
-                prop_lik = complik;
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
 
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                if (curr_lik > prop_lik) {
+                        TimeVec[node]  = curr_time;
+                        for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                }
                 else curr_lik = prop_lik;
         }
 
   }
 
-
+  free(old_vals);
+  FreeQuartDeps(&qd);
+  free(quart_lik_cache);
 
 }
 
@@ -924,10 +1024,12 @@ int it, rnode;
 
 void bl_anneal_ratevar() {
 
-  int it, rnode;
+  int it, rnode, node, dk, qi;
   double par_time, child_time;
   double curr_time, prop_time;
   double curr_lik, prop_lik, U;
+  QuartDeps qd;
+  double *quart_lik_cache, *old_vals;
 
   int i, j, k, l, m;
   int ovec[5];
@@ -936,6 +1038,7 @@ void bl_anneal_ratevar() {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -944,8 +1047,8 @@ void bl_anneal_ratevar() {
            if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
 
                 GetQuartetTree(i,j,k,l,ovec);
-                 FindDupQuarts(ovec[0],duppvec);
-            
+                 FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
                 StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -965,47 +1068,57 @@ void bl_anneal_ratevar() {
     }
   }
 
+  quart_lik_cache = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
   for (i=0; i<num_unique_quarts; i++) {
 
-        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_ratevar(i);
-        else if (StoreQuarts[i]->ncherries==1) complik+=AsymmetricQuartetLikelihood_ratevar(i);
+        if (StoreQuarts[i]->ncherries==2) quart_lik_cache[i] = SymmetricQuartetLikelihood_ratevar(i);
+        else if (StoreQuarts[i]->ncherries==1) quart_lik_cache[i] = AsymmetricQuartetLikelihood_ratevar(i);
         else { printf("There was an error forming quartets .... exiting.\n"); exit(1);}
-        //printf("\t %f\n",complik);
+        complik += quart_lik_cache[i];
 
   }
- 
+
   curr_lik = complik;
+
+  qd = BuildQuartDeps(2*ntaxa+1);
+  old_vals = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
 
   for (it=0; it<max_it_bl; it++) {
 
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
-        curr_time = TimeVec[rnode+(ntaxa+1)];
+        node = rnode+(ntaxa+1);
+        curr_time = TimeVec[node];
         //printf("random node is %d\n",rnode);
         //printf("time of random node is %f\n",TimeVec[rnode+(ntaxa+1)]);
 
         if (rnode!=0) {  // non-root node
-                par_time = TimeVec[find_parent(rnode+(ntaxa+1))];
-               
+                par_time = TimeVec[find_parent(node)];
+
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
-      
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_ratevar(i);
-                        else complik+=AsymmetricQuartetLikelihood_ratevar(i);
-                        
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood_ratevar(qi) : AsymmetricQuartetLikelihood_ratevar(qi);
                 }
 
-                prop_lik = complik;
-      
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
                 if (curr_lik > prop_lik) {
                         //printf("acceptance probability is %f\n",exp((prop_lik-curr_lik)/ci));
-                        if (exp((prop_lik-curr_lik)/ci) < ranf()) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                        if (exp((prop_lik-curr_lik)/ci) < ranf()) {
+                                TimeVec[node]  = curr_time;
+                                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                        }
                         else curr_lik = prop_lik;
                 }
                 else curr_lik = prop_lik;
@@ -1016,22 +1129,27 @@ void bl_anneal_ratevar() {
                 par_time = 2*TimeVec[ntaxa+1];
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
- 
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_ratevar(i);
-                        else complik+=AsymmetricQuartetLikelihood_ratevar(i);
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood_ratevar(qi) : AsymmetricQuartetLikelihood_ratevar(qi);
                 }
 
-                prop_lik = complik;
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
 
                 if (curr_lik > prop_lik) {
                         //printf("acceptance probability is %f\n",exp((prop_lik-curr_lik)/ci));
-                        if (exp((prop_lik-curr_lik)/ci) < ranf()) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                        if (exp((prop_lik-curr_lik)/ci) < ranf()) {
+                                TimeVec[node]  = curr_time;
+                                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                        }
                         else curr_lik = prop_lik;
                 }
                 else curr_lik = prop_lik;
@@ -1039,6 +1157,10 @@ void bl_anneal_ratevar() {
         }
 
   }
+
+  free(old_vals);
+  FreeQuartDeps(&qd);
+  free(quart_lik_cache);
 
 }
 
@@ -1049,10 +1171,12 @@ void bl_anneal_ratevar() {
 
 void bl_uphill_ratevar() {
 
-int it, rnode;
+int it, rnode, node, dk, qi;
   double par_time, child_time;
   double curr_time, prop_time;
   double curr_lik, prop_lik;
+  QuartDeps qd;
+  double *quart_lik_cache, *old_vals;
 
   int i, j, k, l, m;
   int ovec[5];
@@ -1061,6 +1185,7 @@ int it, rnode;
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -1069,8 +1194,8 @@ int it, rnode;
           if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
 
                 GetQuartetTree(i,j,k,l,ovec);
-                FindDupQuarts(ovec[0],duppvec);
-            
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
                 StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -1091,43 +1216,55 @@ int it, rnode;
     }
   }
 
+  quart_lik_cache = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
   for (i=0; i<num_unique_quarts; i++) {
 
-        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_ratevar(i);
-        else if (StoreQuarts[i]->ncherries==1) complik+=AsymmetricQuartetLikelihood_ratevar(i);
+        if (StoreQuarts[i]->ncherries==2) quart_lik_cache[i] = SymmetricQuartetLikelihood_ratevar(i);
+        else if (StoreQuarts[i]->ncherries==1) quart_lik_cache[i] = AsymmetricQuartetLikelihood_ratevar(i);
         else { printf("There was an error forming quartets .... exiting.\n"); exit(1);}
+        complik += quart_lik_cache[i];
 
   }
 
   curr_lik = complik;
 
+  qd = BuildQuartDeps(2*ntaxa+1);
+  old_vals = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
   for (it=0; it<max_it_bl; it++) {
 
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
-        curr_time = TimeVec[rnode+(ntaxa+1)];
+        node = rnode+(ntaxa+1);
+        curr_time = TimeVec[node];
         //printf("random node is %d\n",rnode);
         //printf("time of random node is %f\n",TimeVec[rnode+(ntaxa+1)]);
 
         if (rnode!=0) {  // non-root node
-                par_time = TimeVec[find_parent(rnode+(ntaxa+1))];
-               
+                par_time = TimeVec[find_parent(node)];
+
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
-      
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_ratevar(i);
-                        else complik+=AsymmetricQuartetLikelihood_ratevar(i);
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood_ratevar(qi) : AsymmetricQuartetLikelihood_ratevar(qi);
                 }
 
-                prop_lik = complik;
-      
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
+                if (curr_lik > prop_lik) {
+                        TimeVec[node]  = curr_time;
+                        for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                }
                 else curr_lik = prop_lik;
         }
 
@@ -1135,35 +1272,45 @@ int it, rnode;
                 par_time = 2*TimeVec[ntaxa+1];
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
- 
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) {
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                        if (StoreQuarts[i]->ncherries==2) complik+=SymmetricQuartetLikelihood_ratevar(i);
-                        else complik+=AsymmetricQuartetLikelihood_ratevar(i);
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = (StoreQuarts[qi]->ncherries==2) ? SymmetricQuartetLikelihood_ratevar(qi) : AsymmetricQuartetLikelihood_ratevar(qi);
                 }
 
-                prop_lik = complik;
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
 
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                if (curr_lik > prop_lik) {
+                        TimeVec[node]  = curr_time;
+                        for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                }
                 else curr_lik = prop_lik;
         }
 
   }
 
+  free(old_vals);
+  FreeQuartDeps(&qd);
+  free(quart_lik_cache);
 
 }
 
 
 void bl_anneal_genetree(){
-  
-  int it, rnode;
+
+  int it, rnode, node, dk, qi;
   double par_time, child_time;
   double curr_time, prop_time;
   double curr_lik, prop_lik, U;
+  QuartDeps qd;
+  double *quart_lik_cache, *old_vals;
 
   int i, j, k, l, m;
   int ovec[5];
@@ -1172,6 +1319,7 @@ void bl_anneal_genetree(){
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -1180,8 +1328,8 @@ void bl_anneal_genetree(){
            if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
 
                 GetQuartetTree(i,j,k,l,ovec);
-                FindDupQuarts(ovec[0],duppvec);
-            
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
                 StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -1201,35 +1349,53 @@ void bl_anneal_genetree(){
     }
   }
 
-  for (i=0; i<num_unique_quarts; i++) complik+=QuartetLikelihood_genetree(i);
+  quart_lik_cache = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
+  for (i=0; i<num_unique_quarts; i++) {
+        quart_lik_cache[i] = QuartetLikelihood_genetree(i);
+        complik += quart_lik_cache[i];
+  }
 
   curr_lik = complik;
+
+  qd = BuildQuartDeps(2*ntaxa+1);
+  old_vals = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
 
   for (it=0; it<max_it_bl; it++) {
 
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
-        curr_time = TimeVec[rnode+(ntaxa+1)];
+        node = rnode+(ntaxa+1);
+        curr_time = TimeVec[node];
         //printf("random node is %d\n",rnode);
         //printf("time of random node is %f\n",TimeVec[rnode+(ntaxa+1)]);
 
         if (rnode!=0) {  // non-root node
-                par_time = TimeVec[find_parent(rnode+(ntaxa+1))];
-               
+                par_time = TimeVec[find_parent(node)];
+
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
-      
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) complik+=QuartetLikelihood_genetree(i);
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                prop_lik = complik;
-      
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = QuartetLikelihood_genetree(qi);
+                }
+
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
                 if (curr_lik > prop_lik) {
                         //printf("acceptance probability is %f\n",exp((prop_lik-curr_lik)/ci));
-                        if (exp((prop_lik-curr_lik)/ci) < ranf()) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                        if (exp((prop_lik-curr_lik)/ci) < ranf()) {
+                                TimeVec[node]  = curr_time;
+                                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                        }
                         else curr_lik = prop_lik;
                 }
                 else curr_lik = prop_lik;
@@ -1239,18 +1405,27 @@ void bl_anneal_genetree(){
                 par_time = 2*TimeVec[ntaxa+1];
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
- 
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) complik+=QuartetLikelihood_genetree(i);
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                prop_lik = complik;
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = QuartetLikelihood_genetree(qi);
+                }
+
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
 
                 if (curr_lik > prop_lik) {
                         //printf("acceptance probability is %f\n",exp((prop_lik-curr_lik)/ci));
-                        if (exp((prop_lik-curr_lik)/ci) < ranf()) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                        if (exp((prop_lik-curr_lik)/ci) < ranf()) {
+                                TimeVec[node]  = curr_time;
+                                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                        }
                         else curr_lik = prop_lik;
                 }
                 else curr_lik = prop_lik;
@@ -1259,15 +1434,21 @@ void bl_anneal_genetree(){
 
   }
 
+  free(old_vals);
+  FreeQuartDeps(&qd);
+  free(quart_lik_cache);
+
 }
 
 
 void bl_uphill_genetree() {
 
-  int it, rnode;
+  int it, rnode, node, dk, qi;
   double par_time, child_time;
   double curr_time, prop_time;
   double curr_lik, prop_lik, U;
+  QuartDeps qd;
+  double *quart_lik_cache, *old_vals;
 
   int i, j, k, l, m;
   int ovec[5];
@@ -1276,6 +1457,7 @@ void bl_uphill_genetree() {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -1284,8 +1466,8 @@ void bl_uphill_genetree() {
           if (qvec[(int)subset_to_index(i-1,j-1,k-1,l-1)]==0) {
 
                 GetQuartetTree(i,j,k,l,ovec);
-                FindDupQuarts(ovec[0],duppvec);
-            
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
+
                 // Fill the information for the current quartet into the struct StoreQuarts
                 for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];
                 StoreQuarts[num_unique_quarts]->ncherries = ovec[0];
@@ -1306,53 +1488,84 @@ void bl_uphill_genetree() {
     }
   }
 
-  for (i=0; i<num_unique_quarts; i++) complik+=QuartetLikelihood_genetree(i);
+  quart_lik_cache = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
+
+  for (i=0; i<num_unique_quarts; i++) {
+        quart_lik_cache[i] = QuartetLikelihood_genetree(i);
+        complik += quart_lik_cache[i];
+  }
 
   curr_lik = complik;
+
+  qd = BuildQuartDeps(2*ntaxa+1);
+  old_vals = (double*)malloc((num_unique_quarts > 0 ? num_unique_quarts : 1)*sizeof(double));
 
   for (it=0; it<max_it_bl; it++) {
 
         /* pick a node at random */
         rnode = floor((ntaxa-1)*ranf());
-        curr_time = TimeVec[rnode+(ntaxa+1)];
+        node = rnode+(ntaxa+1);
+        curr_time = TimeVec[node];
         //printf("random node is %d\n",rnode);
         //printf("time of random node is %f\n",TimeVec[rnode+(ntaxa+1)]);
 
         if (rnode!=0) {  // non-root node
-                par_time = TimeVec[find_parent(rnode+(ntaxa+1))];
-               
+                par_time = TimeVec[find_parent(node)];
+
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
-      
+
                 prop_time = ranf()*(par_time-child_time);
-                if (child_time + prop_time > 0.00001) TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) complik+=QuartetLikelihood_genetree(i);
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                prop_lik = complik;
-	 
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                if (child_time + prop_time > 0.00001) TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = QuartetLikelihood_genetree(qi);
+                }
+
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
+                if (curr_lik > prop_lik) {
+                        TimeVec[node]  = curr_time;
+                        for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                }
                 else curr_lik = prop_lik;
         }
         else {  // adjust the time of the root
                 par_time = 2*TimeVec[ntaxa+1];
                 if (TimeVec[ppTwoRow[0][rnode]]<TimeVec[ppTwoRow[1][rnode]]) child_time = TimeVec[ppTwoRow[1][rnode]];
                 else child_time = TimeVec[ppTwoRow[0][rnode]];
- 
+
                 prop_time = ranf()*(par_time-child_time);
-                TimeVec[rnode+(ntaxa+1)]  =  child_time + prop_time;
 
-                complik = 0.0;
-                for (i=0; i<num_unique_quarts; i++) complik+=QuartetLikelihood_genetree(i);
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) old_vals[dk-qd.offset[node]] = quart_lik_cache[qd.dep_quart[dk]];
 
-                prop_lik = complik;
-	
-                if (curr_lik > prop_lik) TimeVec[rnode+(ntaxa+1)]  = curr_time;
+                TimeVec[node]  =  child_time + prop_time;
+
+                for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) {
+                        qi = qd.dep_quart[dk];
+                        quart_lik_cache[qi] = QuartetLikelihood_genetree(qi);
+                }
+
+                prop_lik = 0.0;
+                for (i=0; i<num_unique_quarts; i++) prop_lik += quart_lik_cache[i];
+
+                if (curr_lik > prop_lik) {
+                        TimeVec[node]  = curr_time;
+                        for (dk=qd.offset[node]; dk<qd.offset[node+1]; dk++) quart_lik_cache[qd.dep_quart[dk]] = old_vals[dk-qd.offset[node]];
+                }
                 else curr_lik = prop_lik;
         }
 
   }
+
+  free(old_vals);
+  FreeQuartDeps(&qd);
+  free(quart_lik_cache);
 
 }
 

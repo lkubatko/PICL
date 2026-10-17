@@ -2,33 +2,18 @@ extern double besselK_c(double nu, double x);
 
 /*** Compute the S and A matrices to compute site pattern probs ***/
 
-void ComputeAandS_popvar(double lambda) {
+void ComputeAandS_popvar(double alpha, double lambda) {
 
    int i;
    double m = 4.0/3.0;
-   double constant = 6 * pow(lambda, 5) + 
-                  20 * pow(lambda, 4) * m + 
-                  51 * pow(lambda, 3) * pow(m, 2) + 
-                  93 * pow(lambda, 2) * pow(m, 3) + 
-                  108 * lambda * pow(m, 4) + 
-                  60 * pow(m, 5);
-   double sE1 = (lambda * (6 * pow(lambda, 4) + 
-                        14 * pow(lambda, 3) * m + 
-                        23 * pow(lambda, 2) * pow(m, 2) + 
-                        24 * lambda * pow(m, 3) + 
-                        12 * pow(m, 4))) / constant;
+   double constant = (tgamma(1.0 + alpha) * (12.0 * (lambda * lambda * lambda * lambda * lambda) + lambda * m * (40.0 * (lambda * lambda * lambda) * (1.0 + alpha) + lambda * m * (51.0 * lambda + 31.0 * (3.0 + alpha) * m) * ((2.0 + alpha) * (1.0 + alpha)) + 9.0 * (m * m * m) * ((4.0 + alpha) * (3.0 + alpha) * (2.0 + alpha) * (1.0 + alpha))) + (m * m * m * m * m) * ((5.0 + alpha) * (4.0 + alpha) * (3.0 + alpha) * (2.0 + alpha) * (1.0 + alpha))));
+   double sE1 = (lambda * (12.0 * pow(lambda, 4) * tgamma(1.0 + alpha) + lambda * m * (28.0 * pow(lambda, 2) + (2.0 + alpha) * m * (23.0 * lambda + 8.0 * (3.0 + alpha) * m)) * tgamma(2.0 + alpha) + pow(m, 4) * tgamma(5.0 + alpha))) / constant;
 
-   double sE3 = (pow(lambda, 2) * (6 * pow(lambda, 3) + 
-                                8 * pow(lambda, 2) * m + 
-                                7 * lambda * pow(m, 2) + 
-                                3 * pow(m, 3))) / constant;   
+   double sE3 = ((lambda * lambda) * (12.0 * (lambda * lambda * lambda) * tgamma(1.0 + alpha) + lambda * m * (16.0 * lambda + 7.0 * (2.0 + alpha) * m) * tgamma(2.0 + alpha) + (m * m * m) * tgamma(4.0 + alpha))) / constant;   
 
-    double sE5 = (pow(lambda, 2) * (6 * pow(lambda, 3) + 
-                                11 * pow(lambda, 2) * m + 
-                                12 * lambda * pow(m, 2) + 6 * pow(m, 3))) / (2 * constant);
+    double sE5 = ((lambda * lambda) * (6.0 * (lambda * lambda * lambda) * tgamma(1.0 + alpha) + lambda * m * (11.0 * lambda + 6.0 * (2.0 + alpha) * m) * tgamma(2.0 + alpha) + (m * m * m) * tgamma(4.0 + alpha)))/ constant;
 
-    double sE7 = (pow(lambda, 3) * (3 * pow(lambda, 2) + 
-                                4 * lambda * m + 2 * pow(m, 2))) / (2 * constant);
+    double sE7 = ((lambda * lambda * lambda) * (3.0 * (lambda * lambda) + (1.0 + alpha) * m * (4.0 * lambda + (2.0 + alpha) * m)) * tgamma(1.0 + alpha))/ constant;
 
    //compute the C matrix in the symmetric case - indexing starts at 1 to match R code
         // c0 terms
@@ -78,13 +63,13 @@ void ComputeAandS_popvar(double lambda) {
         for (i=1; i<10; i++) smat[9][i] = 0.0;
 
    //compute the C matrix in the asymmetric case - indexing starts at 1 to match R code
-    double aE1 = (lambda * (6 * pow(lambda, 4) + 14 * pow(lambda, 3) * m + 23 * pow(lambda, 2) * pow(m, 2) + 24 * lambda * pow(m, 3) + 12 * pow(m, 4))) / constant;
+    double aE1 = (lambda * tgamma(1.0 + alpha) * (12.0 * (lambda * lambda * lambda * lambda) + lambda * m * (28.0 * (lambda * lambda) + (2.0 + alpha) * m * (23.0 * lambda + 8.0 * (3.0 + alpha) * m)) * (1.0 + alpha) + (m * m * m * m) * ((4.0 + alpha) * (3.0 + alpha) * (2.0 + alpha) * (1.0 + alpha)))) / constant;
 
-    double aE3 = (pow(lambda, 2) * (6 * pow(lambda, 3) + 11 * pow(lambda, 2) * m + 12 * lambda * pow(m, 2) + 6 * pow(m, 3))) / (2 * constant);
+    double aE3 = ((lambda * lambda) * tgamma(1.0 + alpha) * (6.0 * (lambda * lambda * lambda) + lambda * m * (11.0 * lambda + 6.0 * (2.0 + alpha) * m) * (1.0 + alpha) + (m * m * m) * ((3.0 + alpha) * (2.0 + alpha) * (1.0 + alpha)))) / constant;
 
-    double aE6 = (pow(lambda, 2) * (6 * pow(lambda, 3) + 8 * pow(lambda, 2) * m + 7 * lambda * pow(m, 2) + 3 * pow(m, 3))) / constant;
+    double aE6 = (pow(lambda, 2) * (12.0 * pow(lambda, 3) * tgamma(1.0 + alpha) + lambda * m * (16.0 * lambda + 7.0 * (2.0 + alpha) * m) * tgamma(2.0 + alpha) + pow(m, 3) * tgamma(4.0 + alpha))) / constant;
 
-    double aE8 = (pow(lambda, 3) * (3 * pow(lambda, 2) + 4 * lambda * m + 2 * pow(m, 2))) / (2 * constant);
+    double aE8 = ((lambda * lambda * lambda) * (3.0 * (lambda * lambda) + (1.0 + alpha) * m * (4.0 * lambda + (2.0 + alpha) * m)) * tgamma(1.0 + alpha))/ constant;
         for(int j = 1; j <= 11; j++) { amat[1][j] = 1.0 / 256.0; }
 
     // c1 terms            
@@ -166,39 +151,19 @@ double SymmetricQuartetLikelihood_popvar(int nn){
     double branch_lengths = 2 * t3 - t1 - t2;
     double z = 2 * sqrt(2 * branch_lengths * lambda);
 
-    double constant = 6 * pow(lambda, 5) + 
-                  20 * pow(lambda, 4) * m + 
-                  51 * pow(lambda, 3) * pow(m, 2) + 
-                  93 * pow(lambda, 2) * pow(m, 3) + 
-                  108 * lambda * pow(m, 4) + 
-                  60 * pow(m, 5);
+    double constant = (tgamma(1.0 + alpha) * (12.0 * (lambda * lambda * lambda * lambda * lambda) + lambda * m * (40.0 * (lambda * lambda * lambda) * (1.0 + alpha) + lambda * m * (51.0 * lambda + 31.0 * (3.0 + alpha) * m) * ((2.0 + alpha) * (1.0 + alpha)) + 9.0 * (m * m * m) * ((4.0 + alpha) * (3.0 + alpha) * (2.0 + alpha) * (1.0 + alpha))) + (m * m * m * m * m) * ((5.0 + alpha) * (4.0 + alpha) * (3.0 + alpha) * (2.0 + alpha) * (1.0 + alpha))));
+   
+    double sE81 = (pow(2.0, 1.0 + alpha / 2.0) * pow(lambda, 3.0) * pow((-t1 - t2 + 2.0 * t3) * lambda, alpha / 2.0) * m * (2.0 * (t1 + t2 - 2.0 * t3) * lambda * ((-pow(kappa, 2.0)) * lambda - 2.0 * (t1 + t2 - 2.0 * t3) * pow(m, 2.0) + 2.0 * (t1 + t2 - 2.0 * t3) * kappa * pow(m, 2.0)) * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))) - sqrt(2.0) * sqrt(-t1 - t2 + 2.0 * t3) * pow(kappa, 2.0) * pow(lambda, 1.5) * (3.0 + alpha + 2.0 * t1 * m + 2.0 * t2 * m - 4.0 * t3 * m) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))))) / constant;          
 
-    double sE81 = 2 * branch_lengths * pow(lambda, 3) * m * (lambda * (pow(kappa, 2) * lambda - 2 * branch_lengths * pow(m, 2) + 
-              2 * branch_lengths * kappa * pow(m, 2)) * besselK_c(2, z) + 
-              sqrt(2 * branch_lengths * lambda) * m * (pow(kappa, 2) * lambda - 3 * m + 3 * kappa * m) * besselK_c(3, z)) / constant;          
-
-    double sE84 = 2 * (-branch_lengths) * pow(lambda, 4) * m * (
-             2 * (2 * (-branch_lengths) * pow(m, 2) - 2 * (-branch_lengths) * kappa * pow(m, 2) + 
-             pow(kappa, 2) * (-lambda + (-branch_lengths) * pow(m, 2))) * besselK_c(2, z) - 
-             (1.0 / lambda) * sqrt(2 * branch_lengths * lambda) * m * (6 * m + 3 * pow(kappa, 2) * (lambda + m) - 2 * kappa * (lambda + 3 * m)) * besselK_c(3, z)
-             ) / constant;  
+    double sE84 =(pow(2.0, 2.0 + alpha / 2.0) * pow(lambda, 3.0) * pow((-t1 - t2 + 2.0 * t3) * lambda, alpha / 2.0) * m * (2.0 * (t1 + t2 - 2.0 * t3) * lambda * (2.0 * (t1 + t2 - 2.0 * t3) * pow(m, 2.0) - 2.0 * (t1 + t2 - 2.0 * t3) * kappa * pow(m, 2.0) + pow(kappa, 2.0) * (-lambda + (t1 + t2 - 2.0 * t3) * pow(m, 2.0))) * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))) - sqrt(2.0) * sqrt(-t1 - t2 + 2.0 * t3) * kappa * pow(lambda, 1.5) * (-2.0 * (t1 + t2 - 2.0 * t3) * m + kappa * (3.0 + alpha + 3.0 * t1 * m + 3.0 * t2 * m - 6.0 * t3 * m)) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))))) / constant;  
              
-    double sE85 = 2 * (-branch_lengths) * pow(lambda, 3) * m * (
-              lambda * (-pow(kappa, 2) * lambda + 2 * (-branch_lengths) * pow(m, 2)) * besselK_c(2, z) - 
-              sqrt(2 * branch_lengths * lambda) * m * (2 * kappa * lambda + 3 * m) * besselK_c(3, z)
-              ) / constant;   
+    double sE85 = (pow(2.0, 1.0 + alpha / 2.0) * pow(lambda, 3.0) * pow((-t1 - t2 + 2.0 * t3) * lambda, alpha / 2.0) * m * (2.0 * (t1 + t2 - 2.0 * t3) * lambda * ((-pow(kappa, 2.0)) * lambda + 2.0 * (t1 + t2 - 2.0 * t3) * pow(m, 2.0)) * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))) - sqrt(2.0) * sqrt(-t1 - t2 + 2.0 * t3) * kappa * pow(lambda, 1.5) * ((3.0 + alpha) * kappa + 4.0 * (t1 + t2 - 2.0 * t3) * m) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))))) / constant;   
               
-    double sE86 = (pow(lambda, 6) * pow(m, 2) * (
-               4 * sqrt(2) * kappa * pow((branch_lengths / lambda), 1.5) * besselK_c(3, z) + 
-               (8 * pow(branch_lengths, 2) * m * besselK_c(4, z)) / pow(lambda, 2)
-               )) / (2 * constant);
+    double sE86 = (pow(2.0, 2.0 + alpha / 2.0) * -1.0 * pow(-t1 - t2 + 2.0 * t3, (2.0 + alpha) / 2.0) * pow(lambda, 4.0 + alpha / 2.0) * pow(m, 2.0) * (2.0 * (t1 + t2 - 2.0 * t3) * m * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))) - sqrt(2.0) * kappa * sqrt(-((t1 + t2 - 2.0 * t3) * lambda)) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))))) /  constant;
 
-    double sE88 = (pow(lambda, 6) * pow(m, 2) * (
-               4 * sqrt(2.0) * kappa * pow((branch_lengths / lambda), 1.5) * besselK_c(3, z) + 
-               (8 * pow(branch_lengths, 2) * (-2 + kappa) * m * besselK_c(4, z)) / pow(lambda, 2)
-               )) / (2 * constant);    
+    double sE88 = (pow(2.0, 2.0 + alpha / 2.0) * pow(lambda, 6.0) * pow((-t1 - t2 + 2.0 * t3) * lambda, alpha / 2.0) * pow(m, 2.0) * (sqrt(2.0) * kappa * pow((-t1 - t2 + 2.0 * t3) / lambda, 1.5) * besselK_c(3.0 + alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))) + (2.0 * pow(t1 + t2 - 2.0 * t3, 2.0) * (-2.0 + kappa) * m * besselK_c(4.0 + alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda)))) / pow(lambda, 2.0)))/ constant;    
                
-    double sE89 = (4 * pow(branch_lengths, 2) * pow(lambda, 4) * pow(m, 3) * besselK_c(4, z)) / constant;                
+    double sE89 = (pow(2.0, 3.0 + alpha / 2.0) * pow(-t1 - t2 + 2.0 * t3, (4.0 + alpha) / 2.0) * pow(lambda, 4.0 + alpha / 2.0) * pow(m, 3.0) * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt(-((t1 + t2 - 2.0 * t3) * lambda))))/ constant;                
     
      // c8 terms
         smat[9][1]=6.0*sE81/256;
@@ -255,49 +220,39 @@ double AsymmetricQuartetLikelihood_popvar(int nn){
   t2 = *StoreQuarts[nn]->t2;
   t3 = *StoreQuarts[nn]->t3;
 
-  abeta[1][0]=1.0; 
+  abeta[1][0]=1.0;
   abeta[2][0]=exp(-2.0*m*t1);
-  abeta[3][0]=exp(-2.0*m*t2); 
-  abeta[4][0]=exp(-m*t1)*exp(-2.0*m*t2); 
-  abeta[5][0]=exp(-2.0*m*t3); 
-  abeta[6][0]=exp(-m*t1)*exp(-2.0*m*t3); 
-  abeta[7][0]=exp(-2.0*m*t1)*exp(-2.0*m*t3); 
-  abeta[8][0]=exp(-m*t2)*exp(-2.0*m*t3); 
+  abeta[3][0]=exp(-2.0*m*t2);
+  abeta[4][0]=exp(-m*t1)*exp(-2.0*m*t2);
+  abeta[5][0]=exp(-2.0*m*t3);
+  abeta[6][0]=exp(-m*t1)*exp(-2.0*m*t3);
+  abeta[7][0]=exp(-2.0*m*t1)*exp(-2.0*m*t3);
+  abeta[8][0]=exp(-m*t2)*exp(-2.0*m*t3);
   abeta[9][0]=exp(-m*t1)*exp(-m*t2)*exp(-2.0*m*t3);
-  abeta[10][0]=exp(-2*m*(t2+t3)); 
+  abeta[10][0]=exp(-2*m*(t2+t3));
 
   // Updated amat
   int kappa = 4;
 
-  double constant = 6 * pow(lambda, 5) + 
-                  20 * pow(lambda, 4) * m + 
-                  51 * pow(lambda, 3) * pow(m, 2) + 
-                  93 * pow(lambda, 2) * pow(m, 3) + 
-                  108 * lambda * pow(m, 4) + 
-                  60 * pow(m, 5);
-
-
+  double constant = (tgamma(1.0 + alpha) * (12.0 * (lambda * lambda * lambda * lambda * lambda) + lambda * m * (40.0 * (lambda * lambda * lambda) * (1.0 + alpha) + lambda * m * (51.0 * lambda + 31.0 * (3.0 + alpha) * m) * ((2.0 + alpha) * (1.0 + alpha)) + 9.0 * (m * m * m) * ((4.0 + alpha) * (3.0 + alpha) * (2.0 + alpha) * (1.0 + alpha))) + (m * m * m * m * m) * ((5.0 + alpha) * (4.0 + alpha) * (3.0 + alpha) * (2.0 + alpha) * (1.0 + alpha))));
+  
   double bessel_arg = 2 * sqrt(2) * sqrt((-t1 + t2) * lambda);
 
     double K2 = besselK_c(2, bessel_arg);
     double K3 = besselK_c(3, bessel_arg);
     double K4 = besselK_c(4, bessel_arg);
 
-    double aE91 = 2 * (t1 - t2) * pow(lambda, 4) * m * 
-                    ( - ( (pow(kappa, 2) * lambda + 2 * (t1 - t2) * pow(m, 2) + 2 * (-t1 + t2) * kappa * pow(m, 2)) * K2) + 
-                      (sqrt(2) * (t1 - t2) * m * (pow(kappa, 2) * lambda - 3 * m + 3 * kappa * m) * K3) / sqrt((-t1 + t2) * lambda)) / constant;
+    double aE91 = (pow(2.0, 1.0 + alpha / 2.0) * (t1 - t2) * pow(lambda, 4.0) * pow((-t1 + t2) * lambda, alpha / 2.0) * m * (-2.0 * (pow(kappa, 2.0) * lambda + 2.0 * (t1 - t2) * pow(m, 2.0) + 2.0 * (-t1 + t2) * kappa * pow(m, 2.0)) * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda)) + (sqrt(2.0) * pow(kappa, 2.0) * lambda * (3.0 + alpha + 2.0 * t1 * m - 2.0 * t2 * m) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda))) / sqrt((-t1 + t2) * lambda))) / constant;
 
-    double aE95 = 2 * (t1 - t2) * pow(lambda, 4) * m * ( - ( (pow(kappa, 2) * lambda + 2 * (-t1 + t2) * pow(m, 2)) * K2) + 
-                          (sqrt(2) * (t1 - t2) * m * (2 * kappa * lambda + 3 * m) * K3) / sqrt((-t1 + t2) * lambda) ) / constant;
+    double aE95 = (-1.0 * pow(2.0, 1.0 + alpha / 2.0) * pow(-t1 + t2, (1.0 + alpha) / 2.0) * pow(lambda, (7.0 + alpha) / 2.0) * m * (2.0 * sqrt((-t1 + t2) * lambda) * ((-pow(kappa, 2.0)) * lambda + 2.0 * (t1 - t2) * pow(m, 2.0)) * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda)) + sqrt(2.0) * kappa * lambda * ((3.0 + alpha) * kappa + 4.0 * (t1 - t2) * m) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda)))) / constant;
 
-    double aE96 = 2 * (t1 - t2) * pow(lambda, 4) * m * ( -2 * ( 2 * (-t1 + t2) * pow(m, 2) + 2 * (t1 - t2) * kappa * pow(m, 2) + pow(kappa, 2) * (lambda + (-t1 + t2) * pow(m, 2))) 
-                                    * K2 + (sqrt(2) * (t1 - t2) * m * (6 * m + 3 * pow(kappa, 2) * (lambda + m) - 2 * kappa * (lambda + 3 * m)) * K3) / sqrt((-t1 + t2) * lambda) ) / constant;
+    double aE96 = (pow(2.0, 2.0 + alpha / 2.0) * (t1 - t2) * pow(lambda, 4.0) * pow((-t1 + t2) * lambda, alpha / 2.0) * m * (-2.0 * (2.0 * (-t1 + t2) * pow(m, 2.0) + 2.0 * (t1 - t2) * kappa * pow(m, 2.0) + pow(kappa, 2.0) * (lambda + (-t1 + t2) * pow(m, 2.0))) * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda)) + (sqrt(2.0) * kappa * lambda * (2.0 * (-t1 + t2) * m + kappa * (3.0 + alpha + 3.0 * t1 * m - 3.0 * t2 * m)) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda))) / sqrt((-t1 + t2) * lambda))) / constant;
 
-    double aE97 = 2 * (t2 - t1) * pow(lambda, 4) * pow(m, 2) * ( (sqrt(2) * kappa * sqrt((-t1 + t2) * lambda) * K3) + (2 * (-t1 + t2) * m * K4) ) / constant;
+    double aE97 = (pow(2.0, 2.0 + alpha / 2.0) * (t1 - t2) * pow(lambda, 4.0) * pow((-t1 + t2) * lambda, alpha / 2.0) * pow(m, 2.0) * (2.0 * (t1 - t2) * m * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda)) - sqrt(2.0) * kappa * sqrt((-t1 + t2) * lambda) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda)))) / constant;
 
-    double aE99 = 2 * pow(lambda, 3) * pow(m, 2) * ( (sqrt(2) * kappa * pow((-t1 + t2) * lambda, 1.5) * K3) + (2 * pow(t1 - t2, 2) * (-2 + kappa) * lambda * m * K4) ) / constant;
+    double aE99 = (pow(2.0, 2.0 + alpha / 2.0) * (t1 - t2) * pow(lambda, 4.0) * pow((-t1 + t2) * lambda, alpha / 2.0) * pow(m, 2.0) * (2.0 * (t1 - t2) * (-2.0 + kappa) * m * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda)) - sqrt(2.0) * kappa * sqrt((-t1 + t2) * lambda) * besselK_c(-3.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda)))) / constant;
 
-    double aE911 = (4 * pow(t1 - t2, 2) * pow(lambda, 4) * pow(m, 3) * K4) / (6 * pow(lambda, 5) + 20 * pow(lambda, 4) * m + 51 * pow(lambda, 3) * pow(m, 2) + 93 * pow(lambda, 2) * pow(m, 3) + 108 * lambda * pow(m, 4) + 60 * pow(m, 5)) / constant;
+    double aE911 = (pow(2.0, 3.0 + alpha / 2.0) * pow((-t1 + t2) / lambda, (4.0 + alpha) / 2.0) * pow(lambda, 6.0 + alpha) * pow(m, 3.0) * besselK_c(-4.0 - alpha, 2.0 * sqrt(2.0) * sqrt((-t1 + t2) * lambda))) / constant;
     
     // c9 terms 
     amat[10][1] = 6.0 / 256.0 * aE91;
@@ -349,6 +304,7 @@ double GetCompLik_popvar() {
 
   num_unique_quarts = 0;
   for (i=0; i<nquarts+1; i++) qvec[i]=0;
+  make_indmat();
 
   for (i=1; i<ntaxa+1; i++){
     for (j=i+1; j<ntaxa+1; j++) {
@@ -361,7 +317,7 @@ double GetCompLik_popvar() {
 
 		GetQuartetTree(i,j,k,l,ovec);
   		//printf("ovec is: %d %d %d %d %d\n",ovec[0],ovec[1],ovec[2],ovec[3],ovec[4]);
-                FindDupQuarts(ovec[0],duppvec);
+                FindDupQuarts(ovec[0],duppvec,num_unique_quarts+1);
             
    		// Fill the information for the current quartet into the struct StoreQuarts
    		for (m=0; m<15; m++) StoreQuarts[num_unique_quarts]->spprobs[m] = duppvec[m];

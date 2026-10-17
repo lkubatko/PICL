@@ -38,7 +38,7 @@ int *parents, *parents_temp, *ppTwoRow[2], *ppTwoRow_temp[2], *ppTwoRow_best[2],
 int **ppBase_full, **ppBase, **ppBase_unique, **ppSp_assign, **ppNodeChildren, **ppNodeChildrenLeftQuart, **ppNodeChildrenRightQuart;
 int pattern_index[16][16];
 double ci, max_cl, curr_anneal_lik, b1opt, prob_bound;
-float lambda, theta, beta, mu, ratepar, invpar;
+float alpha, lambda, theta, beta, mu, ratepar, invpar;
 double *TimeVec, *TimeVec_temp, *TimeVec_init, *TimeVec_best, *TimeVec_best_orig, *TimeVecQuart, *rvals, **ppLengthMat, **ppMatrix;
 double smat[10][10],amat[12][12];
 double base_weight_table[15][4]; 
@@ -46,6 +46,7 @@ FILE *out, *pt, *boot;
 
 Link Head, currenttree;
 naym *taxname=NULL, *speciesname=NULL, *psname=NULL;
+naym **assignment_vector=NULL;
 CLq** StoreQuarts;
 
 int MemAlloc() {
@@ -168,7 +169,13 @@ int MemAlloc() {
 
   filled_ind = (int*)malloc((2*ntaxa)*sizeof(int));
 
-  qvec = (int*)malloc(nquarts*sizeof(int));
+  /* Every use of qvec throughout the codebase resets/reads it with loops
+   * shaped "for (i=0; i<nquarts+1; i++)" (main.c, complik.c, anneal.c,
+   * boot.c, etc.) -- i.e. it is consistently treated as having nquarts+1
+   * valid indices (0..nquarts). This allocation was a genuine,
+   * pre-existing off-by-one: nquarts ints instead of nquarts+1, found via
+   * AddressSanitizer (see `make debug`) as a heap-buffer-overflow. */
+  qvec = (int*)malloc((nquarts+1)*sizeof(int));
 
   seq_counter = (int*)malloc((ntaxa+1)*sizeof(int));
   if (seq_counter==NULL)
@@ -203,15 +210,31 @@ int MemAlloc() {
 
   for (i=0; i<nseq+1; i++)
     {
-      ppMatrix[i] = (double*)malloc(ntaxa*sizeof(double));
+      /* make_indmat() (complik.c) writes ppMatrix[q][r] for q,r up to and
+       * including ntaxa (its loops run q,r < ntaxa+1, i.e. q,r <= ntaxa),
+       * so this needs ntaxa+1 doubles (valid indices 0..ntaxa), not ntaxa.
+       * The previous ntaxa-sized allocation was a genuine, pre-existing
+       * off-by-one heap overflow: it silently corrupted adjacent heap
+       * memory without necessarily crashing under glibc's allocator, but
+       * reliably segfaults right after tree-reading under stricter
+       * allocators (e.g. macOS). Found via AddressSanitizer (see `make
+       * debug` in the Makefile). */
+      ppMatrix[i] = (double*)malloc((ntaxa+1)*sizeof(double));
       if (ppMatrix[i]==NULL)
         {
           printf("Can't memalloc ppMatrix[%d]\n",i);
           return 0;
         }
     }
-
+  
+  
+  if(nseq <= 0 || nseq >100000){
+    printf("Number of sequences too big or negative");
+    exit(1);
+  }
+  else{
   ppBase_full = (int**)malloc(nseq*sizeof(int*));
+  }
   if (ppBase_full==NULL)
     {
       printf("     Can't memalloc ppBase_full.\n");
@@ -227,7 +250,14 @@ int MemAlloc() {
       }
   }
 
-  ppBase = (int**)malloc(nseq*sizeof(int*));
+  if(nseq <= 0 || nseq >100000){
+    printf("Number of sequences too big or negative");
+    exit(1);
+  }
+  else{
+    ppBase = (int**)malloc(nseq*sizeof(int*));
+  }
+  
   if (ppBase==NULL)
     {
       printf("     Can't memalloc ppBase.\n");
@@ -290,9 +320,17 @@ int MemAlloc() {
      printf("     Can't memalloc ppNodeChildren.\n");
      return 0;
   }
+  /* ppNodeChildren, ppNodeChildrenLeftQuart, and ppNodeChildrenRightQuart
+   * each store a count in slot [0] followed by up to ntaxa child indices in
+   * slots [1..ntaxa] (see the AllMyChildren-family helpers and FindDupQuarts
+   * in complik.c, and nodeopt.c, which in the worst case -- every taxon
+   * descended from the relevant node -- write index ntaxa). That needs
+   * ntaxa+1 ints, not ntaxa; this was a genuine, pre-existing off-by-one
+   * heap overflow found via AddressSanitizer (see the debug target in the
+   * Makefile). */
   for (i=0; i<3; i++)
    {
-     ppNodeChildren[i] = (int*)malloc(ntaxa*sizeof(int));
+     ppNodeChildren[i] = (int*)malloc((ntaxa+1)*sizeof(int));
      if (ppNodeChildren[i]==NULL)
        {
          printf("     Can't memalloc ppNodeChildren[%d].\n",i);
@@ -307,14 +345,14 @@ int MemAlloc() {
      return 0;
   }
   for (i=0; i<3; i++)
-   { 
-     ppNodeChildrenLeftQuart[i] = (int*)malloc(ntaxa*sizeof(int));
+   {
+     ppNodeChildrenLeftQuart[i] = (int*)malloc((ntaxa+1)*sizeof(int));
      if (ppNodeChildrenLeftQuart[i]==NULL)
        {
          printf("     Can't memalloc ppNodeChildrenLeftQuart[%d].\n",i);
          return 0;
        }
-   } 
+   }
 
   ppNodeChildrenRightQuart = (int**)malloc(3*sizeof(int*));
   if (ppNodeChildrenRightQuart==NULL)
@@ -323,8 +361,8 @@ int MemAlloc() {
      return 0;
   }
   for (i=0; i<3; i++)
-   { 
-     ppNodeChildrenRightQuart[i] = (int*)malloc(ntaxa*sizeof(int));
+   {
+     ppNodeChildrenRightQuart[i] = (int*)malloc((ntaxa+1)*sizeof(int));
      if (ppNodeChildrenRightQuart[i]==NULL)
        {
          printf("     Can't memalloc ppNodeChildrenRightQuart[%d].\n",i);
@@ -384,6 +422,17 @@ void transfer(char **cbase, int **nbase, int pres_loc, int trans_length) {
 // get  DNA sequences of taxa from datafile                        
 // Then transform DNA sequences into numerical sequences (ppBase)   
 
+// Compare two sequence names, treating a space or the end of the string
+// as the end of the name. Needed because getSequenceData pads psname
+// entries with spaces, so strcmp cannot be used on them directly.
+int same_seq_name(const char *a, const char *b) {
+  while (*a != 0 && *a != ' ' && *b != 0 && *b != ' ') {
+    if (*a != *b) return 0;
+    a++; b++;
+  }
+  return (*a == 0 || *a == ' ') && (*b == 0 || *b == ' ');
+}
+
 naym* getSequenceData(FILE *infile) {
   
   int i, k;
@@ -412,8 +461,11 @@ naym* getSequenceData(FILE *infile) {
 
   for (i=0; i<nseq; i++)
     {
-      fscanf(infile, "%s %s", psname[i],ppDNASeq[i]);
-      if (verbose==1) printf("Read sequence %d with name %s\n",i,psname[i]);
+      if(fscanf(infile, "%s %s", psname[i],ppDNASeq[i]) != 2){
+        printf("There was a problem reading the sequence data from the file data.phy ... exiting.\n\n");
+        exit(1);
+      }
+      //if (verbose==1) printf("Read sequence %d with name %s\n",i,psname[i]);
 
       // No need to pad or load names, but done for using with other code.
       for (k=0; k<20; k++) if (psname[i][k] == 0) psname[i][k] = ' ';
@@ -442,49 +494,59 @@ naym* getSequenceData(FILE *infile) {
 
 void unique_sites(){
 
-  int i,j,k,s,m=0;
+  int i,j,m=0;
   int num_no_gaps=0;
 
-  /* to facilitate bootstrapping later, put the constant A site pattern in the first position */
-  /* in ppBase_unique; but don't add a count so that the total count will be correct          */
-  /* for (i=0;i<nseq; i++) ppBase_unique[i][0] = 0; -- no -- no longer doing this             */
+  /*** Code efficiency from Claude, August 2026 ***/
+  /* Hash-table-based rewrite of the original O(nsite^2 * nseq) all-pairs
+   * comparison (each site compared against every later site to find its
+   * duplicates). That algorithm is exact and was left untouched in its
+   * *decision logic* -- this rewrite reaches identical site_counter[]/
+   * ppBase_unique[][]/num_unique values, in the same first-occurrence
+   * order, for both include_gaps settings (verified by construction: see
+   * below) -- it just avoids re-scanning every prior site column by
+   * hashing on a site's first encounter instead. Complexity drops from
+   * O(nsite^2 * nseq) to O(nsite * nseq)
+   */
+
+  long table_size = 1;
+  while (table_size < 2L*nsite + 16) table_size <<= 1;   /* next power of 2, load factor <= 0.5 */
+  long table_mask = table_size - 1;
+  long *slot_group = (long*)malloc(table_size*sizeof(long));
+  for (long t=0; t<table_size; t++) slot_group[t] = -1;
 
   for (j=0; j<nsite; j++) {
 
-    if ((ppBase[0][j]!=99 && include_gaps==1) || (ppBase[0][j]!=99 && include_gaps==0 && ppBase[0][j]!=4)) {
+    if (include_gaps==0 && ppBase[0][j]==4) continue;  /* never seeds, never matches -- always excluded */
+
+    /* FNV-1a style hash over this site's column of base codes */
+    unsigned long long h = 1469598103934665603ULL;
+    for (i=0; i<nseq; i++) {
+      h ^= (unsigned long)(unsigned int)ppBase[i][j];
+      h *= 1099511628211ULL;
+    }
+
+    long slot = (long)(h & (unsigned long)table_mask);
+    int found = -1;
+    while (slot_group[slot] != -1) {
+      int cand = (int)slot_group[slot];
+      int match = 1;
+      for (i=0; i<nseq; i++) {
+        if (ppBase_unique[i][cand] != ppBase[i][j]) { match = 0; break; }
+      }
+      if (match) { found = cand; break; }
+      slot = (slot + 1) & table_mask;
+    }
+
+    if (found >= 0) {
+
+      site_counter[found]++;
+
+    } else {
 
       site_counter[m]=1;
-
       for (i=0; i<nseq; i++) ppBase_unique[i][m] = ppBase[i][j];
-
-      ppBase[0][j]=99;
-
-      for (k=j+1; k<nsite; k++) {
-
-	i=0;
-	
-	while (i< nseq && ppBase_unique[i][m] == ppBase[i][k]) i++;
-
-	if (i==nseq) {
-
-	  site_counter[m]++;
-	  ppBase[0][k]=99;
-
-	}
-
-	if (i<nseq && ppBase[i][k]==4 && include_gaps==0) ppBase[0][k]=99;
-
-	if (i<nseq && include_gaps==0) {
-	  
-	  for (s=0; s<nseq; s++) {
-
-	    if (ppBase[s][k]==4) ppBase[0][k]=99;
-
-	  }
-
-	}
-
-      }
+      slot_group[slot] = m;
 
       m++;
 
@@ -492,8 +554,10 @@ void unique_sites(){
 
   }
 
+  free(slot_group);
+
   num_unique=m;
-  printf("Finding unique site patterns ...");
+  printf("Finding unique site patterns ... ");
   printf("the number of unique site patterns is %d\n\n",num_unique);
   for (i=0; i<num_unique; i++) num_no_gaps += site_counter[i];
   //for (i=0; i<num_unique; i++) printf("%d ",site_counter[i]);
@@ -594,6 +658,9 @@ int main(int argc, char *argv[]) {
   int boottype, nboot, ntquarts;
   int table_initialized = 0;
   naym tempname1, tempname2;
+  naym *map_seqname = NULL;   // sequence names from the settings file assignments
+  int *map_species = NULL;    // species index for each entry of map_seqname
+  int *map_used = NULL;       // flags settings entries already matched to data.phy
   float temp_rate;
   double totaltime, beta_init;
 
@@ -608,12 +675,12 @@ int main(int argc, char *argv[]) {
 
 
   /* --- override via argv --- */
-  if (argc > 1) settings_file = argv[1];
-  if (argc > 2) data_file     = argv[2];
-  if (argc >3) tree_file      = argv[3];
-  if (argc > 4) out_file      = argv[4];
-  if (argc > 5) picltrees_file= argv[5];
-  if (argc > 6) results_file  = argv[6];
+  if (argc > 1) settings_file  = argv[1];
+  if (argc > 2) data_file      = argv[2];
+  if (argc >3) tree_file       = argv[3];
+  if (argc > 4) out_file       = argv[4];
+  if (argc > 5) picltrees_file = argv[5];
+  if (argc > 6) results_file   = argv[6];
    if (argc > 7) bootdata_file = argv[7];
 
   if(argc >1) {
@@ -633,118 +700,373 @@ int main(int argc, char *argv[]) {
   // print opening message
   printf("\n\n----------------------------------------------------------------------------\n");
   printf("\t PICL: Phylogenetic Inference with Composite Likelihood \n");
-  printf("\t\t\t     Version 1.0.5  \n");
-  printf("\t\t\t    July 22, 2026 \n");
+  printf("\t\t\t     Version 1.2  \n");
+  printf("\t\t\t   October 17, 2026 \n");
   printf("----------------------------------------------------------------------------\n\n");
+
+  /*******************************************/
+  /* Read in settings from the settings file */
+  /*******************************************/
 
   // read from settings file
   set = fopen(settings_file,"r");
+  if (set==NULL) { printf("Settings file not found ... exiting.\n\n"); exit(1);}
+  char mykeyword[15];
   
+  printf("Model parameters are now being read from the settings file. Please check the listing\n");
+  printf("below to make sure that your settings are being read in as intended:\n\n");
+
   /* Model */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&model);
-  printf("Model: %d\n",model);
-  
+  if (fscanf(set,"%s %d",mykeyword,&model) != 2) {
+	printf("\nFailed to read from settings file -- error on line 1\n");
+        printf("Exiting.\n\n");
+    	exit(1);
+  }
+  if (strcmp(mykeyword,"Model:") == 0)	printf("%s %d\n",mykeyword,model);
+  else {
+	printf("\nThe settings file should have contained the keyword 'Model' followed by a colon on line 1.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+	printf("Exiting.\n\n");
+	exit(1);
+  }
+
   /* Gaps */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&include_gaps);
-  printf("Gaps: %d\n",include_gaps);
+  if (fscanf(set,"%s %d",mykeyword,&include_gaps) != 2) { 
+        printf("\nFailed to read from settings file -- error on line 2\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Gaps:") == 0)  printf("%s %d\n",mykeyword,include_gaps);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Gaps' followed by a colon on line 2.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+
 
   /* Boot_type */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&boottype);
-  printf("Boot_type: %d\n",boottype);
+  if (fscanf(set,"%s %d",mykeyword,&boottype) != 2) {
+        printf("\nFailed to read from settings file -- error on line 3\n");
+	printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Boot_type:") == 0)  printf("%s %d\n",mykeyword,boottype);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Boot_type' followed by a colon on line 3.\n"); 
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");    
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Nboot */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&nboot);
-  printf("Nboot: %d\n",nboot);
+  if (fscanf(set,"%s %d",mykeyword,&nboot) != 2) {
+        printf("\nFailed to read from settings file -- error on line 4\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Nboot:") == 0)  printf("%s %d\n",mykeyword,nboot);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Nboot' followed by a colon on line 4.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");    
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Theta */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&theta);
-  printf("Theta: %f\n",theta);
+  if (fscanf(set,"%s %f",mykeyword,&theta) != 2) {
+        printf("\nFailed to read from settings file -- error on line 5\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Theta:") == 0)  printf("%s %f\n",mykeyword,theta);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Theta' followed by a colon on line 5.\n");            
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  /**** Now set theta = 4Nmu to theta/2, which is what this code uses throughout ****/
+  theta = theta/2.0;
+
+  /* Alpha */
+  if (fscanf(set,"%s %f",mykeyword,&alpha) != 2) {
+        printf("\nFailed to read from settings file -- error on line 6\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Alpha:") == 0)  printf("%s %f\n",mykeyword,alpha);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Alpha' followed by a colon on line 6.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Lambda */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&lambda);
-  printf("Lambda: %f\n",lambda);
+  if (fscanf(set,"%s %f",mykeyword,&lambda) != 2) {
+        printf("\nFailed to read from settings file -- error on line 7\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Lambda:") == 0)  printf("%s %f\n",mykeyword,lambda);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Lambda' followed by a colon on line 7.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 	
   /* Rate_param */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&ratepar);
-  printf("Rate_param: %f\n",ratepar);
+  if (fscanf(set,"%s %f",mykeyword,&ratepar) != 2) {
+        printf("\nFailed to read from settings file -- error on line 8\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Rate_param:") == 0)  printf("%s %f\n",mykeyword,ratepar);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Rate_param' followed by a colon on line 8.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Random_tree */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&random_tree);
-  printf("Random_tree: %d\n",random_tree);
+  if (fscanf(set,"%s %d",mykeyword,&random_tree) != 2) {
+        printf("\nFailed to read from settings file -- error on line 9\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Random_tree:") == 0)  printf("%s %d\n",mykeyword,random_tree);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Random_tree' followed by a colon on line 9.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");                                                                                                          
+        exit(1);
+  }
 
   /* Opt_bl */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&anneal_bl);
-  printf("Opt_bl: %d\n",anneal_bl);
+  if (fscanf(set,"%s %d",mykeyword,&anneal_bl) != 2) {
+        printf("\nFailed to read from settings file -- error on line 10\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Opt_bl:") == 0)  printf("%s %d\n",mykeyword,anneal_bl);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Opt_bl' followed by a colon on line 10.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* User_bl */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&user_bl);
-  printf("User_bl: %d\n",user_bl);
+  if (fscanf(set,"%s %d",mykeyword,&user_bl) != 2) {
+        printf("\nFailed to read from settings file -- error on line 11\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"User_bl:") == 0)  printf("%s %d\n",mykeyword,user_bl);
+  else {
+        printf("\nThe settings file should have contained the keyword 'User_bl' followed by a colon on line 11.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Num_opt */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&max_it_bl);
-  printf("Num_Opt: %d\n",max_it_bl);
+  if (fscanf(set,"%s %d",mykeyword,&max_it_bl) != 2) {
+        printf("\nFailed to read from settings file -- error on line 12\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Num_opt:") == 0)  printf("%s %d\n",mykeyword,max_it_bl);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Num_opt' followed by a colon on line 12.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Seed1 */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&seedj);
-  printf("Seed1: %d\n",seedj);
+  if (fscanf(set,"%s %d",mykeyword,&seedj) != 2) {  
+        printf("\nFailed to read from settings file -- error on line 13\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Seed1:") == 0)  printf("%s %d\n",mykeyword,seedj);      
+  else {
+        printf("\nThe settings file should have contained the keyword 'Seed1' followed by a colon on line 13.\n");   
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Seed2 */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&seedk);
-  printf("Seed2: %d\n",seedk);
+  if (fscanf(set,"%s %d",mykeyword,&seedk) != 2) {      
+        printf("\nFailed to read from settings file -- error on line 14\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Seed2:") == 0)  printf("%s %d\n",mykeyword,seedk);            
+  else {
+        printf("\nThe settings file should have contained the keyword 'Seed2' followed by a colon on line 14.\n");     
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Num_cat */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&ncat);
-  printf("Num_cat: %d\n",ncat);
+  if (fscanf(set,"%s %d",mykeyword,&ncat) != 2) {      
+        printf("\nFailed to read from settings file -- error on line 15\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Num_cat:") == 0)  printf("%s %d\n",mykeyword,ncat);            
+  else {
+        printf("\nThe settings file should have contained the keyword 'Num_cat' followed by a colon on line 15.\n");     
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Tree_search */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&anneal);
-  printf("Tree_search: %d\n",anneal);
+  if (fscanf(set,"%s %d",mykeyword,&anneal) != 2) {      
+        printf("\nFailed to read from settings file -- error on line 16\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Tree_search:") == 0)  printf("%s %d\n",mykeyword,anneal);            
+  else {
+        printf("\nThe settings file should have contained the keyword 'Tree_search' followed by a colon on line 16.\n");     
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
 
   /* Max_iter */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&max_it);
-  printf("Max_iter: %d\n",max_it);
+  if (fscanf(set,"%s %d",mykeyword,&max_it) != 2) {
+        printf("\nFailed to read from settings file -- error on line 17\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Max_iter:") == 0)  printf("%s %d\n",mykeyword,max_it);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Max_iter' followed by a colon on line 17.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
  
-  /* Mult_iter */                                                                    
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&mult_iter);
-  printf("Mult_iter: %d\n",mult_iter);
+  /* Multi_iter */                                                                    
+  if (fscanf(set,"%s %d",mykeyword,&mult_iter) != 2) {
+        printf("\nFailed to read from settings file -- error on line 18\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Multi_iter:") == 0)  printf("%s %d\n",mykeyword,mult_iter);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Multi_iter' followed by a colon on line 18.\n");
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
   //mult_iter = 3;
 
   /* prob_bound */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%lf",&prob_bound);
-  printf("Prob_bound: %f\n",prob_bound);
+  if (fscanf(set,"%s %lf",mykeyword,&prob_bound) != 2) {
+        printf("\nFailed to read from settings file -- error on line 19\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Prob_bound:") == 0)  printf("%s %f\n",mykeyword,prob_bound);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Prob_bound' followed by a colon on line 19.\n"); 
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
   //prob_bound = 0.05;
 
-  /* test_increment */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&test_increment);
-  printf("Test_increment: %d\n",test_increment);
+  /* Test_incr */
+  if (fscanf(set,"%s %d",mykeyword,&test_increment) != 2) {
+        printf("\nFailed to read from settings file -- error on line 20\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Test_incr:") == 0)  printf("%s %d\n",mykeyword,test_increment);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Test_incr' followed by a colon on line 20.\n"); 
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
   //test_increment = 250; 
 
-  /* b1opt */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%lf",&b1opt);
-  printf("Target annealing slope: %f\n",b1opt);
+  /* Opt_slope */
+  if (fscanf(set,"%s %lf",mykeyword,&b1opt) != 2) {
+        printf("\nFailed to read from settings file -- error on line 21\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Opt_slope:") == 0)  printf("%s %f\n",mykeyword,b1opt);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Opt_slope' followed by a colon on line 21.\n"); 
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
   //b1opt = -0.01;
   
   /* Beta */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%f",&beta);
-  printf("Beta: %f\n",beta);
-  beta_init = beta;
+  if (fscanf(set,"%s %f",mykeyword,&beta) != 2) {
+        printf("\nFailed to read from settings file -- error on line 22\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  if (strcmp(mykeyword,"Beta:") == 0)  printf("%s %f\n",mykeyword,beta);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Beta' followed by a colon on line 22.\n"); 
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+  beta_init = beta;  /* used to initialize bootstrapping search */
 
   /* Verbose */
-  keyword = 0; while (keyword != 58) keyword = fgetc(set); fgetc(set); fscanf(set,"%d",&verbose);
-  printf("Verbose: %d\n\n",verbose);
-
-  if (model == 5){ 
-	  theta = NAN;
-  	  
+  if (fscanf(set,"%s %d",mykeyword,&verbose) != 2) {
+        printf("\nFailed to read from settings file -- error on line 23\n");
+        printf("Exiting.\n\n");
+        exit(1);
   }
+  if (strcmp(mykeyword,"Verbose:") == 0)  printf("%s %d\n",mykeyword,verbose);
+  else {
+        printf("\nThe settings file should have contained the keyword 'Verbose' followed by a colon on line 23.\n"); 
+        printf("Please correct your settings file. Note that the keyword order must match that in the example file.\n\n");
+        printf("Exiting.\n\n");
+        exit(1);
+  }
+
+  if (model == 5)theta = NAN;  	  
   if (b1opt>0) printf("The target annealing slope (b1opt) must be negative; adaptive annealing is disabled.\n\n");
 
-  fscanf(set,"%d",&ntaxa);
+  /*****************************/
+  /* End read model settings   */
+  /*****************************/
+
+
+  if(fscanf(set,"%d",&ntaxa) != 1 || ntaxa <= 0){
+    printf("Invalid ntaxa");
+    exit(1);
+  }
+
   setall((long)seedj,(long)seedk); /* Set seeds for random number generator */
   nquarts = binomial(ntaxa,4);
-  printf("There are %d total species. This corresponds to %d species-level quartets.\n",ntaxa,nquarts);
+  printf("\nThere are %d total species. This corresponds to %d species-level quartets.\n",ntaxa,nquarts);
   data = fopen(data_file,"r");
-  fscanf(data,"%d %d\n",&nseq,&nsite);
+  if( fscanf(data,"%d %d\n",&nseq,&nsite) != 2 || nseq <= 0 || nsite <= 0){
+    printf("Invalid number of sequences or sites");
+    exit(1);
+  }
   ntquarts = binomial(nseq,4);
   printf("There are %d total sequences. This corresponds to %d sequence-level quartets.\n\n",nseq,ntquarts);
 
@@ -758,31 +1080,57 @@ int main(int argc, char *argv[]) {
       ppTwoRow_temp[1][i] = 0;
       seq_counter[i] = 0;
   }
-  taxname = (naym*)malloc(ntaxa*sizeof(naym));
-  for (i=0; i<ntaxa; i++) fscanf(set,"%s",taxname[i]);
 
-  // map sequences to species using info from settings file
-  for (i=0; i<nseq; i++) {
-        fscanf(set,"%s %s",tempname1,tempname2);
-        j=0; while (strcmp(tempname1,taxname[j]) != 0) j++;
-        ppSp_assign[j][seq_counter[j]] = i;
-        seq_counter[j]++;
+  if(ntaxa <= 0 || ntaxa >100000) {
+    printf("Too many taxa or negative taxa");
+    exit(1);
+  }
+  else {
+    taxname = (naym*)malloc(ntaxa*sizeof(naym));
   }
   
-  // checks that assignments were read in correctly
-  for (j=0; j<ntaxa; j++) printf("Species %d with name %s has %d sequences\n",j,taxname[j],seq_counter[j]);
-  printf("\n");
-  fflush(0);
+  for (i=0; i<ntaxa; i++) {
+    if(fscanf(set,"%s",taxname[i]) != 1){
+      printf("The number of species names specified in the settings file is incorrect ... exiting.\n\n");
+      exit(1);
+    }
+  } 
 
-  printf("The species assignments are:\n");
-  for (j=0; j<ntaxa; j++) {
-	printf("Species %d: %s\n",j,taxname[j]);
-	for (i=0; i<seq_counter[j]; i++) {
-		printf("%d ",ppSp_assign[j][i]);
-	}
-	printf("\n");
+
+  // Read the species/sequence-name pairs from the settings file.
+  // These are stored by name only; the mapping to rows of data.phy is
+  // done after the alignment is read, so data.phy may be in any order.
+  map_seqname = (naym*)malloc(nseq*sizeof(naym));
+  map_species = (int*)malloc(nseq*sizeof(int));
+  if (map_seqname==NULL || map_species==NULL) {
+    printf("Can't memalloc species/sequence map ... exiting.\n\n");
+    exit(1);
   }
-  printf("\n");
+
+  for (i=0; i<nseq; i++) {
+        if( fscanf(set,"%s %s",tempname1,tempname2) != 2){
+          printf("The number of taxon assignments in the settings file is incorrect (expected %d, one per sequence in %s) ... exiting.\n\n",nseq,data_file);
+          exit(1);
+        }
+
+        // find the species this sequence belongs to
+        for (j=0; j<ntaxa; j++) if (strcmp(tempname1,taxname[j]) == 0) break;
+        if (j == ntaxa) {
+          printf("Species name '%s' in the taxon assignments of the settings file is not among the %d species names listed ... exiting.\n\n",tempname1,ntaxa);
+          exit(1);
+        }
+
+        // make sure the sequence name is not assigned twice
+        for (k=0; k<i; k++) {
+          if (strcmp(tempname2,map_seqname[k]) == 0) {
+            printf("Sequence name '%s' is assigned more than once in the settings file ... exiting.\n\n",tempname2);
+            exit(1);
+          }
+        }
+
+        strcpy(map_seqname[i],tempname2);
+        map_species[i] = j;
+  }
 
   if (model==1) printf("Estimation will be carried out using the standard CIS/multilocus model (MSC-JC69)\n");
   else if (model==2) printf("Estimation will be carried out using the CIS/multlilocus rate variation model (MSC-JC69 + G)\n");
@@ -808,6 +1156,88 @@ int main(int argc, char *argv[]) {
   getSequenceData(data);
   // fclose(data);
   printf("\nSequence alignment with %d lineages and %d sites has been read successfully\n",nseq,nsite);
+
+  // Map each sequence (row of data.phy) to its species by matching names
+  // against the assignments read from the settings file.
+  map_used = (int*)calloc(nseq,sizeof(int));
+  if (map_used==NULL) {
+    printf("Can't memalloc map_used ... exiting.\n\n");
+    exit(1);
+  }
+
+  for (i=0; i<nseq; i++) {
+        for (k=0; k<nseq; k++) if (same_seq_name(psname[i],map_seqname[k])) break;
+        if (k == nseq) {
+          // print the name only up to the padding added in getSequenceData
+          for (l=0; psname[i][l] != ' ' && psname[i][l] != 0; l++);
+          printf("Sequence '%.*s' in %s has no species assignment in the settings file ... exiting.\n\n",l,psname[i],data_file);
+          exit(1);
+        }
+        if (map_used[k]) {
+          printf("Sequence name '%s' appears more than once in %s ... exiting.\n\n",map_seqname[k],data_file);
+          exit(1);
+        }
+        map_used[k] = 1;
+
+        j = map_species[k];
+        if (seq_counter[j] >= 100) {
+          printf("Species %s has more than 100 sequences, which exceeds the space allocated in ppSp_assign ... exiting.\n\n",taxname[j]);
+          exit(1);
+        }
+        ppSp_assign[j][seq_counter[j]] = i;
+        seq_counter[j]++;
+  }
+
+  // every species must be represented by at least one sequence
+  for (j=0; j<ntaxa; j++) {
+        if (seq_counter[j] == 0) {
+          printf("Species %s has no sequences assigned to it ... exiting.\n\n",taxname[j]);
+          exit(1);
+        }
+  }
+
+  // store the sequence names belonging to each species
+  assignment_vector = (naym**)malloc(ntaxa*sizeof(naym*));
+  if (assignment_vector==NULL) {
+    printf("Can't memalloc assignment_vector ... exiting.\n\n");
+    exit(1);
+  }
+  for (j=0; j<ntaxa; j++) {
+        assignment_vector[j] = (naym*)malloc(seq_counter[j]*sizeof(naym));
+        if (assignment_vector[j]==NULL) {
+          printf("Can't memalloc assignment_vector[%d] ... exiting.\n\n",j);
+          exit(1);
+        }
+  }
+  for (k=0; k<nseq; k++) {
+        // find the row in data.phy that this settings entry was matched to
+        j = map_species[k];
+        for (i=0; i<seq_counter[j]; i++) {
+          if (same_seq_name(psname[ppSp_assign[j][i]],map_seqname[k])) {
+            strcpy(assignment_vector[j][i],map_seqname[k]);
+            break;
+          }
+        }
+  }
+
+  free(map_seqname);
+  free(map_species);
+  free(map_used);
+
+  // checks that assignments were read in correctly
+  for (j=0; j<ntaxa; j++) printf("Species %d with name %s has %d sequences\n",j,taxname[j],seq_counter[j]);
+  printf("\n");
+  fflush(0);
+
+  printf("The species assignments are:\n");
+  for (j=0; j<ntaxa; j++) {
+	printf("Species %d: %s\n",j,taxname[j]);
+	for (i=0; i<seq_counter[j]; i++) {
+		printf("%d (%s) ",ppSp_assign[j][i],assignment_vector[j][i]);
+	}
+	printf("\n");
+  }
+  printf("\n");
   unique_sites();
 
   // build lookup table for quartet site pattern counts
@@ -820,8 +1250,6 @@ int main(int argc, char *argv[]) {
 	if (tf==NULL) { printf("File treefile.tre not found. Exiting.\n\n"); exit(1);}
   	temp_rate = ReadTree(tf);
   
-	printf("Tree has been read\n");
-	
   	totaltime = FindTotalTime();
   	
   	CalcTimeVec(totaltime,1.0);
@@ -910,11 +1338,12 @@ int main(int argc, char *argv[]) {
    fflush(0);
 
   // make the IND matrix that will be used for composite likelihood computation
-  make_indmat();
+  //make_indmat();
   for (i=1; i<2*ntaxa; i++) {
-	parents[i] = find_parent(i);
+	parents[i] = find_parent_scan(i);
  	parents_temp[i] = parents[i];
   }
+  make_indmat();
 
   /* test -- getting estimates of branch lengths via computation -- feature not yet implemented */
   //AllMyChildrenLeft(8);
@@ -926,7 +1355,7 @@ int main(int argc, char *argv[]) {
 
   /* Compute the composite likelihood for the current tree */
   if (model == 5) {
-	  ComputeAandS_popvar(lambda);
+	  ComputeAandS_popvar(alpha, lambda);
   }
   else {
   	ComputeAandS(theta);
@@ -950,7 +1379,7 @@ int main(int argc, char *argv[]) {
   if (anneal==0) {
 	if (anneal_bl==0) { printf("Analysis complete -- exiting.\n\n"); exit(1); }
 	else if (anneal_bl==1) { // uphill bl search
-		printf("Optimizing branch lengths using uphill search ...\n\n");
+		printf("Optimizing branch lengths using uphill search ...");
 		if (model == 1) bl_uphill_full();
         	else if (model == 2) {
                 	bl_uphill_ratevar();                                                                                               
@@ -962,7 +1391,7 @@ int main(int argc, char *argv[]) {
 		else if (model == 5) bl_uphill_full_popvar();
 	}
 	else if (anneal_bl==2) { // simulated annealing bl search
-		printf("Optimizing branch lengths using simulating annealing ...\n\n");
+		printf("Optimizing branch lengths using simulating annealing ...");
 		if (model == 1) bl_anneal_full();
         	else if (model == 2) {
                 	bl_anneal_ratevar();
@@ -995,11 +1424,11 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-	if (model == 1) printf("the composite likelihood of the tree is %f\n",GetCompLik());
-  	else if (model == 2) printf("the composite likelihood of the tree is %f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);
-  	else if (model == 3) printf("the composite likelihood of the tree is %f\n",GetCompLik_msnp());
-	else if (model == 4) printf("the composite likelihood of the tree is %f\n",GetCompLik_genetree());
-	else if (model == 5) printf("the composite likelihood of the tree is %f\n",GetCompLik_popvar());
+	if (model == 1) printf(" the composite likelihood of the tree is %f\n",GetCompLik());
+  	else if (model == 2) printf(" the composite likelihood of the tree is %f with rate variation parameter %f\n",GetCompLik_ratevar(),ratepar);
+  	else if (model == 3) printf(" the composite likelihood of the tree is %f\n",GetCompLik_msnp());
+	else if (model == 4) printf(" the composite likelihood of the tree is %f\n",GetCompLik_genetree());
+	else if (model == 5) printf(" the composite likelihood of the tree is %f\n",GetCompLik_popvar());
   	printf("\n\n");
   	
 	// re-order ppTwoRow and write tree to outtree.tre
@@ -1130,6 +1559,17 @@ int main(int argc, char *argv[]) {
   	}
   	for (i=0; i<2*ntaxa+1; i++) TimeVec[i] = TimeVec_best[i];
 	for (i=0; i<2*ntaxa+1; i++) TimeVec_best_orig[i] = TimeVec_best[i];
+	// ppTwoRow was just replaced wholesale with the best tree found during
+	// the search, so parents[] (kept in sync incrementally by trbldg.c
+	// during the search) is now stale relative to it -- resync from
+	// scratch before the GetCompLik() call below reads it via
+	// find_parent(). Missing this resync silently corrupted the reported
+	// "composite likelihood of the best tree" (find_parent() would return
+	// parent indices for the pre-transfer tree).
+	for (i=1; i<2*ntaxa; i++) {
+		parents[i] = find_parent_scan(i);
+		parents_temp[i] = parents[i];
+	}
 
 	// re-order ppTwoRow to write to outtree.tre
 
@@ -1199,7 +1639,7 @@ int main(int argc, char *argv[]) {
   /* done print branch lengths to file */
 
   /* print only Newick string to file */
-	pt = fopen(picltrees_file,"a");
+	pt = fopen(picltrees_file,"w");
 	write_species_tree_out_file(ntaxa+1,ntaxa+1);
 	fprintf(pt,";\n");
 	fclose(pt);
